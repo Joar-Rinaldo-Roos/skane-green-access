@@ -1,0 +1,9 @@
+geopandas>=1.0,<2
+osmnx>=2.0,<3
+shapely>=2.0,<3
+pyproj>=3.6,<4
+pandas>=2.2,<3
+folium>=0.17,<1
+streamlit>=1.38,<2
+streamlit-folium>=0.23,<1
+pytest>=8,<10
