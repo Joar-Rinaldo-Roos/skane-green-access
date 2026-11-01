@@ -68,6 +68,7 @@ Wikipedia content is provided by Wikipedia contributors; follow linked article l
 The interactive map is now displayed above the existing discoveries, even when reading a result:
 
 - **Street map**: OpenStreetMap tiles via Leaflet 1.9.4, with attribution and mobile pan/zoom.
+- **Globe**: Optional world-scale MapLibre GL JS 6.16.0 globe using OpenStreetMap raster tiles. The globe requires WebGL; it shows the same selected-location marker but not SGU geology. Choose **Street map** to return to geology.
 - **Find me**: requests one-time browser GPS permission when tapped, places a location marker and a GPS accuracy circle, and recenters the map. No continuous tracking.
 - **Choose a place**: searching for a Swedish place moves the same map marker. The map opens at **Lund only as an example**, not as a claimed GPS reading.
 - **Soil geology**: toggle SGU's published OGC **WMS 1.3.0** map layer `jord:SE.GOV.SGU.JORD.GRUNDLAGER.25K` (Jordarter 1:25 000–1:100 000). WMS serves map images; it is **not** yet a query of underlying geology attributes. The Geology discovery topic shows an honest map-only description, not invented facts.
@@ -100,3 +101,11 @@ Automated checks or inspecting the desktop browser cannot replace testing live G
 ### Phase 1 limits
 
 This does not yet implement historical archives, OGC API Features, a backend, GPT chat, or evidence-grounded site-specific geology. Those belong to later phases. The original Skåne Python prototype remains untouched.
+
+### Globe and SGU troubleshooting
+
+The OSM background provides street context; SGU's WMS provides the OGC geology overlay. Neither OSM nor the globe itself is an OGC geology service. The SGU layer displays only on the **street map**. You can use **🌐 Globe** to rotate and zoom the Earth, then **🗺️ Street map** to return. It requires a browser with WebGL.
+
+If SGU tiles are delayed, the map now displays a clear message after 12 seconds instead of staying indefinitely at "Loading". Image request failures and successful requests have distinct messages. A successful image response does **not** prove there is colourful geology at a specific point: SGU's scale-dependent rendering and map coverage can produce transparent images.
+
+To compare directly with SGU, use **Open SGU’s original map** beneath the map. The WMS URL, layer name, and EPSG:3857 coordinate support agree with SGU's service documentation, but mobile-origin requests and pixel rendering still need testing on a live network.

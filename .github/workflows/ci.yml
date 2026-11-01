@@ -18,5 +18,6 @@ jobs:
         run: |
           node --check app.js
           node --check map.js
+          node --check globe.js
       - name: Run browser-independent map tests
-        run: node --test tests/map.test.cjs
+        run: node --test tests/*.test.cjs
