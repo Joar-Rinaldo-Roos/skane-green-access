@@ -9,6 +9,21 @@
   let accuracyCircle = null;
   let geologyLayer = null;
   let geologyHasError = false;
+  let geologyTimer = null;
+  let geologyTilesReceived = 0;
+
+  function clearGeologyTimer() {
+    if (geologyTimer !== null) clearTimeout(geologyTimer);
+    geologyTimer = null;
+  }
+  function watchGeologyLoading() {
+    clearGeologyTimer();
+    geologyTimer = setTimeout(function () {
+      if (map && geologyLayer && map.hasLayer(geologyLayer) && geologyTilesReceived === 0 && !geologyHasError) {
+        setStatus('SGU has not returned map images. Try toggling Soil geology off/on, or open SGU’s original map below.');
+      }
+    }, 12000);
+  }
 
   function setStatus(message) {
     statusEl.textContent = message;
@@ -53,12 +68,15 @@
       return;
     }
     geologyHasError = false;
+    geologyTilesReceived = 0;
+    clearGeologyTimer();
     if (enabled) {
       if (!map.hasLayer(geologyLayer)) geologyLayer.addTo(map);
       geologyButton.classList.add('layer-active');
       geologyButton.setAttribute('aria-pressed', 'true');
       geologyButton.setAttribute('aria-label', 'Hide SGU soil geology map layer');
       setStatus('Loading SGU soil geology map…');
+      watchGeologyLoading();
     } else {
       if (map.hasLayer(geologyLayer)) map.removeLayer(geologyLayer);
       geologyButton.classList.remove('layer-active');
@@ -68,7 +86,13 @@
     }
   }
 
-  window.HereNowMap = { setLocation, clearLocation, showGeology, setStatus };
+  function resize() { if (map) map.invalidateSize(); }
+  function getView() {
+    if (!map) return null;
+    const center = map.getCenter();
+    return { lat: center.lat, lon: center.lng, zoom: map.getZoom() };
+  }
+  window.HereNowMap = { setLocation, clearLocation, showGeology, setStatus, resize, getView };
 
   if (!window.L) {
     geologyButton.disabled = true;
@@ -93,18 +117,31 @@
       version: '1.3.0',
       format: 'image/png',
       transparent: true,
-      opacity: 0.73,
+      opacity: 0.85,
+      tileSize: 512,
       attribution: '&copy; <a href="https://www.sgu.se/">SGU</a>'
+    });
+    geologyLayer.on('tileload', function () {
+      geologyTilesReceived++;
+      if (map.hasLayer(geologyLayer) && !geologyHasError) {
+        clearGeologyTimer();
+        if (geologyTilesReceived === 1) {
+          setStatus('SGU map images received. If no colours appear, zoom closer to a covered area; map scale and coverage vary.');
+        }
+      }
     });
     geologyLayer.on('tileerror', function () {
       geologyHasError = true;
+      clearGeologyTimer();
       if (map.hasLayer(geologyLayer)) {
-        setStatus('Some SGU map tiles could not load. Try zooming out or turn off Soil geology.');
+        setStatus('SGU map images failed to load. Try toggling the overlay, or open SGU’s original map below.');
       }
     });
     geologyLayer.on('load', function () {
-      if (map.hasLayer(geologyLayer) && !geologyHasError) {
-        setStatus('SGU soil geology overlay loaded. Colors indicate mapped soil units, not verified point measurements.');
+      if (!map.hasLayer(geologyLayer)) return;
+      clearGeologyTimer();
+      if (!geologyHasError) {
+        setStatus('SGU map image requests completed. If nothing is coloured, SGU may not show data at this scale or place.');
       }
     });
     geologyButton.addEventListener('click', function () {

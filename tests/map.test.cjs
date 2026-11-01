@@ -8,6 +8,7 @@ const source = readFileSync(path.join(__dirname, '..', 'map.js'), 'utf8');
 
 function boot(withLeaflet = true) {
   const listeners = {};
+  const timeouts = [];
   const controls = {};
   for (const id of ['map-status', 'toggle-geology', 'locate']) {
     controls[id] = {
@@ -30,6 +31,9 @@ function boot(withLeaflet = true) {
   const layers = new Set();
   const map = {
     setView(coords, zoom) { this.center = coords; this.zoom = zoom; return this; },
+    getCenter() { return { lat: this.center[0], lng: this.center[1] }; },
+    getZoom() { return this.zoom; },
+    invalidateSize() {},
     addLayer(layer) { layers.add(layer); },
     removeLayer(layer) { layers.delete(layer); },
     hasLayer(layer) { return layers.has(layer); }
@@ -58,8 +62,8 @@ function boot(withLeaflet = true) {
     return layer('wms');
   };
   const window = { L: withLeaflet ? L : undefined };
-  vm.runInNewContext(source, { document, window, L });
-  return { window, map, layers, requests, controls, listeners };
+  vm.runInNewContext(source, { document, window, L, setTimeout: fn => { timeouts.push(fn); return timeouts.length; }, clearTimeout: () => {} });
+  return { window, map, layers, requests, controls, listeners, timeouts };
 }
 
 test('initial map is a Lund example with OpenStreetMap plus configured SGU WMS', () => {
@@ -108,4 +112,12 @@ test('missing Leaflet gracefully disables overlay without crashing discovery', (
   const app = boot(false);
   assert.equal(app.controls['toggle-geology'].disabled, true);
   assert.match(app.controls['map-status'].textContent, /could not load/i);
+});
+
+test('slow SGU WMS gets a human-readable status instead of infinite Loading', () => {
+  const app = boot();
+  app.listeners['toggle-geology:click']();
+  assert.match(app.controls['map-status'].textContent, /Loading SGU/);
+  app.timeouts[0]();
+  assert.match(app.controls['map-status'].textContent, /has not returned map images/);
 });

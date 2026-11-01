@@ -29,3 +29,14 @@
   .map-note{margin:7px 5px 0}
   #map{height:clamp(315px,48dvh,480px)}
 }
+
+/* Switchable world globe (loads only when requested). */
+#globe-map{height:clamp(300px,44dvh,480px);width:100%;background:#081c2a}
+#map[hidden],#globe-map[hidden]{display:none!important}
+#globe-map .maplibregl-control-container{font-size:11px}
+#globe-map .maplibregl-ctrl-attrib{font-size:10px}
+@media(max-width:540px){
+  #globe-map{height:clamp(315px,48dvh,480px)}
+}
+
+.globe-marker{background:#176b50;border:3px solid white;border-radius:50%;width:19px;height:19px;box-shadow:0 1px 9px #0008}
