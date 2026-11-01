@@ -54,5 +54,5 @@
     }
   });
   log('Diagnostics', 'Active. Logs stay in this tab and omit precise coordinates.');
-  checkBrowser();
+  window.addEventListener('load', checkBrowser);
 })();
