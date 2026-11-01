@@ -40,3 +40,14 @@
 }
 
 .globe-marker{background:#176b50;border:3px solid white;border-radius:50%;width:19px;height:19px;box-shadow:0 1px 9px #0008}
+
+.toggle:has(#map-mode){grid-template-columns:repeat(3,minmax(0,1fr))}
+.toggle:has(#map-mode) button{font-size:.83rem;padding:12px 4px}
+.diagnostics{margin-top:16px}
+.diagnostics summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#214f3d;font-size:.95rem}
+.diagnostics summary span{font-size:.75rem;color:#6a7d71;font-weight:400}
+.diagnostics .actions{margin-top:8px}
+.diagnostics .actions button{background:#e7f1e9;color:#1e6249}
+#diagnostics-output{background:#102820;color:#e0f3e4;border-radius:10px;max-height:310px;overflow:auto;padding:13px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.72rem;line-height:1.5;min-height:95px}
+#copy-diagnostics-status{font-size:.8rem;color:#265c44}
+@media(max-width:410px){.toggle:has(#map-mode) button{font-size:.72rem;padding:12px 2px}.diagnostics summary span{max-width:100px}}

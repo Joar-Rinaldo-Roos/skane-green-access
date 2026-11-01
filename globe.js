@@ -53,8 +53,14 @@
   }
 
   function toGlobe() {
-    if (!window.maplibregl || !maplibregl.supported?.()) {
-      controller.setStatus('Globe needs a browser with WebGL support and an internet connection. The street map still works.');
+    if(!window.maplibregl){
+      window.HereNowDiagnostics?.log('Globe','MapLibre script missing');
+      controller.setStatus('Globe library did not load. Open diagnostics to see if the MapLibre script failed.');
+      return;
+    }
+    if(typeof maplibregl.supported==='function' && !maplibregl.supported()){
+      window.HereNowDiagnostics?.log('Globe','WebGL unsupported / blocked');
+      controller.setStatus('Globe cannot start: WebGL is unavailable. The street map will still work.');
       return;
     }
     globeActive = true;
@@ -110,6 +116,7 @@
       // A failed CDN or renderer must not leave the user stuck in globe mode.
       button.disabled = false;
     } catch (error) {
+      window.HereNowDiagnostics?.log('Globe','Renderer initialization failed: '+error.message);
       failGlobe('Your browser could not start the globe. The street map is still available.');
     }
   }
