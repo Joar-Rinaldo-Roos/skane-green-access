@@ -21,6 +21,7 @@
     geologyTimer = setTimeout(function () {
       if (map && geologyLayer && map.hasLayer(geologyLayer) && geologyTilesReceived === 0 && !geologyHasError) {
         setStatus('SGU has not returned map images. Try toggling Soil geology off/on, or open SGU’s original map below.');
+        window.HereNowDiagnostics?.log('SGU WMS','No tile images after 12 seconds');
       }
     }, 12000);
   }
@@ -123,6 +124,7 @@
     });
     geologyLayer.on('tileload', function () {
       geologyTilesReceived++;
+      if(geologyTilesReceived===1)window.HereNowDiagnostics?.log('SGU WMS','First tile image received');
       if (map.hasLayer(geologyLayer) && !geologyHasError) {
         clearGeologyTimer();
         if (geologyTilesReceived === 1) {
@@ -132,6 +134,7 @@
     });
     geologyLayer.on('tileerror', function () {
       geologyHasError = true;
+      window.HereNowDiagnostics?.log('SGU WMS','Image tile failed to load');
       clearGeologyTimer();
       if (map.hasLayer(geologyLayer)) {
         setStatus('SGU map images failed to load. Try toggling the overlay, or open SGU’s original map below.');

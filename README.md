@@ -109,3 +109,10 @@ The OSM background provides street context; SGU's WMS provides the OGC geology o
 If SGU tiles are delayed, the map now displays a clear message after 12 seconds instead of staying indefinitely at "Loading". Image request failures and successful requests have distinct messages. A successful image response does **not** prove there is colourful geology at a specific point: SGU's scale-dependent rendering and map coverage can produce transparent images.
 
 To compare directly with SGU, use **Open SGU’s original map** beneath the map. The WMS URL, layer name, and EPSG:3857 coordinate support agree with SGU's service documentation, but mobile-origin requests and pixel rendering still need testing on a live network.
+
+
+## Troubleshooting on your Samsung
+
+Open **Diagnostics & error logs** at the bottom of the site. Tap **Check browser**, reproduce the problem, then tap **Copy error report**. This stores recent status messages in the current browser tab and does not upload GPS coordinates or the text of questions. Inspect the report before sharing it. For full network responses, inspect Chrome on a computer (`F12`) or remote-debug Android with `chrome://inspect/#devices`.
+
+**Find me** requests GPS access on user tap, rather than prompting without context on page load. If Chrome already blocked GPS, enable Location for this website in Chrome site settings. **Map center** allows using Discover without location permission or place-search services. GPS is cached within the session, so Discover will not repeatedly ask after a successful Find me.
