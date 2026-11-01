@@ -1,42 +1,69 @@
-# Skåne Green-Space Access Explorer
+# Sweden Outdoor Explorer 🌲
 
-An exploratory GIS portfolio project analyzing **straight-line proximity of mapped buildings to parks** in Lund and Malmö, Sweden. Built for sustainable urban planning and reproducible spatial analysis.
+A **mobile-friendly outdoor discovery web app** for finding nature reserves, swimming spots and viewpoints in Sweden. Built as a personally useful GIS project with real OpenStreetMap data.
 
-**Important:** Proximity to a mapped park is not a climate-risk score, walkability measure, or population-access measure. Buildings are not weighted by residents, park entrances are not modeled, and OpenStreetMap may be incomplete.
+## MVP features
+- Responsive layout for mobile browsers and desktop
+- Interactive Leaflet map with OpenStreetMap tiles
+- Search for a Swedish city (Nominatim)
+- Use phone GPS location (browser permission required)
+- Search nearby OpenStreetMap features using Overpass API
+- Filter by nature reserves, swimming spots and viewpoints
+- Show approximate straight-line distance from the search centre
+- Save places locally in your browser (no account required)
+- Open the original OpenStreetMap feature for more detail
 
-## Features
-- Query and cache OpenStreetMap building footprints and park polygons via OSMnx
-- Reproject geometries to **SWEREF99 TM (EPSG:3006)** for metre-based spatial analysis
-- Compute distances from building representative points to park polygons
-- Explore 100–1000 m thresholds and export results as GeoJSON
-- Interactive Folium map in Streamlit, with reproducible marker sampling
-- **Offline synthetic demo** for testing without network access; clearly labeled as fictional
-- Unit tests for distance calculations and reproducibility
+## Run the web app
 
-## Run locally
-
-Requires Python 3.11+.
+Open `index.html` with a local static web server:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+python -m http.server 8000
+```
+
+Then visit `http://localhost:8000` on your computer. The web app has no build step.
+
+### Put it on your phone with GitHub Pages
+1. Open this repository's **Settings → Pages**.
+2. Choose **Deploy from a branch**, select **main** and **/(root)**, then Save.
+3. When GitHub Pages publishes the site, open its HTTPS URL on your phone.
+4. Choose **Near me** and grant location access, or search for a city.
+
+**Important:** GitHub Pages availability depends on your repository visibility and GitHub plan. If Pages is unavailable for a private repository, make a public copy of just the app files or use another static hosting provider. Do not publish private files unintentionally.
+
+The app needs an internet connection for map tiles, geocoding and Overpass. Browser geolocation generally requires HTTPS (or localhost). Saved places persist only in the same browser/device.
+
+## How it works
+- **OpenStreetMap tiles** provide the map.
+- **Nominatim** geocodes Swedish place names.
+- **Overpass API** retrieves mapped nature reserves, protected areas, bathing places, beaches and viewpoints within 3, 7 or 15 km.
+- Distances use the haversine formula and are **straight-line**, not walking or driving routes.
+- Bookmarks are stored in browser `localStorage`, not on a server.
+
+The app currently uses public community-operated APIs. They can be slow, rate-limited or unavailable. This MVP is appropriate for occasional personal use, not high-traffic production. Do not bulk-query or repeatedly refresh; respect provider usage policies. Results may be incomplete and not every tagged feature is a publicly accessible destination.
+
+## Roadmap
+- [ ] Validate live searches and GPS on a real phone
+- [ ] Improve duplicate handling and place details
+- [ ] Add hiking trails and official Swedish protected-area datasets
+- [ ] Add real walking/cycling routing and estimated travel time
+- [ ] Add offline-friendly caching and installable PWA support
+- [ ] Add automated UI tests and deployment checks
+
+## Previous GIS analysis
+The original **Skåne Green-Space Access Explorer** Python prototype remains in `app.py`, `analysis.py`, `download.py`, `demo.py` and `tests/`. It explores building-to-park straight-line proximity with GeoPandas and Streamlit, using a synthetic offline demo or live OSM data.
+
+Run the legacy prototype with:
+
+```bash
 pip install -r requirements.txt
 python -m pytest -q
 streamlit run app.py
 ```
 
-The app defaults to **synthetic demo mode**. Uncheck the demo box and select Lund or Malmö to query real OSM data. Large Overpass queries can be slow or fail; downloaded GeoJSON files are cached under `data/` and excluded from Git.
-
-## Data and methods
-- **Source:** © OpenStreetMap contributors, via OSMnx / Overpass. Respect OSM attribution and ODbL terms.
-- **Input geometries:** OSM `building=*` footprints and `leisure=park` polygons.
-- **CRS:** EPSG:3006 for distances; EPSG:4326 for map display and GeoJSON export.
-- **Indicator:** Euclidean distance from each building's representative point to the nearest park polygon; a threshold flags proximity.
-- **Caveats:** No street-network routing, entrances, demographic weighting, vegetation cover, accessibility, or causal climate inference. Park tags are incomplete and do not capture all green space.
-- **Reproducibility:** Live OSM results vary with updates; cached GeoJSON preserves a local snapshot. Tests use fixed synthetic geometries.
-
-## Next steps
-Add walking-network access, neighborhood-level aggregation, and provenance metadata for a fixed OSM extract. These are ideas, not implemented features.
+The original analysis is exploratory, **not** a walkability or climate-risk model.
 
 ## Status
-Spatial core tested locally (3 tests passed). The live OSM download and full Streamlit deployment have **not yet been validated end-to-end**.
+The static web app files have been committed to GitHub. **Live Overpass queries, hosting, mobile GPS and end-to-end behavior have not yet been verified.** The previous Python prototype's live OSM/Streamlit path also remains unverified.
+
+Data © OpenStreetMap contributors (ODbL).
