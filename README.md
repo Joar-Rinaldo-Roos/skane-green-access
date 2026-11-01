@@ -1,69 +1,62 @@
-# Sweden Outdoor Explorer 🌲
+# Here & Now — location-based curiosity app
 
-A **mobile-friendly outdoor discovery web app** for finding nature reserves, swimming spots and viewpoints in Sweden. Built as a personally useful GIS project with real OpenStreetMap data.
+**Here & Now** is a responsive, browser-based discovery app that answers: **“What is interesting about where I am?”**
 
-## MVP features
-- Responsive layout for mobile browsers and desktop
-- Interactive Leaflet map with OpenStreetMap tiles
-- Search for a Swedish city (Nominatim)
-- Use phone GPS location (browser permission required)
-- Search nearby OpenStreetMap features using Overpass API
-- Filter by nature reserves, swimming spots and viewpoints
-- Show approximate straight-line distance from the search centre
-- Save places locally in your browser (no account required)
-- Open the original OpenStreetMap feature for more detail
+Choose your **current GPS location** or search for a **place in Sweden**, then choose a topic. The app fetches information from linked public sources and presents one discovery at a time.
 
-## Run the web app
+## Topics and live data
 
-Open `index.html` with a local static web server:
+| Topic | Current implementation | Source |
+| --- | --- | --- |
+| Surprise me | Nearby geotagged articles in random order | Wikipedia MediaWiki API |
+| History | Nearby geotagged articles (not strictly classified by historical topic yet) | Wikipedia MediaWiki API |
+| Culture | Nearby geotagged articles (not strictly classified by cultural topic yet) | Wikipedia MediaWiki API |
+| Nature | Species recorded within 10 km, not guaranteed present now | iNaturalist species counts API |
+| Astronomy | Today's sunrise, sunset and solar noon | sunrise-sunset.org API |
+| Geology | **Not implemented** — shown as unavailable | Future SGU integration |
+
+**Limitations:** History and Culture currently return the same broad nearby Wikipedia dataset. This is an honest first integration, not yet a reliable topic classifier. Wikipedia's geotagged coverage varies. Nature records represent observations, not a live species inventory. Astronomy gives calculated solar times, not actual sky visibility. Facts are sourced, not generated. The site does not provide location-based safety or navigation advice.
+
+## Run locally
+
+The new app is **static HTML/CSS/JavaScript** and requires no Python dependencies:
 
 ```bash
 python -m http.server 8000
 ```
 
-Then visit `http://localhost:8000` on your computer. The web app has no build step.
+Open `http://localhost:8000` on the same device. On Android, you can run this command from Termux inside the repository directory. Or host the static files with GitHub Pages.
 
-### Put it on your phone with GitHub Pages
-1. Open this repository's **Settings → Pages**.
-2. Choose **Deploy from a branch**, select **main** and **/(root)**, then Save.
-3. When GitHub Pages publishes the site, open its HTTPS URL on your phone.
-4. Choose **Near me** and grant location access, or search for a city.
+### Host on GitHub Pages
 
-**Important:** GitHub Pages availability depends on your repository visibility and GitHub plan. If Pages is unavailable for a private repository, make a public copy of just the app files or use another static hosting provider. Do not publish private files unintentionally.
+Repository **Settings → Pages → Deploy from a branch → main → /(root)**. After publishing, open the HTTPS Pages URL on your Samsung phone. GitHub Pages availability for private repositories depends on your plan and settings.
 
-The app needs an internet connection for map tiles, geocoding and Overpass. Browser geolocation generally requires HTTPS (or localhost). Saved places persist only in the same browser/device.
+GPS access needs browser permission and a secure context (HTTPS or localhost). A manual place search works without GPS. The app sends the location coordinates to the selected public APIs when querying. No app account or database is used.
 
-## How it works
-- **OpenStreetMap tiles** provide the map.
-- **Nominatim** geocodes Swedish place names.
-- **Overpass API** retrieves mapped nature reserves, protected areas, bathing places, beaches and viewpoints within 3, 7 or 15 km.
-- Distances use the haversine formula and are **straight-line**, not walking or driving routes.
-- Bookmarks are stored in browser `localStorage`, not on a server.
+## Technology
 
-The app currently uses public community-operated APIs. They can be slow, rate-limited or unavailable. This MVP is appropriate for occasional personal use, not high-traffic production. Do not bulk-query or repeatedly refresh; respect provider usage policies. Results may be incomplete and not every tagged feature is a publicly accessible destination.
+- Responsive HTML, CSS and vanilla JavaScript
+- Browser Geolocation API
+- OpenStreetMap Nominatim for Swedish place search
+- Wikipedia MediaWiki geosearch and article extracts
+- iNaturalist observations/species counts
+- sunrise-sunset.org solar calculations
+
+Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to-end behavior on a Samsung device **has not been verified**.
 
 ## Roadmap
-- [ ] Validate live searches and GPS on a real phone
-- [ ] Improve duplicate handling and place details
-- [ ] Add hiking trails and official Swedish protected-area datasets
-- [ ] Add real walking/cycling routing and estimated travel time
-- [ ] Add offline-friendly caching and installable PWA support
-- [ ] Add automated UI tests and deployment checks
 
-## Previous GIS analysis
-The original **Skåne Green-Space Access Explorer** Python prototype remains in `app.py`, `analysis.py`, `download.py`, `demo.py` and `tests/`. It explores building-to-park straight-line proximity with GeoPandas and Streamlit, using a synthetic offline demo or live OSM data.
+- [ ] Verify mobile API requests and GPS on an actual device
+- [ ] Add real history/culture topic classification and heritage records from Riksantikvarieämbetet
+- [ ] Add Swedish geology from SGU's open datasets
+- [ ] Add richer astronomy and seasonal context
+- [ ] Add radius control, source details, bookmarks and caching
+- [ ] Add tests, deployment checks and accessibility improvements
 
-Run the legacy prototype with:
+## Previous prototype
 
-```bash
-pip install -r requirements.txt
-python -m pytest -q
-streamlit run app.py
-```
+This repository began as a Skåne green-space proximity project. Its original Python files (`analysis.py`, `app.py`, `download.py`, `demo.py`, `tests/`) are retained for reference and have **not** been incorporated into Here & Now. The original prototype's live OSM/Streamlit integration has not been validated end-to-end.
 
-The original analysis is exploratory, **not** a walkability or climate-risk model.
+## Attribution
 
-## Status
-The static web app files have been committed to GitHub. **Live Overpass queries, hosting, mobile GPS and end-to-end behavior have not yet been verified.** The previous Python prototype's live OSM/Streamlit path also remains unverified.
-
-Data © OpenStreetMap contributors (ODbL).
+Wikipedia content is provided by Wikipedia contributors; follow linked article license terms. OpenStreetMap geocoding © OpenStreetMap contributors. iNaturalist observations are subject to their individual licenses.
