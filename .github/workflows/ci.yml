@@ -1,0 +1,22 @@
+name: Validate Here & Now
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check map.js
+      - name: Run browser-independent map tests
+        run: node --test tests/map.test.cjs

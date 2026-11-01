@@ -1,1 +1,90 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173c35"><meta name="description" content="Discover fascinating facts about where you are."><title>Here & Now — Discover your surroundings</title><link rel="stylesheet" href="./style.css"></head><body><div class="shell"><header><div class="brand">✦ HERE & NOW</div><span class="tagline">There's a story everywhere.</span></header><main><section id="setup" class="panel"><h1>What are you curious about?</h1><p class="sub">Pick a topic and a place. We'll find something interesting around you.</p><h2>1. Where are you?</h2><div class="toggle"><button id="gps-mode" class="selected" aria-pressed="true">◎ My location</button><button id="city-mode" aria-pressed="false">⌕ Choose a place</button></div><div id="city-box" hidden><label for="city">City or place in Sweden</label><div class="search"><input id="city" placeholder="e.g. Lund, Stockholm" autocomplete="off"><button id="find-city">Find</button></div></div><p id="location-label" class="hint">We'll ask for location permission when you discover.</p><h2>2. Choose a topic</h2><div class="topics" id="topics"><button class="topic selected" data-topic="surprise" aria-pressed="true"><span>🎲</span><strong>Surprise me</strong><small>A little of everything</small></button><button class="topic" data-topic="history" aria-pressed="false"><span>🏛️</span><strong>History</strong><small>Stories of the past</small></button><button class="topic" data-topic="culture" aria-pressed="false"><span>🎭</span><strong>Culture</strong><small>People and places</small></button><button class="topic" data-topic="nature" aria-pressed="false"><span>🌿</span><strong>Nature</strong><small>Species recorded nearby</small></button><button class="topic" data-topic="astronomy" aria-pressed="false"><span>🌙</span><strong>Astronomy</strong><small>Sun and moon today</small></button><button class="topic" data-topic="geology" aria-pressed="false"><span>🪨</span><strong>Geology</strong><small>Coming soon</small></button></div><button id="discover" class="primary">Discover something →</button><p id="status" role="status" aria-live="polite"></p></section><section id="discovery" class="panel" hidden><button id="back" class="quiet">← Change topic or place</button><div class="eyebrow" id="category"></div><h1 id="fact-title"></h1><p id="fact-text"></p><p id="fact-meta" class="hint"></p><div class="actions"><a id="source" href="#" target="_blank" rel="noopener noreferrer">Read original source ↗</a><button id="another">Another discovery ↻</button></div><p id="result-status" role="status" aria-live="polite"></p></section></main><footer>Facts come from linked public sources. Nearby does not mean visible or accessible. GPS coordinates stay in your browser and are sent only to the selected data providers for queries.</footer></div><script src="./app.js" defer></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173c35">
+  <meta name="description" content="Discover the history, nature and geology around you on an interactive map.">
+  <title>Here &amp; Now — Discover your surroundings</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./map.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="./map.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">✦ HERE &amp; NOW</div>
+      <span class="tagline">There's a story everywhere.</span>
+    </header>
+    <main>
+      <section class="map-panel" aria-labelledby="map-title">
+        <div class="map-heading">
+          <div>
+            <p class="map-eyebrow">EXPLORE YOUR SURROUNDINGS</p>
+            <h1 id="map-title">See what's here.</h1>
+          </div>
+          <p>Start in Lund, or find your own location to explore the map.</p>
+        </div>
+        <div class="map-frame">
+          <div id="map" role="region" aria-label="Interactive street map of Lund, Sweden. Pan or zoom to explore."></div>
+          <div class="map-toolbar" role="group" aria-label="Map controls">
+            <button id="locate" type="button" aria-label="Find my current location">◎ Find me</button>
+            <button id="toggle-geology" type="button" aria-pressed="false" aria-label="Show SGU soil geology map layer">🪨 Soil geology</button>
+          </div>
+        </div>
+        <div class="map-summary">
+          <p id="map-status" role="status" aria-live="polite">Map starts in Lund. Use Find me or search for a place below.</p>
+          <a href="https://www.sgu.se/produkter-och-tjanster/geologiska-data/jordarter--geologiska-data/jordartsdata/" target="_blank" rel="noopener noreferrer">About SGU data ↗</a>
+        </div>
+        <p class="map-note">The geology overlay shows mapped near-surface soil types from SGU. It is not a site investigation or a verified description of the exact spot under your feet.</p>
+      </section>
+
+      <section id="setup" class="panel" aria-labelledby="setup-title">
+        <h2 id="setup-title" class="panel-title">What are you curious about?</h2>
+        <p class="sub">Pick a topic and a place. We'll find something interesting around you.</p>
+        <h3>1. Where are you?</h3>
+        <div class="toggle">
+          <button id="gps-mode" class="selected" aria-pressed="true" type="button">◎ My location</button>
+          <button id="city-mode" aria-pressed="false" type="button">⌕ Choose a place</button>
+        </div>
+        <div id="city-box" hidden>
+          <label for="city">City or place in Sweden</label>
+          <div class="search">
+            <input id="city" placeholder="e.g. Lund, Stockholm" autocomplete="off">
+            <button id="find-city" type="button">Find</button>
+          </div>
+        </div>
+        <p id="location-label" class="hint">We'll ask for location permission when you discover, or tap Find me on the map.</p>
+        <h3>2. Choose a topic</h3>
+        <div class="topics" id="topics">
+          <button class="topic selected" data-topic="surprise" aria-pressed="true" type="button"><span>🎲</span><strong>Surprise me</strong><small>A little of everything</small></button>
+          <button class="topic" data-topic="history" aria-pressed="false" type="button"><span>🏛️</span><strong>History</strong><small>Stories of the past</small></button>
+          <button class="topic" data-topic="culture" aria-pressed="false" type="button"><span>🎭</span><strong>Culture</strong><small>People and places</small></button>
+          <button class="topic" data-topic="nature" aria-pressed="false" type="button"><span>🌿</span><strong>Nature</strong><small>Species recorded nearby</small></button>
+          <button class="topic" data-topic="astronomy" aria-pressed="false" type="button"><span>🌙</span><strong>Astronomy</strong><small>Sunrise and sunset</small></button>
+          <button class="topic" data-topic="geology" aria-pressed="false" type="button"><span>🪨</span><strong>Geology</strong><small>Map layer available</small></button>
+        </div>
+        <button id="discover" class="primary" type="button">Discover something →</button>
+        <p id="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="discovery" class="panel" aria-labelledby="fact-title" hidden>
+        <button id="back" class="quiet" type="button">← Change topic or place</button>
+        <div class="eyebrow" id="category"></div>
+        <h2 id="fact-title" class="result-title"></h2>
+        <p id="fact-text"></p>
+        <p id="fact-meta" class="hint"></p>
+        <div class="actions">
+          <a id="source" href="#" target="_blank" rel="noopener noreferrer">Read original source ↗</a>
+          <button id="another" type="button">Another discovery ↻</button>
+        </div>
+        <p id="result-status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <footer>Facts come from linked public sources. Nearby does not mean visible or accessible. GPS coordinates stay in your browser and are sent only to selected data providers for queries. Map data © OpenStreetMap contributors; soil geology © SGU.</footer>
+  </div>
+</body>
+</html>
