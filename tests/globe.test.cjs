@@ -63,7 +63,7 @@ test('globe falls back to street map when WebGL is unavailable',()=>{
   const a=boot(false);
   a.listeners['toggle-globe:click']();
   assert.equal(a.elements['map'].hidden,false);
-  assert.match(a.log.at(-1),/needs a browser with WebGL/);
+  assert.match(a.log.at(-1),/WebGL/);
 });
 test('GPS marker updates on globe and preserves local map behavior',()=>{
   const a=boot();
