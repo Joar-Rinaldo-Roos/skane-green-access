@@ -21,7 +21,10 @@
     if (accuracyCircle) map.removeLayer(accuracyCircle);
     marker = L.circleMarker(point, {
       radius: 9, weight: 3, color: '#fff', fillColor: '#176b50', fillOpacity: 1
-    }).addTo(map).bindPopup(place.name || 'Selected location');
+    }).addTo(map);
+    const popupText = document.createElement('span');
+    popupText.textContent = place.name || 'Selected location';
+    marker.bindPopup(popupText);
     if (Number.isFinite(place.accuracy) && place.accuracy > 0 && place.accuracy < 10000) {
       accuracyCircle = L.circle(point, {
         radius: place.accuracy, color: '#176b50', fillColor: '#176b50',

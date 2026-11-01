@@ -13,13 +13,13 @@ Choose your **current GPS location** or search for a **place in Sweden**, then c
 | Culture | Nearby geotagged articles (not strictly classified by cultural topic yet) | Wikipedia MediaWiki API |
 | Nature | Species recorded within 10 km, not guaranteed present now | iNaturalist species counts API |
 | Astronomy | Today's sunrise, sunset and solar noon | sunrise-sunset.org API |
-| Geology | **Not implemented** — shown as unavailable | Future SGU integration |
+| Geology | SGU soil geology WMS map overlay; no underlying feature query or site-specific interpretation yet | SGU Jordarter 1:25 000–1:100 000 |
 
-**Limitations:** History and Culture currently return the same broad nearby Wikipedia dataset. This is an honest first integration, not yet a reliable topic classifier. Wikipedia's geotagged coverage varies. Nature records represent observations, not a live species inventory. Astronomy gives calculated solar times, not actual sky visibility. Facts are sourced, not generated. The site does not provide location-based safety or navigation advice.
+**Limitations:** The Geology map displays WMS imagery, not interpreted site measurements. History and Culture currently return the same broad nearby Wikipedia dataset. This is an honest first integration, not yet a reliable topic classifier. Wikipedia's geotagged coverage varies. Nature records represent observations, not a live species inventory. Astronomy gives calculated solar times, not actual sky visibility. Facts are sourced, not generated. The site does not provide location-based safety or navigation advice.
 
 ## Run locally
 
-The new app is **static HTML/CSS/JavaScript** and requires no Python dependencies:
+The current app is **static HTML/CSS/JavaScript** and requires no Python dependencies:
 
 ```bash
 python -m http.server 8000
@@ -36,6 +36,7 @@ GPS access needs browser permission and a secure context (HTTPS or localhost). A
 ## Technology
 
 - Responsive HTML, CSS and vanilla JavaScript
+- Leaflet 1.9.4, OpenStreetMap map tiles, and SGU OGC WMS soil geology overlay
 - Browser Geolocation API
 - OpenStreetMap Nominatim for Swedish place search
 - Wikipedia MediaWiki geosearch and article extracts
@@ -48,7 +49,8 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 
 - [ ] Verify mobile API requests and GPS on an actual device
 - [ ] Add real history/culture topic classification and heritage records from Riksantikvarieämbetet
-- [ ] Add Swedish geology from SGU's open datasets
+- [x] Add SGU soil geology WMS overlay to the map
+- [ ] Add underlying geology feature queries and explanatory research
 - [ ] Add richer astronomy and seasonal context
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
