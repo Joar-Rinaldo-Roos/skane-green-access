@@ -10,11 +10,12 @@
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./map.css">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
+  <script src="./diagnostics.js?v=5" defer></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script src="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.js" defer></script>
-  <script src="./map.js" defer></script>
-  <script src="./globe.js" defer></script>
-  <script src="./app.js" defer></script>
+  <script src="./map.js?v=5" defer></script>
+  <script src="./globe.js?v=5" defer></script>
+  <script src="./app.js?v=5" defer></script>
 </head>
 <body>
   <div class="shell">
@@ -53,7 +54,8 @@
         <h3>1. Where are you?</h3>
         <div class="toggle">
           <button id="gps-mode" class="selected" aria-pressed="true" type="button">◎ My location</button>
-          <button id="city-mode" aria-pressed="false" type="button">⌕ Choose a place</button>
+          <button id="city-mode" aria-pressed="false" type="button">⌕ Search place</button>
+          <button id="map-mode" aria-pressed="false" type="button">⊕ Map center</button>
         </div>
         <div id="city-box" hidden>
           <label for="city">City or place in Sweden</label>
@@ -62,7 +64,7 @@
             <button id="find-city" type="button">Find</button>
           </div>
         </div>
-        <p id="location-label" class="hint">We'll ask for location permission when you discover, or tap Find me on the map.</p>
+        <p id="location-label" class="hint">Tap Find me to request location permission. No GPS? Choose Map center instead.</p>
         <h3>2. Choose a topic</h3>
         <div class="topics" id="topics">
           <button class="topic selected" data-topic="surprise" aria-pressed="true" type="button"><span>🎲</span><strong>Surprise me</strong><small>A little of everything</small></button>
@@ -88,6 +90,17 @@
         </div>
         <p id="result-status" role="status" aria-live="polite"></p>
       </section>
+      <details id="diagnostics" class="panel diagnostics">
+        <summary><strong>🛠 Diagnostics &amp; error logs</strong><span>Open when something fails</span></summary>
+        <p class="hint">Diagnostics stay in this browser tab. They include errors and service statuses but not precise GPS coordinates. Check the report before sharing.</p>
+        <div class="actions">
+          <button id="check-diagnostics" type="button">Check browser</button>
+          <button id="copy-diagnostics" type="button">Copy error report</button>
+        </div>
+        <p id="copy-diagnostics-status" role="status" aria-live="polite"></p>
+        <pre id="diagnostics-output" tabindex="0" aria-label="Browser error log"></pre>
+        <p class="hint">For full HTTP request details use desktop Chrome DevTools or remote Android debugging.</p>
+      </details>
     </main>
     <footer>Facts come from linked public sources. Nearby does not mean visible or accessible. GPS coordinates stay in your browser and are sent only to selected data providers for queries. Map data © OpenStreetMap contributors; soil geology © SGU.</footer>
   </div>
