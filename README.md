@@ -116,3 +116,10 @@ To compare directly with SGU, use **Open SGU’s original map** beneath the map.
 Open **Diagnostics & error logs** at the bottom of the site. Tap **Check browser**, reproduce the problem, then tap **Copy error report**. This stores recent status messages in the current browser tab and does not upload GPS coordinates or the text of questions. Inspect the report before sharing it. For full network responses, inspect Chrome on a computer (`F12`) or remote-debug Android with `chrome://inspect/#devices`.
 
 **Find me** requests GPS access on user tap, rather than prompting without context on page load. If Chrome already blocked GPS, enable Location for this website in Chrome site settings. **Map center** allows using Discover without location permission or place-search services. GPS is cached within the session, so Discover will not repeatedly ask after a successful Find me.
+
+
+### Runtime crash fix — global location and MapLibre v6
+- The previous `let location` conflicted with the browser's built-in `location` property (notably in Safari), preventing `app.js` from running. Discovery state now uses `selectedLocation`; browser location access still works through `navigator.geolocation`.
+- MapLibre GL JS v6 removed the old `dist/maplibre-gl.js` browser bundle. `globe-loader.mjs` now imports the documented v6 `dist/maplibre-gl.mjs` module and exposes it to the existing globe code; a failed optional globe import is reported through Diagnostics and does not stop the discovery interface.
+- On phones, **Find me** or Discover in GPS mode triggers the browser location-permission request. If location is blocked, use **Map center** (or enable location access in browser site settings).
+- Automated regression tests check these cases but cannot guarantee live browser connectivity, MapLibre WebGL support, or SGU WMS tile availability.

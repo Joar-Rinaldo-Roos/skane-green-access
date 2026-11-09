@@ -19,6 +19,7 @@ jobs:
           node --check app.js
           node --check map.js
           node --check globe.js
+          node --check globe-loader.mjs
           node --check diagnostics.js
       - name: Run browser-independent map tests
         run: node --test tests/*.test.cjs

@@ -16,7 +16,7 @@ test('diagnostics library is loaded before app scripts and deployed', () => {
 test('discovery can use map center without GPS and does not always reacquire GPS', () => {
   const app = root('app.js');
   assert.match(app, /function chooseMapCenter/);
-  assert.match(app, /mode==='gps'\)\{if\(!location\)location=await gps\(\)/);
+  assert.match(app, /mode==='gps'\)\{if\(!selectedLocation\)selectedLocation=await gps\(\)/);
   assert.match(app, /mode==='map'\)/);
   assert.match(app, /HereNowDiagnostics/);
 });

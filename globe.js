@@ -55,7 +55,10 @@
   function toGlobe() {
     if(!window.maplibregl){
       window.HereNowDiagnostics?.log('Globe','MapLibre script missing');
-      controller.setStatus('Globe library did not load. Open diagnostics to see if the MapLibre script failed.');
+      const state = window.HereNowGlobeLoader?.state || 'loading';
+      controller.setStatus(state === 'error'
+        ? 'Globe library failed to download. See Diagnostics for details. Street map still works.'
+        : 'Globe library is still loading. Try Globe again shortly.');
       return;
     }
     if(typeof maplibregl.supported==='function' && !maplibregl.supported()){
