@@ -106,7 +106,7 @@
     panel.scrollIntoView?.({behavior:'smooth',block:'start'});
     return true;
   }
-  const close=document.getElementById('close-geology-details');
+  const close=document.getElementById?.('close-geology-details');
   if(close)close.addEventListener('click',()=>{
     const panel=document.getElementById('geology-details');
     if(panel)panel.hidden=true;
