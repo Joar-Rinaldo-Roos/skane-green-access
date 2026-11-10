@@ -158,3 +158,14 @@ Archive records and image rights remain the responsibility of the contributing i
 - **Culture:** removed because it duplicated History.
 
 - The standalone `discovery-ui.js` renders animal diets, visual identification notes, a planet-position table and source links. If the optional astronomy library does not load, the solar-time fallback still works. The astronomy calculations run locally in the browser.
+
+
+## Ask Here & Now — Mac-hosted GPT proof of concept
+
+The public website now includes an optional **Ask Here & Now** panel under the map. Its source code remains on GitHub Pages; GPT requests go to a tiny password-protected server running on your Mac via a temporary HTTPS Cloudflare Quick Tunnel. The existing map and Discover are independent of the Mac backend.
+
+Start with [the Mac setup guide](backend/README.md). This setup script downloads backend files into `~/HereNowBackend` and preserves private `.env` settings when updated. No Git clone or repeated git pull is required. You must create your own OpenAI API project key, install Node.js 22+ and Cloudflare Tunnel locally and keep two Terminal windows open while testing.
+
+**Security:** Never commit or enter `OPENAI_API_KEY` in the browser. Only a separate randomly generated access token is entered in the chat settings. The server checks the token, restricts browser origins, rate-limits requests and sets `store:false` for OpenAI Responses. The frontend sends selected coordinates and geological or historical context only when you ask. API usage and optional web searches are billed separately from ChatGPT subscriptions.
+
+**GitHub repo privacy:** GitHub Pages from a private repository requires an eligible GitHub plan, and published sites can still be publicly accessible even when the repository is private. On GitHub Free, changing the repository from public to private will unpublish Pages. We recommend leaving this prototype repository public and excluding private credentials entirely.
