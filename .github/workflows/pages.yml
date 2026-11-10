@@ -35,12 +35,13 @@ jobs:
           node --check nature-detail.js
           node --check local-history.js
           node --check sky.js
+          node --check discovery-ui.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Stage only public website assets
         run: |
           mkdir -p _site
-          cp index.html app.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js style.css map.css _site/
+          cp index.html app.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js style.css map.css _site/
           touch _site/.nojekyll
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4

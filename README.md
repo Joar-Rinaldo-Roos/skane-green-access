@@ -156,3 +156,5 @@ Archive records and image rights remain the responsibility of the contributing i
 - **Astronomy:** sunrise/sunset remain available. Astronomy Engine 2.1.19 calculates actual Moon and naked-eye planet positions for 21:00 **device-local time** from the selected coordinates entirely in the browser. No meteor shower schedule is guessed. If the optional calculator does not load, solar times still appear.
 - **History:** the official K-samsök catalogue remains available for nearby records. A curated, sourced Lund hospital-district story is shown when the selected map point falls in the approximate hospital area. Hospital historical photographs are opened at the original institution website instead of republishing potentially restricted photos. This is campus context, not a claim that a specific historical photograph depicts the exact GPS point.
 - **Culture:** removed because it duplicated History.
+
+- The standalone `discovery-ui.js` renders animal diets, visual identification notes, a planet-position table and source links. If the optional astronomy library does not load, the solar-time fallback still works. The astronomy calculations run locally in the browser.
