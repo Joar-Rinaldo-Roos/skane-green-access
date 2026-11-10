@@ -101,3 +101,35 @@
 .sky-table .sky-muted{color:#88988f}
 .sky-time-note{font-size:.8rem;color:#627569;line-height:1.5}
 .discovery-photo-wrap img{border:1px solid #e3eae4}
+
+/* Optional GPT chat does not affect existing maps or Discover controls. */
+.ask-panel{margin-bottom:16px}
+.ask-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ask-heading .panel-title{margin:0}
+.ask-experimental{font-size:.7rem;border:1px solid #d2e2d8;border-radius:99px;padding:5px 8px;color:#397c5c;white-space:nowrap}
+.chat-settings{padding:12px 15px;background:#f5f8f4;border:1px solid #dce9df;border-radius:14px}
+.chat-settings summary{cursor:pointer;color:#255c44;font-weight:700;font-size:.89rem}
+.chat-settings .hint{margin:10px 0;font-size:.8rem}
+.chat-settings label{display:block;margin:11px 0 5px;font-size:.82rem;color:#315d49;font-weight:650}
+.chat-settings input{width:100%;min-width:0;padding:12px;border:1px solid #c7d8cb;background:white;border-radius:10px;font-size:.85rem}
+.chat-setting-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.chat-setting-actions button:first-child{background:#236b50;color:#fff}
+.chat-setting-actions button:last-child{background:#e8f0e9;color:#255c44}
+.ask-prompts{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+.ask-prompts button{border:1px solid #d7e7db;background:#f7faf5;color:#2c674b;padding:9px 10px;font-size:.75rem}
+.ask-messages{max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:3px 0;margin:12px 0}
+.chat-bubble{padding:13px;border-radius:13px;line-height:1.52;font-size:.88rem;border:1px solid #deebe0}
+.chat-bubble>strong{display:block;color:#2c7555;font-size:.8rem;margin-bottom:7px}
+.chat-user{background:#edf5ed;align-self:flex-end;max-width:92%}
+.chat-assistant{background:#fbfdfb;align-self:flex-start;width:100%}
+.chat-body{white-space:pre-wrap;overflow-wrap:anywhere}
+.chat-sources{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:11px;border-top:1px solid #dfeade}
+.chat-sources>strong{font-size:.78rem;color:#65786b}
+.chat-sources a{color:#266b4e;font-size:.78rem;overflow-wrap:anywhere}
+.ask-form{display:grid;gap:8px}
+.ask-label{font-size:.78rem;font-weight:700;color:#35694e}
+.ask-form textarea{width:100%;resize:vertical;min-height:74px;padding:13px;border:1px solid #c8dacf;border-radius:12px;font:inherit;font-size:.91rem}
+.ask-form button{background:#216c50;color:white;justify-self:end;min-width:100px}
+.ask-form button:disabled{opacity:.58;cursor:wait}
+.ask-panel #ask-status{min-height:1.3em;margin-top:13px}
+@media(max-width:440px){.ask-heading{align-items:flex-start;flex-direction:column}.ask-experimental{font-size:.68rem}}

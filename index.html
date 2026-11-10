@@ -22,7 +22,8 @@
   <script src="./map.js?v=9" defer></script>
   <script src="./globe.js?v=9" defer></script>
   <script src="./discovery-ui.js?v=10" defer></script>
-  <script src="./app.js?v=10" defer></script>
+  <script src="./app.js?v=11" defer></script>
+  <script src="./chat.js?v=11" defer></script>
 </head>
 <body>
   <div class="shell">
@@ -57,6 +58,43 @@
           <div class="geology-details-heading"><h2>Under the surface</h2><button id="close-geology-details" type="button" aria-label="Close geology details">✕ Close</button></div>
           <div id="geology-details-content"></div>
         </section>
+      </section>
+
+
+      <section id="ask-panel" class="panel ask-panel" aria-labelledby="ask-title">
+        <div class="ask-heading">
+          <div>
+            <p class="map-eyebrow">YOUR PLACE, YOUR QUESTIONS</p>
+            <h2 id="ask-title" class="panel-title">✦ Ask Here &amp; Now</h2>
+          </div>
+          <span class="ask-experimental">Mac-powered prototype</span>
+        </div>
+        <p class="sub">Ask about the stones beneath you, how this area changed, or why an animal lives here. GPT receives the selected location and available SGU data.</p>
+        <details id="chat-settings" class="chat-settings">
+          <summary>⚙ Connect to Mac backend</summary>
+          <p class="hint">Start the Mac server and Cloudflare Tunnel. Paste the tunnel address and your separate access token. <strong>Never enter your OpenAI API key in the website.</strong></p>
+          <label for="backend-url">Backend HTTPS URL</label>
+          <input id="backend-url" type="url" inputmode="url" placeholder="https://something.trycloudflare.com" autocomplete="off" spellcheck="false">
+          <label for="backend-token">Private access token (not the OpenAI API key)</label>
+          <input id="backend-token" type="password" autocomplete="off" placeholder="Generated with openssl rand -hex 24">
+          <div class="chat-setting-actions">
+            <button id="backend-connect" type="button">Connect to Mac</button>
+            <button id="backend-disconnect" type="button">Disconnect</button>
+          </div>
+          <p class="hint">The URL stays in this browser; the access token stays in this tab’s session storage. Your location is sent only when you tap Ask.</p>
+        </details>
+        <div class="ask-prompts" aria-label="Example questions">
+          <button type="button" data-ask-prompt="Why are these stones here?">Why are these stones here?</button>
+          <button type="button" data-ask-prompt="What happened in this area 200 years ago?">What happened here 200 years ago?</button>
+          <button type="button" data-ask-prompt="What is surprising about the ground below me?">Tell me something surprising</button>
+        </div>
+        <div id="ask-messages" class="ask-messages" role="log" aria-label="Here and Now conversation" aria-live="polite"></div>
+        <form id="ask-form" class="ask-form">
+          <label for="ask-question" class="ask-label">Ask about the selected place</label>
+          <textarea id="ask-question" rows="2" maxlength="1200" placeholder="What's interesting about this place?"></textarea>
+          <button id="ask-send" type="submit">Ask ✦</button>
+        </form>
+        <p id="ask-status" class="hint" role="status" aria-live="polite">The map works without your Mac. Connect to enable GPT chat.</p>
       </section>
 
       <section id="setup" class="panel" aria-labelledby="setup-title">
