@@ -1,123 +1,101 @@
-/* Basic map behavior tests without network or browser dependencies. */
+/* Leaflet SGU GeoJSON source tests without a browser or network. */
 const assert = require('node:assert/strict');
-const { readFileSync } = require('node:fs');
-const path = require('node:path');
 const test = require('node:test');
+const fs = require('node:fs');
 const vm = require('node:vm');
-const source = readFileSync(path.join(__dirname, '..', 'map.js'), 'utf8');
+const path = require('node:path');
+const code = fs.readFileSync(path.join(__dirname,'..','map.js'),'utf8');
 
-function boot(withLeaflet = true) {
-  const listeners = {};
-  const timeouts = [];
-  const controls = {};
-  for (const id of ['map-status', 'toggle-geology', 'locate']) {
-    controls[id] = {
-      textContent: '',
-      disabled: false,
-      attributes: {},
-      classes: new Set(),
-      setAttribute(key, value) { this.attributes[key] = value; },
-      addEventListener(event, handler) { listeners[id + ':' + event] = handler; }
-    };
-    controls[id].classList = {
-      add(name) { controls[id].classes.add(name); },
-      remove(name) { controls[id].classes.delete(name); }
-    };
+function boot({missingLeaflet=false,features=[{type:'Feature',properties:{jg2_tx:'Morän'},geometry:{type:'Polygon',coordinates:[[[13.19,55.70],[13.2,55.70],[13.2,55.71],[13.19,55.70]]]}}],http=200}={}){
+  const events = {};
+  const elems={};
+  for(const name of ['map-status','toggle-geology','locate']){
+    elems[name]={textContent:'',disabled:false,attrs:{},setAttribute(k,v){this.attrs[k]=v;},addEventListener(k,v){events[name+':'+k]=v;},classList:{add(){},remove(){}}};
   }
-  const document = {
-    getElementById(id) { return controls[id]; },
-    createElement(tag) { return { tagName: tag, textContent: '' }; }
+  const markers=[];
+  const mapLayers=new Set();
+  const map={
+    setView(pos,z){this.center=pos;this.zoom=z;return this;},
+    getCenter(){return {lat:this.center[0],lng:this.center[1]};},
+    getZoom(){return this.zoom;},
+    getBounds(){return {getWest:()=>13.18,getSouth:()=>55.70,getEast:()=>13.21,getNorth:()=>55.72};},
+    on(name,cb){events['map:'+name]=cb;},
+    invalidateSize(){},
+    addLayer(l){mapLayers.add(l);},
+    hasLayer(l){return mapLayers.has(l);},
+    removeLayer(l){mapLayers.delete(l);}
   };
-  const layers = new Set();
-  const map = {
-    setView(coords, zoom) { this.center = coords; this.zoom = zoom; return this; },
-    getCenter() { return { lat: this.center[0], lng: this.center[1] }; },
-    getZoom() { return this.zoom; },
-    invalidateSize() {},
-    addLayer(layer) { layers.add(layer); },
-    removeLayer(layer) { layers.delete(layer); },
-    hasLayer(layer) { return layers.has(layer); }
+  const layer=kind=>({
+    kind, addTo(m){m.addLayer(this);return this;},bindPopup(p){this.popup=p;return this;},
+    clearLayers(){this.collection=[];},
+    addData(f){this.collection=f.features;}
+  });
+  const L={
+    map:()=>map,
+    tileLayer:()=>layer('osm'),
+    geoJSON:()=>layer('geology'),
+    circleMarker:()=>{const m=layer('marker');markers.push(m);return m;},
+    circle:()=>layer('accuracy'),
+    control:{zoom:()=>({addTo(){}}),scale:()=>({addTo(){}})}
   };
-  function layer(kind) {
-    return {
-      kind,
-      addTo(instance) { instance.addLayer(this); return this; },
-      on(event, callback) { this.events ||= {}; this.events[event] = callback; return this; },
-      bindPopup(value) { this.popup = value; return this; }
-    };
-  }
-  const requests = [];
-  const L = {
-    map() { return map; },
-    tileLayer(url, options) { requests.push({ type: 'street', url, options }); return layer('street'); },
-    circleMarker() { return layer('marker'); },
-    circle() { return layer('accuracy'); },
-    control: {
-      zoom() { return { addTo() {} }; },
-      scale() { return { addTo() {} }; }
-    }
+  const document={getElementById:id=>elems[id],createElement:name=>({tagName:name,textContent:'',children:[],appendChild(v){this.children.push(v);}})};
+  const diagnostics=[];
+  const window={L:missingLeaflet?undefined:L,HereNowDiagnostics:{log(...args){diagnostics.push(args);}}};
+  const queries=[];
+  const fetch=async(url,opts)=>{
+    queries.push(url);
+    return {ok:http===200,status:http,json:async()=>({type:'FeatureCollection',features})};
   };
-  L.tileLayer.wms = (url, options) => {
-    requests.push({ type: 'wms', url, options });
-    return layer('wms');
-  };
-  const window = { L: withLeaflet ? L : undefined };
-  vm.runInNewContext(source, { document, window, L, setTimeout: fn => { timeouts.push(fn); return timeouts.length; }, clearTimeout: () => {} });
-  return { window, map, layers, requests, controls, listeners, timeouts };
+  const context={document,window,L,fetch,URLSearchParams,AbortController,setTimeout:()=>1,clearTimeout:()=>{}};
+  vm.runInNewContext(code,context);
+  return {map,events,elems,window,mapLayers,queries,diagnostics,markers};
 }
-
-test('initial map is a Lund example with OpenStreetMap plus configured SGU WMS', () => {
-  const app = boot();
-  assert.equal(Number(app.map.center[0].toFixed(4)), 55.7047);
-  assert.equal(Number(app.map.center[1].toFixed(4)), 13.1910);
-  assert.equal(app.requests[0].type, 'street');
-  assert.match(app.requests[0].url, /tile\.openstreetmap\.org/);
-  const wms = app.requests.find(request => request.type === 'wms');
-  assert.match(wms.url, /resource\.sgu\.se\/service\/wms\/130\/jordarter-25-100-tusen/);
-  assert.equal(wms.options.layers, 'jord:SE.GOV.SGU.JORD.GRUNDLAGER.25K');
-  assert.equal(wms.options.version, '1.3.0');
-  assert.equal(wms.options.format, 'image/png');
-  assert.equal(wms.options.transparent, true);
-  assert.equal(app.layers.size, 1);
+const flush=()=>new Promise(resolve=>setImmediate(resolve));
+test('Street map initializes in Lund without invoking SGU prematurely',()=>{
+  const a=boot();
+  assert.equal(a.map.center[0],55.7047);
+  assert.equal(a.map.center[1],13.1910);
+  assert.equal(a.queries.length,0);
 });
-
-test('geology toggle adds and removes the real layer with accessible pressed state', () => {
-  const app = boot();
-  const button = app.controls['toggle-geology'];
-  app.listeners['toggle-geology:click']();
-  assert.equal(button.attributes['aria-pressed'], 'true');
-  assert.ok([...app.layers].some(layer => layer.kind === 'wms'));
-  app.listeners['toggle-geology:click']();
-  assert.equal(button.attributes['aria-pressed'], 'false');
-  assert.ok(![...app.layers].some(layer => layer.kind === 'wms'));
+test('Soil geology fetches official OGC API Features with a lon-lat bbox',async()=>{
+  const a=boot();
+  a.events['toggle-geology:click']();
+  await flush();
+  assert.equal(a.elems['toggle-geology'].attrs['aria-pressed'],'true');
+  assert.equal(a.queries.length,1);
+  const url = new URL(a.queries[0]);
+  assert.equal(url.hostname,'api.sgu.se');
+  assert.match(url.pathname,/collections\/grundlager\/items/);
+  assert.equal(url.searchParams.get('bbox'),'13.18000,55.70000,13.21000,55.72000');
+  assert.ok([...a.mapLayers].some(l=>l.kind==='geology' && l.collection.length===1));
+  assert.match(a.elems['map-status'].textContent,/1 SGU soil polygons/);
 });
-
-test('selected GPS position recenters and accuracy marker is removed with location', () => {
-  const app = boot();
-  app.window.HereNowMap.setLocation({
-    lat: 55.72, lon: 13.2, name: '<img src=x onerror=alert(1)>', accuracy: 35
-  }, { zoom: 15 });
-  assert.equal(app.map.zoom, 15);
-  assert.equal(app.map.center[0], 55.72);
-  assert.equal(app.map.center[1], 13.2);
-  const marker = [...app.layers].find(layer => layer.kind === 'marker');
-  assert.equal(marker.popup.textContent, '<img src=x onerror=alert(1)>');
-  assert.ok([...app.layers].some(layer => layer.kind === 'accuracy'));
-  app.window.HereNowMap.clearLocation();
-  assert.ok(![...app.layers].some(layer => layer.kind === 'marker'));
-  assert.ok(![...app.layers].some(layer => layer.kind === 'accuracy'));
+test('Turning off geology removes polygons and retains street map',async()=>{
+  const a=boot();
+  a.events['toggle-geology:click']();await flush();
+  a.events['toggle-geology:click']();
+  assert.equal(a.elems['toggle-geology'].attrs['aria-pressed'],'false');
+  assert.ok(![...a.mapLayers].some(l=>l.kind==='geology'));
+  assert.ok([...a.mapLayers].some(l=>l.kind==='osm'));
 });
-
-test('missing Leaflet gracefully disables overlay without crashing discovery', () => {
-  const app = boot(false);
-  assert.equal(app.controls['toggle-geology'].disabled, true);
-  assert.match(app.controls['map-status'].textContent, /could not load/i);
+test('SGU HTTP errors are shown rather than pretending soil data loaded',async()=>{
+  const a=boot({http:503});
+  a.events['toggle-geology:click']();
+  await flush();
+  assert.match(a.elems['map-status'].textContent,/HTTP 503/);
+  assert.ok(a.diagnostics.some(d=>d[1].includes('HTTP 503')));
 });
-
-test('slow SGU WMS gets a human-readable status instead of infinite Loading', () => {
-  const app = boot();
-  app.listeners['toggle-geology:click']();
-  assert.match(app.controls['map-status'].textContent, /Loading SGU/);
-  app.timeouts[0]();
-  assert.match(app.controls['map-status'].textContent, /has not returned map images/);
+test('Selected location marker and privacy-safe popup survive map updates',()=>{
+  const a=boot();
+  a.window.HereNowMap.setLocation({lat:55.73,lon:13.22,name:'<danger>',accuracy:33},{zoom:15});
+  assert.equal(a.map.zoom,15);
+  assert.equal(a.markers[0].popup.textContent,'<danger>');
+  assert.ok([...a.mapLayers].some(l=>l.kind==='accuracy'));
+  a.window.HereNowMap.clearLocation();
+  assert.ok(![...a.mapLayers].some(l=>l.kind==='marker'));
+});
+test('Missing Leaflet degrades geology without breaking the rest',()=>{
+  const a=boot({missingLeaflet:true});
+  assert.equal(a.elems['toggle-geology'].disabled,true);
+  assert.match(a.elems['map-status'].textContent,/Leaflet could not load/);
 });

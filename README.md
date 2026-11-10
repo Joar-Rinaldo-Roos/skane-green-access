@@ -123,3 +123,9 @@ Open **Diagnostics & error logs** at the bottom of the site. Tap **Check browser
 - MapLibre GL JS v6 removed the old `dist/maplibre-gl.js` browser bundle. `globe-loader.mjs` now imports the documented v6 `dist/maplibre-gl.mjs` module and exposes it to the existing globe code; a failed optional globe import is reported through Diagnostics and does not stop the discovery interface.
 - On phones, **Find me** or Discover in GPS mode triggers the browser location-permission request. If location is blocked, use **Map center** (or enable location access in browser site settings).
 - Automated regression tests check these cases but cannot guarantee live browser connectivity, MapLibre WebGL support, or SGU WMS tile availability.
+
+
+### SGU geology data source update
+The old SGU WMS endpoint `resource.sgu.se/service/wms/130/jordarter-25-100-tusen` returned repeated image failures on the Samsung device. The primary geological overlay now uses SGU's separately published **OGC API – Features** `grundlager` endpoint, requesting GeoJSON polygons for the map viewport in longitude/latitude coordinates (CRS84):
+`https://api.sgu.se/oppnadata/jordarter25k-100k/ogc/features/v1/collections/grundlager/items`.
+The polygons carry `jg2_tx` (mapped soil-type text). Tapping coloured areas shows the actual source label; colours are illustrative, not official SGU symbology. Maps use a capped number of results per viewport, so zoom closer if the source has more than 180 features. Failed requests report the network/HTTP error in browser diagnostics. This feature relies on SGU's service and cross-origin browser access; successful rendering on a Samsung still needs live testing. The globe remains separate and does not render these geological features.
