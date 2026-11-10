@@ -99,3 +99,12 @@ test('Missing Leaflet degrades geology without breaking the rest',()=>{
   assert.equal(a.elems['toggle-geology'].disabled,true);
   assert.match(a.elems['map-status'].textContent,/Leaflet could not load/);
 });
+
+test('the selected point gets its soil only if actually covered by a SGU polygon',async()=>{
+  const a=boot();
+  a.events['toggle-geology:click']();
+  await flush();
+  const feature=a.window.HereNowMap.getSoilAt({lat:55.703,lon:13.195});
+  assert.equal(feature?.properties?.jg2_tx,'Morän');
+  assert.equal(a.window.HereNowMap.getSoilAt({lat:55.703,lon:13.4}),null);
+});
