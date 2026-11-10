@@ -1,156 +1,176 @@
-/* Optional world-scale globe, using OSM raster tiles and MapLibre GL JS.
- * The SGU WMS only appears on Leaflet's flat local map. */
+/* Globe-first MapLibre projection, synchronized with Leaflet and SGU OGC Features.
+ * Only the map basemap uses OSM; coloured polygons come directly from SGU. */
 (function () {
   'use strict';
-  const button = document.getElementById('toggle-globe');
-  const street = document.getElementById('map');
-  const globeContainer = document.getElementById('globe-map');
-  const geologyButton = document.getElementById('toggle-geology');
-  const controller = window.HereNowMap;
+  const button=document.getElementById('toggle-globe');
+  const street=document.getElementById('map');
+  const globeContainer=document.getElementById('globe-map');
+  const controller=window.HereNowMap;
   if (!button || !street || !globeContainer || !controller) return;
 
-  let globeMap = null;
-  let globeMarker = null;
-  let currentPlace = null;
-  let globeActive = false;
-  let globeReady = false;
+  const EMPTY={type:'FeatureCollection',features:[]};
+  let globeMap=null, globeReady=false, globeActive=false, globeMarker=null;
+  let currentPlace=null, lastZoom=15, soilCollection=EMPTY, geologyEnabled=false;
+  const diag=(message)=>window.HereNowDiagnostics?.log('Globe',message);
 
+  function setViewFromPlace(place,zoom) {
+    if (!globeMap || !globeReady || !place) return;
+    // Unlike the old hard-coded zoom 4, respect the GPS or place-search zoom.
+    globeMap.jumpTo({center:[place.lon,place.lat],zoom:Math.max(3,Math.min(16,zoom||15))});
+  }
   function syncMarker() {
     if (!globeMap || !globeReady || !window.maplibregl) return;
     if (globeMarker) globeMarker.remove();
-    globeMarker = null;
+    globeMarker=null;
     if (currentPlace) {
-      const dot = document.createElement('div');
-      dot.className = 'globe-marker';
-      dot.setAttribute('aria-label', currentPlace.name || 'Selected location');
-      globeMarker = new maplibregl.Marker({ element: dot })
-        .setLngLat([currentPlace.lon, currentPlace.lat])
-        .addTo(globeMap);
+      const dot=document.createElement('div');
+      dot.className='globe-marker';
+      dot.setAttribute('aria-label',currentPlace.name||'Selected place');
+      globeMarker=new maplibregl.Marker({element:dot})
+        .setLngLat([currentPlace.lon,currentPlace.lat]).addTo(globeMap);
     }
+  }
+  function ensureSoilLayers() {
+    if (!globeMap || !globeReady || globeMap.getSource('sgu-geology')) return;
+    globeMap.addSource('sgu-geology',{type:'geojson',data:soilCollection});
+    globeMap.addLayer({
+      id:'sgu-soil-fill',type:'fill',source:'sgu-geology',
+      paint:{'fill-color':['coalesce',['get','_hereNowColor'],'#b88d67'],'fill-opacity':0.62},
+      layout:{visibility:geologyEnabled?'visible':'none'}
+    });
+    globeMap.addLayer({
+      id:'sgu-soil-outline',type:'line',source:'sgu-geology',
+      paint:{'line-color':'#294a39','line-opacity':0.86,'line-width':1},
+      layout:{visibility:geologyEnabled?'visible':'none'}
+    });
+    globeMap.on('click','sgu-soil-fill',event=>{
+      const feature=event.features?.[0];
+      if (!feature) return;
+      const card=document.createElement('div');
+      const label=document.createElement('strong');
+      label.textContent=feature.properties?.jg2_tx || 'Unclassified mapped soil';
+      const note=document.createElement('p');
+      note.textContent='SGU mapped soil; not a ground investigation at this precise point.';
+      card.appendChild(label);card.appendChild(note);
+      new maplibregl.Popup().setLngLat(event.lngLat).setDOMContent(card).addTo(globeMap);
+    });
+  }
+  function paintSoil() {
+    if (!globeMap || !globeReady) return;
+    ensureSoilLayers();
+    const source=globeMap.getSource('sgu-geology');
+    if (source) source.setData(soilCollection);
+    globeMap.setLayoutProperty('sgu-soil-fill','visibility',geologyEnabled?'visible':'none');
+    globeMap.setLayoutProperty('sgu-soil-outline','visibility',geologyEnabled?'visible':'none');
   }
 
   function toStreet() {
-    globeActive = false;
-    globeContainer.hidden = true;
-    street.hidden = false;
-    geologyButton.disabled = false;
-    button.disabled = false;
-    button.textContent = '🌐 Globe';
-    button.setAttribute('aria-pressed', 'false');
-    button.setAttribute('aria-label', 'Switch to a rotatable globe');
+    globeActive=false;
+    globeContainer.hidden=true;
+    street.hidden=false;
+    button.textContent='🌐 Globe';
+    button.setAttribute('aria-pressed','false');
+    button.setAttribute('aria-label','Switch to 3D globe');
     controller.resize?.();
-    controller.setStatus('Street map active. Toggle Soil geology to view SGU’s WMS layer.');
+    controller.setStatus('2D street map active. Soil geology remains available.');
   }
-
   function failGlobe(message) {
-    if (globeMap) {
-      try { globeMap.remove(); } catch (_) { /* ignore cleanup errors */ }
-      globeMap = null;
-    }
-    globeReady = false;
+    diag(message);
+    if (globeMap) {try {globeMap.remove();}catch (_){} globeMap=null;}
+    globeReady=false;
     toStreet();
     controller.setStatus(message);
   }
-
   function toGlobe() {
-    if(!window.maplibregl){
-      window.HereNowDiagnostics?.log('Globe','MapLibre script missing');
-      const state = window.HereNowGlobeLoader?.state || 'loading';
-      controller.setStatus(state === 'error'
-        ? 'Globe library failed to download. See Diagnostics for details. Street map still works.'
-        : 'Globe library is still loading. Try Globe again shortly.');
+    if (!window.maplibregl) {
+      const state=window.HereNowGlobeLoader?.state;
+      controller.setStatus(state==='error'?'Globe library failed to load. Check diagnostics.':'Globe library is loading. Try again shortly.');
       return;
     }
-    if(typeof maplibregl.supported==='function' && !maplibregl.supported()){
-      window.HereNowDiagnostics?.log('Globe','WebGL unsupported / blocked');
-      controller.setStatus('Globe cannot start: WebGL is unavailable. The street map will still work.');
-      return;
+    if (typeof maplibregl.supported==='function' && !maplibregl.supported()) {
+      controller.setStatus('WebGL is not available in this browser. The 2D street map is available.');
+      diag('WebGL unsupported');return;
     }
-    globeActive = true;
-    globeContainer.hidden = false;
-    street.hidden = true;
-    geologyButton.disabled = true;
-    button.textContent = '🗺️ Street map';
-    button.setAttribute('aria-pressed', 'true');
-    button.setAttribute('aria-label', 'Return to the street map');
-    controller.setStatus('Opening globe… Drag to rotate Earth, pinch or scroll to zoom.');
-
+    globeActive=true;
+    globeContainer.hidden=false;
+    street.hidden=true;
+    button.textContent='🗺️ 2D map';
+    button.setAttribute('aria-pressed','true');
+    button.setAttribute('aria-label','Switch to 2D street map');
+    controller.setStatus('3D globe active. Drag to rotate; pinch to zoom.');
     if (globeMap) {
       globeMap.resize();
+      if (currentPlace) setViewFromPlace(currentPlace,lastZoom);
+      controller.scheduleGeologyRefresh?.();
       return;
     }
-
-    const local = controller.getView?.() || { lat: 55.7047, lon: 13.1910 };
+    const local=controller.getView?.() || {lat:55.7047,lon:13.1910};
     try {
-      globeMap = new maplibregl.Map({
-        container: 'globe-map',
-        style: {
-          version: 8,
-          sources: {
-            osm: {
-              type: 'raster',
-              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-              tileSize: 256,
-              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }
-          },
-          layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+      globeMap=new maplibregl.Map({
+        container:'globe-map',
+        style:{
+          version:8,
+          sources:{osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize:256,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}},
+          layers:[{id:'osm',type:'raster',source:'osm'}]
         },
-        center: [local.lon, local.lat],
-        zoom: 1.5,
-        minZoom: 0.5,
-        maxZoom: 16,
-        attributionControl: true
+        center:currentPlace?[currentPlace.lon,currentPlace.lat]:[local.lon,local.lat],
+        zoom:currentPlace?lastZoom:3.3,
+        minZoom:0.5,maxZoom:18,
+        attributionControl:true
       });
-      globeMap.on('style.load', function () {
-        globeMap.setProjection({ type: 'globe' });
-      });
-      globeMap.on('load', function () {
-        globeReady = true;
-        button.disabled = false;
+      globeMap.on('style.load',()=>globeMap.setProjection({type:'globe'}));
+      globeMap.on('load',()=>{
+        globeReady=true;
         syncMarker();
-        if (globeActive) controller.setStatus('Globe ready. Drag to spin Earth; zoom in to examine a region.');
+        paintSoil();
+        if(currentPlace) setViewFromPlace(currentPlace,lastZoom);
+        controller.scheduleGeologyRefresh?.();
+        if(globeActive)controller.setStatus('Globe ready. Find me zooms to your GPS location; Soil geology adds SGU polygons.');
       });
-      globeMap.on('error', function (event) {
-        if (globeActive && !globeReady) {
-          failGlobe('Globe map failed to load. Try again on Wi-Fi or use the street map.');
-        }
-      });
-      // A failed CDN or renderer must not leave the user stuck in globe mode.
-      button.disabled = false;
-    } catch (error) {
-      window.HereNowDiagnostics?.log('Globe','Renderer initialization failed: '+error.message);
-      failGlobe('Your browser could not start the globe. The street map is still available.');
+      globeMap.on('moveend',()=>{if(globeActive)controller.scheduleGeologyRefresh?.();});
+      globeMap.on('error',event=>{diag('MapLibre resource/render error; globe may be partially available');});
+    } catch(error) {
+      failGlobe('The 3D globe could not start. The 2D map remains available.');
     }
   }
+  button.addEventListener('click',()=>{if(globeActive)toStreet();else toGlobe();});
 
-  button.addEventListener('click', function () {
-    if (globeActive) toStreet();
-    else toGlobe();
+  // The active map's viewport, not the hidden Leaflet viewport, drives SGU queries.
+  controller.setViewProvider?.(()=>{
+    if(!globeActive||!globeMap||!globeReady)return null;
+    const p=globeMap.getCenter();
+    return {bounds:globeMap.getBounds(),zoom:globeMap.getZoom(),center:{lat:p.lat,lon:p.lng}};
   });
-
-  const oldSetLocation = controller.setLocation;
-  controller.setLocation = function (place, options) {
-    oldSetLocation(place, options);
-    if (!place || !Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
-    currentPlace = place;
+  controller.subscribeGeology?.(event=>{
+    if(event.type==='data'){soilCollection=event.collection||EMPTY;geologyEnabled=!!event.enabled;}
+    else if(event.type==='visibility') geologyEnabled=!!event.enabled;
+    paintSoil();
+    if(event.type==='visibility' && geologyEnabled && globeActive && globeMap && globeReady && globeMap.getZoom()<11) {
+      const center=currentPlace?[currentPlace.lon,currentPlace.lat]:[13.1910,55.7047];
+      globeMap.jumpTo({center,zoom:12});
+    }
+  });
+  const priorLocation=controller.setLocation;
+  controller.setLocation=function(place,options) {
+    priorLocation(place,options);
+    if(!place || !Number.isFinite(place.lat)||!Number.isFinite(place.lon))return;
+    currentPlace=place;
+    lastZoom=options?.zoom||15;
     syncMarker();
-    if (globeMap && globeActive) {
-      globeMap.flyTo({ center: [place.lon, place.lat], zoom: 4 });
-      controller.setStatus('Showing ' + (place.name || 'selected location') + ' on the globe. Pinch or drag to explore.');
+    if(globeMap && globeActive) {
+      if(globeReady) setViewFromPlace(place,lastZoom);
+      controller.setStatus('Centered on '+(place.name||'selected location')+'. Zoom '+lastZoom+'; pinch to explore.');
+      diag('Centered globe on selected location (coordinates omitted), zoom '+lastZoom);
     }
   };
-
-  const oldClear = controller.clearLocation;
-  controller.clearLocation = function () {
-    oldClear();
-    currentPlace = null;
+  const priorClear=controller.clearLocation;
+  controller.clearLocation=function() {
+    priorClear();
+    currentPlace=null;
     syncMarker();
   };
-
-  const oldGeology = controller.showGeology;
-  controller.showGeology = function (enabled) {
-    if (enabled && globeActive) toStreet();
-    oldGeology(enabled);
-  };
+  // The ES-module loader dispatches this after MapLibre is actually available.
+  window.addEventListener('here-now-globe-ready',toGlobe);
+  if(window.maplibregl) toGlobe();
 })();

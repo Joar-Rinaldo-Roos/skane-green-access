@@ -16,7 +16,7 @@ test('app must not declare or reference the browser global location as state',()
 test('MapLibre v6 loads as an ES module, not deleted classic UMD bundle',()=>{
   const html=file('index.html');
   const loader=file('globe-loader.mjs');
-  assert.match(html,/<script type="module" src="\.\/globe-loader\.mjs\?v=6"><\/script>/);
+  assert.match(html,/<script type="module" src="\.\/globe-loader\.mjs\?v=\d+"><\/script>/);
   assert.doesNotMatch(html,/maplibre-gl@6\.16\.0\/dist\/maplibre-gl\.js/);
   assert.match(loader,/await import\('https:\/\/unpkg\.com\/maplibre-gl@6\.16\.0\/dist\/maplibre-gl\.mjs'\)/);
   assert.match(file('.github/workflows/pages.yml'),/cp .*globe-loader\.mjs/);

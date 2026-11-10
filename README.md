@@ -129,3 +129,12 @@ Open **Diagnostics & error logs** at the bottom of the site. Tap **Check browser
 The old SGU WMS endpoint `resource.sgu.se/service/wms/130/jordarter-25-100-tusen` returned repeated image failures on the Samsung device. The primary geological overlay now uses SGU's separately published **OGC API – Features** `grundlager` endpoint, requesting GeoJSON polygons for the map viewport in longitude/latitude coordinates (CRS84):
 `https://api.sgu.se/oppnadata/jordarter25k-100k/ogc/features/v1/collections/grundlager/items`.
 The polygons carry `jg2_tx` (mapped soil-type text). Tapping coloured areas shows the actual source label; colours are illustrative, not official SGU symbology. Maps use a capped number of results per viewport, so zoom closer if the source has more than 180 features. Failed requests report the network/HTTP error in browser diagnostics. This feature relies on SGU's service and cross-origin browser access; successful rendering on a Samsung still needs live testing. The globe remains separate and does not render these geological features.
+
+
+### Globe-first map revision
+- **Globe is the preferred default** if MapLibre loads and WebGL is available. Otherwise Leaflet is a 2D fallback. MapLibre's globe is a rendering/projection choice; OpenStreetMap supplies background map data.
+- **Find me** now zooms the active globe to its actual GPS point (zoom 15) instead of zoom 4. The marker appears in both modes.
+- **SGU OGC Features** GeoJSON polygons are drawn on both 3D Globe and 2D map, with tappable real SGU soil descriptions. Validate coordinates and report when the API returns features but no drawable polygons.
+- **2D gray tiles** are mitigated by not recentering Leaflet while it is hidden and by delaying Leaflet resize/invalidate after switching back.
+- **Request throttling** reduces repeated SGU queries while panning to at most one after 800 ms of idle map movement; canceled requests do not overwrite the newest view.
+- Real-device display remains to be checked. MapLibre globe and Leaflet street map still use OpenStreetMap-derived basemaps with required attribution; switching projection does not change the map's source.
