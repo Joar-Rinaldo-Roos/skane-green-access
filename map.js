@@ -12,6 +12,35 @@
   let map, marker = null, accuracyCircle = null, geologyLayer = null;
   let geologyVisible = false, geologyRequest = 0, abortRequest = null;
   let refreshTimer = null;
+  let viewProvider = null;
+  let geologyObserver = null;
+  let lastCollection = { type:'FeatureCollection', features:[] };
+  let lastSelectedPoint = null;
+  let lastSelectedZoom = 14;
+
+  function notifyGeology(message) {
+    if (geologyObserver) {
+      try { geologyObserver(message); }
+      catch (error) { log('Overlay renderer failed: ' + error.message); }
+    }
+  }
+  function subscribeGeology(listener) {
+    geologyObserver = listener;
+    listener({ type:'data', collection:lastCollection, enabled:geologyVisible });
+  }
+  function setViewProvider(provider) { viewProvider = provider; }
+  function activeView() {
+    const other = viewProvider?.();
+    if (other && other.bounds && Number.isFinite(other.zoom)) return other;
+    return map ? { bounds:map.getBounds(), zoom:map.getZoom() } : null;
+  }
+  function isGeologyEnabled() { return geologyVisible; }
+
+  function firstCoordinate(geometry) {
+    let point = geometry?.coordinates;
+    while (Array.isArray(point) && Array.isArray(point[0])) point = point[0];
+    return Array.isArray(point) && Number.isFinite(point[0]) && Number.isFinite(point[1]) ? point : null;
+  }
 
   function log(message) { window.HereNowDiagnostics?.log('SGU OGC Features',message); }
   function setStatus(message) { statusEl.textContent = message; }
@@ -46,6 +75,7 @@
     geologyRequest++;
     cancelQuery();
     if (geologyLayer && map && map.hasLayer(geologyLayer)) map.removeLayer(geologyLayer);
+    notifyGeology({ type:'visibility', enabled:false });
     geologyButton.classList.remove('layer-active');
     geologyButton.setAttribute('aria-pressed','false');
     geologyButton.setAttribute('aria-label','Show SGU soil geology features');
@@ -56,13 +86,16 @@
     if (!map || !geologyVisible) return;
     const id = ++geologyRequest;
     cancelQuery();
-    const z = map.getZoom();
+    const view = activeView();
+    if (!view) return;
+    const z = view.zoom;
     if (z < 11) {
       if (geologyLayer && map.hasLayer(geologyLayer)) map.removeLayer(geologyLayer);
       setStatus('Zoom closer (zoom level 11+) to load detailed SGU geological features.');
+      notifyGeology({type:'data', collection:{type:'FeatureCollection',features:[]}, enabled:true});
       return;
     }
-    const b = map.getBounds();
+    const b = view.bounds;
     const coords = [b.getWest(),b.getSouth(),b.getEast(),b.getNorth()];
     if (!coords.every(Number.isFinite)) return;
     // SGU OGC API Features uses CRS84 bbox longitude/latitude; does not use Leaflet's EPSG:3857.
@@ -80,7 +113,20 @@
       const data = await response.json();
       if (id !== geologyRequest || !geologyVisible) return;
       if (data.type !== 'FeatureCollection' || !Array.isArray(data.features)) throw new Error('Invalid GeoJSON response');
-      const features = data.features.filter(f=>f?.geometry && f.geometry.type);
+      const drawable = data.features.filter(f=>
+        (f?.geometry?.type==='Polygon' || f?.geometry?.type==='MultiPolygon')
+        && firstCoordinate(f.geometry));
+      const features = drawable.filter(f=>{
+        const point = firstCoordinate(f.geometry);
+        return point[0] >= -180 && point[0] <= 180 && point[1] >= -90 && point[1] <= 90;
+      }).map(f=>({
+        ...f,
+        properties:{...f.properties,_hereNowColor:colorFor(f.properties?.jg2_tx||f.properties?.jg2)}
+      }));
+      log('Returned '+data.features.length+' features; '+features.length+' drawable WGS84 polygons');
+      if (data.features.length && !features.length) {
+        throw new Error('SGU features have no usable WGS84 polygon coordinates');
+      }
       if (!geologyLayer) {
         geologyLayer = L.geoJSON(null, {
           style: f=>({
@@ -94,7 +140,9 @@
       geologyLayer.clearLayers();
       if (features.length) geologyLayer.addData({type:'FeatureCollection',features});
       if (!map.hasLayer(geologyLayer)) geologyLayer.addTo(map);
-      log('Received ' + features.length + ' mapped soil features (HTTP ' + response.status + ')');
+      lastCollection = {type:'FeatureCollection',features};
+      notifyGeology({type:'data',collection:lastCollection,enabled:true});
+      log('Received '+features.length+' drawable soil polygons (HTTP '+response.status+')');
       if (!features.length) {
         setStatus('SGU returned no mapped soil polygons for this view. Pan or zoom, or check the official SGU map.');
       } else if (features.length >= MAX_FEATURES || data.links?.some(link=>link.rel==='next')) {
@@ -108,6 +156,7 @@
       log('Geology request failed: ' + message);
       setStatus('SGU geological features unavailable (' + message + '). Try again or open SGU’s original map below.');
       if (geologyLayer && map.hasLayer(geologyLayer)) map.removeLayer(geologyLayer);
+      notifyGeology({type:'data',collection:{type:'FeatureCollection',features:[]},enabled:true});
     } finally {
       clearTimeout(timeout);
     }
@@ -116,7 +165,7 @@
   function scheduleRefresh() {
     if (!geologyVisible) return;
     if (refreshTimer !== null) clearTimeout(refreshTimer);
-    refreshTimer=setTimeout(fetchSoilFeatures, 220);
+    refreshTimer=setTimeout(fetchSoilFeatures, 800);
   }
 
   function showGeology(enabled) {
@@ -130,6 +179,7 @@
     geologyButton.classList.add('layer-active');
     geologyButton.setAttribute('aria-pressed','true');
     geologyButton.setAttribute('aria-label','Hide SGU soil geology features');
+    notifyGeology({type:'visibility',enabled:true});
     fetchSoilFeatures();
   }
 
@@ -146,7 +196,12 @@
     if (Number.isFinite(place.accuracy) && place.accuracy>0 && place.accuracy<10000) {
       accuracyCircle=L.circle(point,{radius:place.accuracy,color:'#176b50',fillColor:'#176b50',fillOpacity:0.08,weight:1}).addTo(map);
     }
-    map.setView(point,options.zoom||14,{animate:false});
+    lastSelectedPoint = point;
+    lastSelectedZoom = options.zoom || 14;
+    // Leaflet does not calculate tile dimensions correctly while hidden behind Globe.
+    if (!document.getElementById('map').hidden) {
+      map.setView(point,lastSelectedZoom,{animate:false});
+    }
     setStatus('Showing '+(place.name||'selected location')+'. Pan and zoom to explore.');
     if (geologyVisible) scheduleRefresh();
   }
@@ -156,16 +211,28 @@
     if (marker) map.removeLayer(marker);
     if (accuracyCircle) map.removeLayer(accuracyCircle);
     marker=null;accuracyCircle=null;
+    lastSelectedPoint=null;
     setStatus('Choose a place or tap Find me to mark a location.');
   }
 
   function getView() {
     if (!map) return null;
+    const view = viewProvider?.();
+    if (view?.center) return {...view.center,zoom:view.zoom};
     const p=map.getCenter();
     return {lat:p.lat,lon:p.lng,zoom:map.getZoom()};
   }
-  function resize() { if (map) map.invalidateSize(); }
-  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize};
+  function resize() {
+    if (!map) return;
+    setTimeout(()=>{
+      if (document.getElementById('map').hidden) return;
+      map.invalidateSize({pan:false});
+      if (lastSelectedPoint) map.setView(lastSelectedPoint,lastSelectedZoom,{animate:false});
+      map.invalidateSize({pan:false});
+      if (geologyVisible) scheduleRefresh();
+    },110);
+  }
+  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize,setViewProvider,subscribeGeology,isGeologyEnabled,scheduleGeologyRefresh:scheduleRefresh};
 
   if (!window.L) {
     geologyButton.disabled=true;
@@ -181,7 +248,7 @@
     }).addTo(map);
     L.control.zoom({position:'bottomright'}).addTo(map);
     L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
-    map.on('moveend',scheduleRefresh);
+    map.on('moveend',()=>{if (!document.getElementById('map').hidden) scheduleRefresh();});
     geologyButton.addEventListener('click',()=>showGeology(!geologyVisible));
   } catch (error) {
     geologyButton.disabled=true;

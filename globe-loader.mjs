@@ -4,6 +4,7 @@ window.HereNowGlobeLoader = { state: 'loading' };
 try {
   const maplibregl = await import('https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs');
   window.maplibregl = maplibregl;
+  window.dispatchEvent(new Event('here-now-globe-ready'));
   window.HereNowGlobeLoader.state = 'ready';
   window.HereNowDiagnostics?.log('Globe', 'MapLibre v6 ES module loaded');
 } catch (error) {

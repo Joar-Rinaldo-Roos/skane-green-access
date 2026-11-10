@@ -30,7 +30,7 @@
   #map{height:clamp(315px,48dvh,480px)}
 }
 
-/* Switchable world globe (loads only when requested). */
+/* Globe-first experience, with 2D Leaflet fallback where WebGL is unavailable. */
 #globe-map{height:clamp(300px,44dvh,480px);width:100%;background:#081c2a}
 #map[hidden],#globe-map[hidden]{display:none!important}
 #globe-map .maplibregl-control-container{font-size:11px}
