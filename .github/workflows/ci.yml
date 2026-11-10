@@ -27,5 +27,10 @@ jobs:
           node --check local-history.js
           node --check sky.js
           node --check discovery-ui.js
+          node --check chat.js
+          node --check backend/server.mjs
+          bash -n backend/setup-mac.sh
       - name: Run browser-independent map tests
         run: node --test tests/*.test.cjs
+      - name: Run Mac backend security and API contract tests
+        run: node --test backend/*.test.mjs

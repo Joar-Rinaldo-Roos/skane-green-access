@@ -238,3 +238,16 @@ $('locate').onclick=async()=>{
     button.disabled=false;
   }
 };
+
+/* Only selected geographic context is shared with optional GPT chat. */
+window.HereNowAppContext=function(){
+  const point=selectedLocation||window.HereNowMap?.getView?.();
+  if(!point||!Number.isFinite(point.lat)||!Number.isFinite(point.lon))return null;
+  const active=Boolean(selectedLocation);
+  return {
+    lat:point.lat,lon:point.lon,
+    name:active?(selectedLocation.name||'selected place'):'visible map center (not GPS)',
+    accuracy:active&&mode==='gps'?selectedLocation.accuracy:null,
+    kind:active?(mode==='gps'?'GPS':mode==='city'?'searched place':'map center'):'map center'
+  };
+};
