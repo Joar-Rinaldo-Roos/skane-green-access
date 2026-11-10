@@ -47,7 +47,7 @@
       const feature=event.features?.[0];
       if (!feature) return;
       const soilLabel=feature.properties?.jg2_tx || feature.properties?.jg2 || 'Unclassified';
-      const card=window.HereNowSoil?.createCard(soilLabel) || document.createTextNode(String(soilLabel));
+      const card=window.HereNowSoil?.createSummary(soilLabel) || document.createTextNode(String(soilLabel));
       new maplibregl.Popup({maxWidth:'320px'}).setLngLat(event.lngLat).setDOMContent(card).addTo(globeMap);
     });
   }

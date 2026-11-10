@@ -55,5 +55,61 @@
     card.appendChild(a);
     return card;
   }
-  window.HereNowSoil={explain,createCard};
+  function createSummary(rawLabel) {
+    const info=explain(rawLabel);
+    const card=element('div','soil-info-card soil-summary');
+    card.appendChild(element('strong','soil-english-title',info.title));
+    card.appendChild(element('div','soil-swedish','SGU: '+info.original));
+    card.appendChild(element('p','',info.material));
+    const button=element('button','soil-read-more','Read more about this ground ↓');
+    button.type='button';
+    button.addEventListener('click',()=>openDetails(info.original));
+    card.appendChild(button);
+    return card;
+  }
+  function openDetails(rawLabel) {
+    const info=explain(rawLabel);
+    const panel=document.getElementById('geology-details');
+    const inner=document.getElementById('geology-details-content');
+    if(!panel||!inner)return false;
+    inner.replaceChildren();
+    inner.appendChild(element('h3','',info.title));
+    inner.appendChild(element('p','soil-swedish','SGU label: '+info.original));
+    const table=element('table','geology-details-table');
+    const body=element('tbody','');
+    for(const [heading,value] of [
+      ['What it is made of',info.material],
+      ['How did it get here?',info.formation],
+      ['Why it matters',info.meaning]]) {
+      const tr=element('tr','');
+      const th=element('th','',heading);
+      th.scope='row';
+      tr.appendChild(th);
+      tr.appendChild(element('td','',value));
+      body.appendChild(tr);
+    }
+    table.appendChild(body);
+    inner.appendChild(table);
+    inner.appendChild(element('h4','geology-question-heading','Go deeper'));
+    for(const [question,answer] of info.questions){
+      const details=element('details','soil-question');
+      details.appendChild(element('summary','',question));
+      details.appendChild(element('p','',answer));
+      inner.appendChild(details);
+    }
+    const link=element('a','soil-source','Read the SGU geological symbol guide ↗');
+    link.href=info.source;
+    link.target='_blank';
+    link.rel='noopener noreferrer';
+    inner.appendChild(link);
+    panel.hidden=false;
+    panel.scrollIntoView?.({behavior:'smooth',block:'start'});
+    return true;
+  }
+  const close=document.getElementById('close-geology-details');
+  if(close)close.addEventListener('click',()=>{
+    const panel=document.getElementById('geology-details');
+    if(panel)panel.hidden=true;
+  });
+  window.HereNowSoil={explain,createCard,createSummary,openDetails};
 })();

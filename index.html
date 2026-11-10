@@ -47,7 +47,11 @@
           <p id="map-status" role="status" aria-live="polite">Map starts in Lund. Use Find me or search for a place below.</p>
           <a href="https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html" target="_blank" rel="noopener noreferrer">Open SGU’s original map ↗</a>
         </div>
-        <p class="map-note">Soil geology now uses real SGU OGC API Features polygons instead of the failing WMS image service. Tap a coloured area for its mapped soil classification. Colours are illustrative, not SGU’s official palette. Available in both Globe and 2D views. Tap them for English explanations, formation stories and follow-up questions.</p>
+        <p class="map-note">Tap a geological area for its English name and composition, then <strong>Read more</strong> to explore the ground’s formation and history below the map. Soil units come from SGU.</p>
+        <section id="geology-details" class="geology-details-panel" aria-label="Read more about soil geology" hidden>
+          <div class="geology-details-heading"><h2>Under the surface</h2><button id="close-geology-details" type="button" aria-label="Close geology details">✕ Close</button></div>
+          <div id="geology-details-content"></div>
+        </section>
       </section>
 
       <section id="setup" class="panel" aria-labelledby="setup-title">
