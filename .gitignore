@@ -3,3 +3,13 @@ __pycache__/
 .venv/
 data/
 *.pyc
+.DS_Store
+node_modules/
+
+# Personal Mac backend secrets — do not commit these.
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
