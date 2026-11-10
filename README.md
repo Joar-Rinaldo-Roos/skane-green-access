@@ -138,3 +138,13 @@ The polygons carry `jg2_tx` (mapped soil-type text). Tapping coloured areas show
 - **2D gray tiles** are mitigated by not recentering Leaflet while it is hidden and by delaying Leaflet resize/invalidate after switching back.
 - **Request throttling** reduces repeated SGU queries while panning to at most one after 800 ms of idle map movement; canceled requests do not overwrite the newest view.
 - Real-device display remains to be checked. MapLibre globe and Leaflet street map still use OpenStreetMap-derived basemaps with required attribution; switching projection does not change the map's source.
+
+
+## Phase 1.5 — Understand the ground and find local archives (November 2026)
+The colour overlays in MapLibre Globe and Leaflet 2D now show **English SGU soil stories** when tapped. Each popup includes the English geological term, the original SGU Swedish category, the material composition, how it formed, why it matters, expandable questions and a link to SGU's source legend. For example, `Fyllning` is artificial fill placed by people; `Moränfinlera` is glacial till with more than 25% clay. These explanations describe classifications rather than asserting actual borehole material.
+
+**Geology** under Discover now calls SGU's OGC API – Features for the map point and looks for a polygon that **contains** the selected GPS or map-center coordinate. It will not use a merely nearby polygon to label the point. A source gap is reported clearly.
+
+**History** and **Culture** now try the official Swedish K-samsök catalogue (Riksantikvarieämbetet), instead of treating unclassified Wikipedia articles up to 10 km away as local history. The search uses a WGS84 bounding box and a strict **75 m** post-filter on source coordinates. Archival photos may be offered by their source thumbnail, with source attribution and a link to the original object. A historical image's mapped coordinate may describe the subject, not the actual photographer location. When nothing is catalogued within 75 m, the app does not invent a story; users can explicitly widen to **250 m**. **Surprise me** starts with such an archive record and falls back to a verified local SGU ground story when none is available.
+
+Archive records and image rights remain the responsibility of the contributing institution. Descriptions may still be in the source's original Swedish: the app does not invent English translations of historical documents. The K-samsök browser API/CORS and thumbnail delivery **have not been verified on a Samsung**; on-site errors are logged in Diagnostics. No API key or GPT model is used. K-samsök documentation: https://www.raa.se/hitta-information/k-samsok/att-anvanda-k-samsok/kom-igang-med-k-samsoks-api/

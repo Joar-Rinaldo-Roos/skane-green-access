@@ -21,5 +21,7 @@ jobs:
           node --check globe.js
           node --check globe-loader.mjs
           node --check diagnostics.js
+          node --check soil-info.js
+          node --check archive.js
       - name: Run browser-independent map tests
         run: node --test tests/*.test.cjs
