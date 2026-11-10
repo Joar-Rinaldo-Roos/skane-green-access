@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173c35">
-  <meta name="description" content="Discover the history, nature and geology around you on an interactive map.">
+  <meta name="description" content="Discover local history, animals and the sky above you on a location-aware globe.">
   <title>Here &amp; Now — Discover your surroundings</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="./style.css">
@@ -15,9 +15,13 @@
   <script type="module" src="./globe-loader.mjs?v=8"></script>
   <script src="./soil-info.js?v=9" defer></script>
   <script src="./archive.js?v=9" defer></script>
+  <script src="./nature-detail.js?v=10" defer></script>
+  <script src="./local-history.js?v=10" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js" defer></script>
+  <script src="./sky.js?v=10" defer></script>
   <script src="./map.js?v=9" defer></script>
   <script src="./globe.js?v=9" defer></script>
-  <script src="./app.js?v=9" defer></script>
+  <script src="./app.js?v=10" defer></script>
 </head>
 <body>
   <div class="shell">
@@ -75,9 +79,8 @@
         <div class="topics" id="topics">
           <button class="topic selected" data-topic="surprise" aria-pressed="true" type="button"><span>🎲</span><strong>Surprise me</strong><small>Ground or archives here</small></button>
           <button class="topic" data-topic="history" aria-pressed="false" type="button"><span>🏛️</span><strong>History</strong><small>Swedish archives within 75 m</small></button>
-          <button class="topic" data-topic="culture" aria-pressed="false" type="button"><span>🎭</span><strong>Culture</strong><small>Museum and photo collections</small></button>
-          <button class="topic" data-topic="nature" aria-pressed="false" type="button"><span>🌿</span><strong>Nature</strong><small>Species recorded nearby</small></button>
-          <button class="topic" data-topic="astronomy" aria-pressed="false" type="button"><span>🌙</span><strong>Astronomy</strong><small>Sunrise and sunset</small></button>
+          <button class="topic" data-topic="nature" aria-pressed="false" type="button"><span>🌿</span><strong>Nature</strong><small>Wildlife, photos and food</small></button>
+          <button class="topic" data-topic="astronomy" aria-pressed="false" type="button"><span>🌙</span><strong>Astronomy</strong><small>Moon and planets tonight</small></button>
           <button class="topic" data-topic="geology" aria-pressed="false" type="button"><span>🪨</span><strong>Geology</strong><small>What is beneath me?</small></button>
         </div>
         <button id="discover" class="primary" type="button">Discover something →</button>
@@ -94,6 +97,7 @@
           <figcaption id="discovery-photo-caption"></figcaption>
         </figure>
         <div id="discovery-deep-dive" class="discovery-deep-dive" hidden></div>
+        <div id="discovery-extras" class="discovery-extras" hidden></div>
         <p id="fact-meta" class="hint"></p>
         <div class="actions">
           <a id="source" href="#" target="_blank" rel="noopener noreferrer">Read original source ↗</a>

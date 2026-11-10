@@ -87,3 +87,17 @@
 .discovery-photo-wrap{margin:15px 0;padding:0}
 .discovery-photo-wrap img{display:block;width:100%;max-height:400px;object-fit:contain;background:#f2f3f2;border-radius:13px}
 .discovery-photo-wrap figcaption{margin:8px 1px;font-size:.75rem;color:#5d7063}
+
+/* Topic-specific discovery panels: wildlife, sky and linked heritage photos. */
+.discovery-extras{margin:14px 0 2px}
+.discovery-extras h3{font-size:.94rem;color:#275f46;margin:16px 0 5px}
+.discovery-extras p{line-height:1.65;font-size:.91rem;margin:0 0 13px}
+.discovery-extras .nature-fact,.discovery-extras .extra-links{background:#f6faf6;border:1px solid #e0ebe3;padding:13px;border-radius:12px;margin:12px 0}
+.discovery-extras .nature-fact h3{margin:0 0 6px}
+.discovery-extras .extra-links a{display:block;color:#246b4e;font-size:.85rem;margin:7px 0}
+.sky-table{width:100%;border-collapse:collapse;font-size:.86rem;margin:14px 0}
+.sky-table th,.sky-table td{border-bottom:1px solid #dde8e0;padding:9px 5px;text-align:left}
+.sky-table th{color:#2e654f;font-size:.78rem}
+.sky-table .sky-muted{color:#88988f}
+.sky-time-note{font-size:.8rem;color:#627569;line-height:1.5}
+.discovery-photo-wrap img{border:1px solid #e3eae4}
