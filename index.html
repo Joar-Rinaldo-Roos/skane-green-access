@@ -13,9 +13,11 @@
   <script src="./diagnostics.js?v=5" defer></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script type="module" src="./globe-loader.mjs?v=8"></script>
-  <script src="./map.js?v=8" defer></script>
-  <script src="./globe.js?v=8" defer></script>
-  <script src="./app.js?v=7" defer></script>
+  <script src="./soil-info.js?v=9" defer></script>
+  <script src="./archive.js?v=9" defer></script>
+  <script src="./map.js?v=9" defer></script>
+  <script src="./globe.js?v=9" defer></script>
+  <script src="./app.js?v=9" defer></script>
 </head>
 <body>
   <div class="shell">
@@ -45,12 +47,12 @@
           <p id="map-status" role="status" aria-live="polite">Map starts in Lund. Use Find me or search for a place below.</p>
           <a href="https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html" target="_blank" rel="noopener noreferrer">Open SGU’s original map ↗</a>
         </div>
-        <p class="map-note">Soil geology now uses real SGU OGC API Features polygons instead of the failing WMS image service. Tap a coloured area for its mapped soil classification. Colours are illustrative, not SGU’s official palette. Available in both Globe and 2D views. The soil polygons are broad mapped units, not a site-specific ground investigation.</p>
+        <p class="map-note">Soil geology now uses real SGU OGC API Features polygons instead of the failing WMS image service. Tap a coloured area for its mapped soil classification. Colours are illustrative, not SGU’s official palette. Available in both Globe and 2D views. Tap them for English explanations, formation stories and follow-up questions.</p>
       </section>
 
       <section id="setup" class="panel" aria-labelledby="setup-title">
         <h2 id="setup-title" class="panel-title">What are you curious about?</h2>
-        <p class="sub">Pick a topic and a place. We'll find something interesting around you.</p>
+        <p class="sub">Discover stories about the ground beneath you and historical records tied to your immediate surroundings.</p>
         <h3>1. Where are you?</h3>
         <div class="toggle">
           <button id="gps-mode" class="selected" aria-pressed="true" type="button">◎ My location</button>
@@ -67,12 +69,12 @@
         <p id="location-label" class="hint">Tap Find me to request location permission. No GPS? Choose Map center instead.</p>
         <h3>2. Choose a topic</h3>
         <div class="topics" id="topics">
-          <button class="topic selected" data-topic="surprise" aria-pressed="true" type="button"><span>🎲</span><strong>Surprise me</strong><small>A little of everything</small></button>
-          <button class="topic" data-topic="history" aria-pressed="false" type="button"><span>🏛️</span><strong>History</strong><small>Stories of the past</small></button>
-          <button class="topic" data-topic="culture" aria-pressed="false" type="button"><span>🎭</span><strong>Culture</strong><small>People and places</small></button>
+          <button class="topic selected" data-topic="surprise" aria-pressed="true" type="button"><span>🎲</span><strong>Surprise me</strong><small>Ground or archives here</small></button>
+          <button class="topic" data-topic="history" aria-pressed="false" type="button"><span>🏛️</span><strong>History</strong><small>Swedish archives within 75 m</small></button>
+          <button class="topic" data-topic="culture" aria-pressed="false" type="button"><span>🎭</span><strong>Culture</strong><small>Museum and photo collections</small></button>
           <button class="topic" data-topic="nature" aria-pressed="false" type="button"><span>🌿</span><strong>Nature</strong><small>Species recorded nearby</small></button>
           <button class="topic" data-topic="astronomy" aria-pressed="false" type="button"><span>🌙</span><strong>Astronomy</strong><small>Sunrise and sunset</small></button>
-          <button class="topic" data-topic="geology" aria-pressed="false" type="button"><span>🪨</span><strong>Geology</strong><small>Map layer available</small></button>
+          <button class="topic" data-topic="geology" aria-pressed="false" type="button"><span>🪨</span><strong>Geology</strong><small>What is beneath me?</small></button>
         </div>
         <button id="discover" class="primary" type="button">Discover something →</button>
         <p id="status" role="status" aria-live="polite"></p>
@@ -83,12 +85,18 @@
         <div class="eyebrow" id="category"></div>
         <h2 id="fact-title" class="result-title"></h2>
         <p id="fact-text"></p>
+        <figure id="discovery-photo-wrap" class="discovery-photo-wrap" hidden>
+          <img id="discovery-photo" alt="" loading="lazy">
+          <figcaption id="discovery-photo-caption"></figcaption>
+        </figure>
+        <div id="discovery-deep-dive" class="discovery-deep-dive" hidden></div>
         <p id="fact-meta" class="hint"></p>
         <div class="actions">
           <a id="source" href="#" target="_blank" rel="noopener noreferrer">Read original source ↗</a>
           <button id="another" type="button">Another discovery ↻</button>
         </div>
         <p id="result-status" role="status" aria-live="polite"></p>
+        <button id="expand-archive" class="quiet" type="button" hidden>Explore records within 250 m instead</button>
       </section>
       <details id="diagnostics" class="panel diagnostics">
         <summary><strong>🛠 Diagnostics &amp; error logs</strong><span>Open when something fails</span></summary>
@@ -102,7 +110,7 @@
         <p class="hint">For full HTTP request details use desktop Chrome DevTools or remote Android debugging.</p>
       </details>
     </main>
-    <footer>Facts come from linked public sources. Nearby does not mean visible or accessible. GPS coordinates stay in your browser and are sent only to selected data providers for queries. Map data © OpenStreetMap contributors; soil geology © SGU.</footer>
+    <footer>Discoveries are linked to sources. Archive coordinates may represent pictured subjects, not exact camera positions. GPS coordinates stay in your browser except for queries to selected public providers. Basemap © OpenStreetMap; soil geology © SGU; archive records from K-samsök contributors.</footer>
   </div>
 </body>
 </html>

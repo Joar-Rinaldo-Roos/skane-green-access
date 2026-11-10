@@ -46,13 +46,9 @@
     globeMap.on('click','sgu-soil-fill',event=>{
       const feature=event.features?.[0];
       if (!feature) return;
-      const card=document.createElement('div');
-      const label=document.createElement('strong');
-      label.textContent=feature.properties?.jg2_tx || 'Unclassified mapped soil';
-      const note=document.createElement('p');
-      note.textContent='SGU mapped soil; not a ground investigation at this precise point.';
-      card.appendChild(label);card.appendChild(note);
-      new maplibregl.Popup().setLngLat(event.lngLat).setDOMContent(card).addTo(globeMap);
+      const soilLabel=feature.properties?.jg2_tx || feature.properties?.jg2 || 'Unclassified';
+      const card=window.HereNowSoil?.createCard(soilLabel) || document.createTextNode(String(soilLabel));
+      new maplibregl.Popup({maxWidth:'320px'}).setLngLat(event.lngLat).setDOMContent(card).addTo(globeMap);
     });
   }
   function paintSoil() {

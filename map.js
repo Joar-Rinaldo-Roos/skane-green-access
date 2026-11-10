@@ -53,14 +53,58 @@
   }
 
   function popup(feature, layer) {
-    const content = document.createElement('div');
-    const heading = document.createElement('strong');
-    heading.textContent = feature.properties?.jg2_tx || 'Unclassified soil unit';
-    const desc = document.createElement('p');
-    desc.textContent = 'SGU mapped soil unit, generally near the surface. This is not a point-specific ground investigation.';
-    content.appendChild(heading);
-    content.appendChild(desc);
-    layer.bindPopup(content);
+    const raw = feature.properties?.jg2_tx || feature.properties?.jg2 || 'Unclassified';
+    const content = window.HereNowSoil?.createCard(raw) || document.createTextNode(String(raw));
+    layer.bindPopup(content,{maxWidth:310,minWidth:245});
+  }
+
+  // Point-in-polygon is used only for a feature that actually covers the selected point.
+  // An archive or geology record elsewhere in the search bbox is not treated as underfoot.
+  function insideRing(point, ring) {
+    let inside=false;
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const a=ring[i],b=ring[j];
+      if(((a[1]>point[1])!==(b[1]>point[1])) &&
+         (point[0]<(b[0]-a[0])*(point[1]-a[1])/(b[1]-a[1])+a[0]))inside=!inside;
+    }
+    return inside;
+  }
+  function insidePolygon(point, rings) {
+    return Array.isArray(rings)&&rings.length>0 && insideRing(point,rings[0]) &&
+      !rings.slice(1).some(ring=>insideRing(point,ring));
+  }
+  function containsPoint(feature, point) {
+    const geom=feature?.geometry;
+    if(geom?.type==='Polygon')return insidePolygon(point,geom.coordinates);
+    if(geom?.type==='MultiPolygon')return geom.coordinates.some(rings=>insidePolygon(point,rings));
+    return false;
+  }
+  function getSoilAt(place) {
+    if(!Number.isFinite(place?.lat)||!Number.isFinite(place?.lon))return null;
+    return lastCollection.features.find(f=>containsPoint(f,[place.lon,place.lat]))||null;
+  }
+  async function lookupSoilAt(place) {
+    const cached=getSoilAt(place);
+    if(cached)return cached;
+    if(!Number.isFinite(place?.lat)||!Number.isFinite(place?.lon))return null;
+    const r=0.00015;
+    const bbox=[place.lon-r,place.lat-r,place.lon+r,place.lat+r].map(n=>n.toFixed(6)).join(',');
+    const params=new URLSearchParams({bbox,limit:'100',f:'application/geo+json'});
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),13000);
+    try{
+      log('Checking mapped soil at selected point (coordinates omitted)');
+      const response=await fetch(API+'?'+params,{headers:{Accept:'application/geo+json, application/json'},signal:controller.signal});
+      if(!response.ok)throw Error('SGU HTTP '+response.status);
+      const data=await response.json();
+      if(!Array.isArray(data.features))throw Error('SGU returned invalid feature data');
+      const covering=data.features.find(f=>containsPoint(f,[place.lon,place.lat]))||null;
+      log(covering?'SGU polygon contains selected point':'No SGU polygon contains selected point');
+      return covering;
+    }catch(error){
+      log('Point geology lookup failed: '+error.message);
+      throw error;
+    }finally{clearTimeout(timer);}
   }
 
   function cancelQuery() {
@@ -232,7 +276,7 @@
       if (geologyVisible) scheduleRefresh();
     },110);
   }
-  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize,setViewProvider,subscribeGeology,isGeologyEnabled,scheduleGeologyRefresh:scheduleRefresh};
+  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize,setViewProvider,subscribeGeology,isGeologyEnabled,scheduleGeologyRefresh:scheduleRefresh,getSoilAt,lookupSoilAt};
 
   if (!window.L) {
     geologyButton.disabled=true;
