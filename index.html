@@ -13,9 +13,9 @@
   <script src="./diagnostics.js?v=5" defer></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script type="module" src="./globe-loader.mjs?v=6"></script>
-  <script src="./map.js?v=5" defer></script>
+  <script src="./map.js?v=7" defer></script>
   <script src="./globe.js?v=6" defer></script>
-  <script src="./app.js?v=6" defer></script>
+  <script src="./app.js?v=7" defer></script>
 </head>
 <body>
   <div class="shell">
@@ -37,7 +37,7 @@
           <div id="globe-map" role="region" aria-label="Rotatable 3D globe showing Earth with OpenStreetMap data." hidden></div>
           <div class="map-toolbar" role="group" aria-label="Map controls">
             <button id="locate" type="button" aria-label="Find my current location">◎ Find me</button>
-            <button id="toggle-geology" type="button" aria-pressed="false" aria-label="Show SGU soil geology map layer">🪨 Soil geology</button>
+            <button id="toggle-geology" type="button" aria-pressed="false" aria-label="Show SGU soil geology features">🪨 Soil geology</button>
             <button id="toggle-globe" type="button" aria-pressed="false" aria-label="Switch to a rotatable globe">🌐 Globe</button>
           </div>
         </div>
@@ -45,7 +45,7 @@
           <p id="map-status" role="status" aria-live="polite">Map starts in Lund. Use Find me or search for a place below.</p>
           <a href="https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html" target="_blank" rel="noopener noreferrer">Open SGU’s original map ↗</a>
         </div>
-        <p class="map-note">The Soil geology button displays SGU’s OGC WMS map images over streets. Globe mode is a separate world-scale view; the geology overlay is available on the street map only. SGU mapping is not a site investigation.</p>
+        <p class="map-note">Soil geology now uses real SGU OGC API Features polygons instead of the failing WMS image service. Tap a coloured area for its mapped soil classification. Colours are illustrative, not SGU’s official palette. Available on the flat street map only. The maps are not ground investigations.</p>
       </section>
 
       <section id="setup" class="panel" aria-labelledby="setup-title">

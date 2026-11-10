@@ -1,158 +1,192 @@
-/* Phase 1: Leaflet street map + SGU OGC WMS imagery. No geological claims are inferred from pixels. */
+/* Here & Now: mobile Leaflet map + real SGU OGC API Features polygons.
+ * SGU's legacy WMS image requests failed on-device; this uses queryable GeoJSON instead.
+ * A working API response is required. No local geology is fabricated. */
 (function () {
   'use strict';
   const statusEl = document.getElementById('map-status');
   const geologyButton = document.getElementById('toggle-geology');
-  const findButton = document.getElementById('locate');
-  let map = null;
-  let marker = null;
-  let accuracyCircle = null;
-  let geologyLayer = null;
-  let geologyHasError = false;
-  let geologyTimer = null;
-  let geologyTilesReceived = 0;
+  const locateButton = document.getElementById('locate');
+  const API = 'https://api.sgu.se/oppnadata/jordarter25k-100k/ogc/features/v1/collections/grundlager/items';
+  const MAX_FEATURES = 180;
+  const COLORS = ['#c28b5f','#71976d','#bfa64d','#9a8aaa','#d28c84','#78a9b5','#bb855e','#8eae78','#b6a5cf'];
+  let map, marker = null, accuracyCircle = null, geologyLayer = null;
+  let geologyVisible = false, geologyRequest = 0, abortRequest = null;
+  let refreshTimer = null;
 
-  function clearGeologyTimer() {
-    if (geologyTimer !== null) clearTimeout(geologyTimer);
-    geologyTimer = null;
+  function log(message) { window.HereNowDiagnostics?.log('SGU OGC Features',message); }
+  function setStatus(message) { statusEl.textContent = message; }
+
+  function colorFor(value) {
+    let hash = 0;
+    const str = String(value || 'Other');
+    for (let i=0;i<str.length;i++) hash = ((hash * 31) + str.charCodeAt(i)) | 0;
+    return COLORS[(hash >>> 0) % COLORS.length];
   }
-  function watchGeologyLoading() {
-    clearGeologyTimer();
-    geologyTimer = setTimeout(function () {
-      if (map && geologyLayer && map.hasLayer(geologyLayer) && geologyTilesReceived === 0 && !geologyHasError) {
-        setStatus('SGU has not returned map images. Try toggling Soil geology off/on, or open SGU’s original map below.');
-        window.HereNowDiagnostics?.log('SGU WMS','No tile images after 12 seconds');
+
+  function popup(feature, layer) {
+    const content = document.createElement('div');
+    const heading = document.createElement('strong');
+    heading.textContent = feature.properties?.jg2_tx || 'Unclassified soil unit';
+    const desc = document.createElement('p');
+    desc.textContent = 'SGU mapped soil unit, generally near the surface. This is not a point-specific ground investigation.';
+    content.appendChild(heading);
+    content.appendChild(desc);
+    layer.bindPopup(content);
+  }
+
+  function cancelQuery() {
+    if (refreshTimer !== null) clearTimeout(refreshTimer);
+    refreshTimer = null;
+    if (abortRequest) abortRequest.abort();
+    abortRequest = null;
+  }
+
+  function hideLayer() {
+    geologyVisible = false;
+    geologyRequest++;
+    cancelQuery();
+    if (geologyLayer && map && map.hasLayer(geologyLayer)) map.removeLayer(geologyLayer);
+    geologyButton.classList.remove('layer-active');
+    geologyButton.setAttribute('aria-pressed','false');
+    geologyButton.setAttribute('aria-label','Show SGU soil geology features');
+    setStatus('Street map showing. SGU soil geology hidden.');
+  }
+
+  async function fetchSoilFeatures() {
+    if (!map || !geologyVisible) return;
+    const id = ++geologyRequest;
+    cancelQuery();
+    const z = map.getZoom();
+    if (z < 11) {
+      if (geologyLayer && map.hasLayer(geologyLayer)) map.removeLayer(geologyLayer);
+      setStatus('Zoom closer (zoom level 11+) to load detailed SGU geological features.');
+      return;
+    }
+    const b = map.getBounds();
+    const coords = [b.getWest(),b.getSouth(),b.getEast(),b.getNorth()];
+    if (!coords.every(Number.isFinite)) return;
+    // SGU OGC API Features uses CRS84 bbox longitude/latitude; does not use Leaflet's EPSG:3857.
+    const bbox = coords.map(x=>x.toFixed(5)).join(',');
+    const params = new URLSearchParams({ bbox, limit: String(MAX_FEATURES), f:'application/geo+json' });
+    const url = API + '?' + params.toString();
+    abortRequest = new AbortController();
+    const signal = abortRequest.signal;
+    const timeout = setTimeout(()=>abortRequest?.abort(), 20000);
+    setStatus('Loading mapped soil polygons from SGU’s OGC Features API…');
+    log('Request started (bbox hidden for location privacy)');
+    try {
+      const response = await fetch(url, { headers: { 'Accept': 'application/geo+json, application/json' }, signal });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      if (id !== geologyRequest || !geologyVisible) return;
+      if (data.type !== 'FeatureCollection' || !Array.isArray(data.features)) throw new Error('Invalid GeoJSON response');
+      const features = data.features.filter(f=>f?.geometry && f.geometry.type);
+      if (!geologyLayer) {
+        geologyLayer = L.geoJSON(null, {
+          style: f=>({
+            color:'#5b5747', weight:0.65,
+            fillColor:colorFor(f.properties?.jg2_tx || f.properties?.jg2),
+            fillOpacity:0.55
+          }),
+          onEachFeature: popup
+        });
       }
-    }, 12000);
+      geologyLayer.clearLayers();
+      if (features.length) geologyLayer.addData({type:'FeatureCollection',features});
+      if (!map.hasLayer(geologyLayer)) geologyLayer.addTo(map);
+      log('Received ' + features.length + ' mapped soil features (HTTP ' + response.status + ')');
+      if (!features.length) {
+        setStatus('SGU returned no mapped soil polygons for this view. Pan or zoom, or check the official SGU map.');
+      } else if (features.length >= MAX_FEATURES || data.links?.some(link=>link.rel==='next')) {
+        setStatus('Showing ' + features.length + ' SGU soil polygons (partial result). Zoom closer for more detail. Tap a coloured area for its name.');
+      } else {
+        setStatus('Showing ' + features.length + ' SGU soil polygons. Tap a coloured area to see the recorded soil type.');
+      }
+    } catch (error) {
+      if (id !== geologyRequest || !geologyVisible) return;
+      const message = error.name === 'AbortError' ? 'Request timed out' : error.message;
+      log('Geology request failed: ' + message);
+      setStatus('SGU geological features unavailable (' + message + '). Try again or open SGU’s original map below.');
+      if (geologyLayer && map.hasLayer(geologyLayer)) map.removeLayer(geologyLayer);
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
-  function setStatus(message) {
-    statusEl.textContent = message;
+  function scheduleRefresh() {
+    if (!geologyVisible) return;
+    if (refreshTimer !== null) clearTimeout(refreshTimer);
+    refreshTimer=setTimeout(fetchSoilFeatures, 220);
   }
 
-  function setLocation(place, options = {}) {
+  function showGeology(enabled) {
+    if (!map) {
+      setStatus('The map is not ready. Reload the page to try again.');
+      return;
+    }
+    if (!enabled) { hideLayer(); return; }
+    if (geologyVisible) { scheduleRefresh(); return; }
+    geologyVisible=true;
+    geologyButton.classList.add('layer-active');
+    geologyButton.setAttribute('aria-pressed','true');
+    geologyButton.setAttribute('aria-label','Hide SGU soil geology features');
+    fetchSoilFeatures();
+  }
+
+  function setLocation(place, options={}) {
     if (!map || !Number.isFinite(place?.lat) || !Number.isFinite(place?.lon)) return;
-    const point = [place.lat, place.lon];
+    const point=[place.lat,place.lon];
     if (marker) map.removeLayer(marker);
     if (accuracyCircle) map.removeLayer(accuracyCircle);
-    marker = L.circleMarker(point, {
-      radius: 9, weight: 3, color: '#fff', fillColor: '#176b50', fillOpacity: 1
-    }).addTo(map);
-    const popupText = document.createElement('span');
-    popupText.textContent = place.name || 'Selected location';
+    marker=L.circleMarker(point, {radius:9,weight:3,color:'#fff',fillColor:'#176b50',fillOpacity:1}).addTo(map);
+    const popupText=document.createElement('span');
+    popupText.textContent=place.name||'Selected location';
     marker.bindPopup(popupText);
-    if (Number.isFinite(place.accuracy) && place.accuracy > 0 && place.accuracy < 10000) {
-      accuracyCircle = L.circle(point, {
-        radius: place.accuracy, color: '#176b50', fillColor: '#176b50',
-        fillOpacity: 0.08, weight: 1
-      }).addTo(map);
-    } else {
-      accuracyCircle = null;
+    accuracyCircle=null;
+    if (Number.isFinite(place.accuracy) && place.accuracy>0 && place.accuracy<10000) {
+      accuracyCircle=L.circle(point,{radius:place.accuracy,color:'#176b50',fillColor:'#176b50',fillOpacity:0.08,weight:1}).addTo(map);
     }
-    map.setView(point, options.zoom || 14, { animate: false });
-    const precision = Number.isFinite(place.accuracy) ? ' (GPS accuracy ≈' + Math.round(place.accuracy) + ' m)' : '';
-    setStatus('Showing ' + (place.name || 'selected location') + precision + '. Pan or zoom to explore.');
+    map.setView(point,options.zoom||14,{animate:false});
+    setStatus('Showing '+(place.name||'selected location')+'. Pan and zoom to explore.');
+    if (geologyVisible) scheduleRefresh();
   }
 
   function clearLocation() {
     if (!map) return;
     if (marker) map.removeLayer(marker);
     if (accuracyCircle) map.removeLayer(accuracyCircle);
-    marker = null;
-    accuracyCircle = null;
+    marker=null;accuracyCircle=null;
     setStatus('Choose a place or tap Find me to mark a location.');
   }
 
-  function showGeology(enabled) {
-    if (!map || !geologyLayer) {
-      setStatus('Map service unavailable. Check your connection and reload.');
-      return;
-    }
-    geologyHasError = false;
-    geologyTilesReceived = 0;
-    clearGeologyTimer();
-    if (enabled) {
-      if (!map.hasLayer(geologyLayer)) geologyLayer.addTo(map);
-      geologyButton.classList.add('layer-active');
-      geologyButton.setAttribute('aria-pressed', 'true');
-      geologyButton.setAttribute('aria-label', 'Hide SGU soil geology map layer');
-      setStatus('Loading SGU soil geology map…');
-      watchGeologyLoading();
-    } else {
-      if (map.hasLayer(geologyLayer)) map.removeLayer(geologyLayer);
-      geologyButton.classList.remove('layer-active');
-      geologyButton.setAttribute('aria-pressed', 'false');
-      geologyButton.setAttribute('aria-label', 'Show SGU soil geology map layer');
-      setStatus('Street map showing. Soil geology overlay hidden.');
-    }
-  }
-
-  function resize() { if (map) map.invalidateSize(); }
   function getView() {
     if (!map) return null;
-    const center = map.getCenter();
-    return { lat: center.lat, lon: center.lng, zoom: map.getZoom() };
+    const p=map.getCenter();
+    return {lat:p.lat,lon:p.lng,zoom:map.getZoom()};
   }
-  window.HereNowMap = { setLocation, clearLocation, showGeology, setStatus, resize, getView };
+  function resize() { if (map) map.invalidateSize(); }
+  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize};
 
   if (!window.L) {
-    geologyButton.disabled = true;
-    setStatus('The map library could not load. Check your connection and reload; discovery still works.');
+    geologyButton.disabled=true;
+    setStatus('Leaflet could not load. Other discovery features can still work.');
     return;
   }
 
   try {
-    // Lund is a neutral starting view. This is NOT the user's GPS location.
-    map = L.map('map', { zoomControl: false, scrollWheelZoom: false }).setView([55.7047, 13.1910], 13);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    map=L.map('map',{zoomControl:false,scrollWheelZoom:false}).setView([55.7047,13.1910],13);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      maxZoom:19,
+      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-    L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
-
-    // Source: SGU Jordarter 1:25 000–1:100 000 WMS 1.3.0;
-    // named layer and EPSG:3857 support documented by SGU.
-    geologyLayer = L.tileLayer.wms('https://resource.sgu.se/service/wms/130/jordarter-25-100-tusen', {
-      layers: 'jord:SE.GOV.SGU.JORD.GRUNDLAGER.25K',
-      version: '1.3.0',
-      format: 'image/png',
-      transparent: true,
-      opacity: 0.85,
-      tileSize: 512,
-      attribution: '&copy; <a href="https://www.sgu.se/">SGU</a>'
-    });
-    geologyLayer.on('tileload', function () {
-      geologyTilesReceived++;
-      if(geologyTilesReceived===1)window.HereNowDiagnostics?.log('SGU WMS','First tile image received');
-      if (map.hasLayer(geologyLayer) && !geologyHasError) {
-        clearGeologyTimer();
-        if (geologyTilesReceived === 1) {
-          setStatus('SGU map images received. If no colours appear, zoom closer to a covered area; map scale and coverage vary.');
-        }
-      }
-    });
-    geologyLayer.on('tileerror', function () {
-      geologyHasError = true;
-      window.HereNowDiagnostics?.log('SGU WMS','Image tile failed to load');
-      clearGeologyTimer();
-      if (map.hasLayer(geologyLayer)) {
-        setStatus('SGU map images failed to load. Try toggling the overlay, or open SGU’s original map below.');
-      }
-    });
-    geologyLayer.on('load', function () {
-      if (!map.hasLayer(geologyLayer)) return;
-      clearGeologyTimer();
-      if (!geologyHasError) {
-        setStatus('SGU map image requests completed. If nothing is coloured, SGU may not show data at this scale or place.');
-      }
-    });
-    geologyButton.addEventListener('click', function () {
-      showGeology(!map.hasLayer(geologyLayer));
-    });
+    L.control.zoom({position:'bottomright'}).addTo(map);
+    L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
+    map.on('moveend',scheduleRefresh);
+    geologyButton.addEventListener('click',()=>showGeology(!geologyVisible));
   } catch (error) {
-    geologyButton.disabled = true;
-    findButton.disabled = false;
+    geologyButton.disabled=true;
+    locateButton.disabled=false;
     setStatus('Unable to initialize the map. Discovery can still be used.');
+    log('Map setup failed: '+error.message);
   }
 })();
