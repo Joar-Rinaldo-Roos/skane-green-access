@@ -23,5 +23,9 @@ jobs:
           node --check diagnostics.js
           node --check soil-info.js
           node --check archive.js
+          node --check nature-detail.js
+          node --check local-history.js
+          node --check sky.js
+          node --check discovery-ui.js
       - name: Run browser-independent map tests
         run: node --test tests/*.test.cjs

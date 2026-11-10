@@ -57,8 +57,26 @@ function gps(){return new Promise((resolve,reject)=>{
   },{enableHighAccuracy:false,timeout:15000,maximumAge:120000});
 })}
 async function wikipedia(){const params=new URLSearchParams({action:'query',generator:'geosearch',ggscoord:selectedLocation.lat+'|'+selectedLocation.lon,ggsradius:'10000',ggslimit:'40',prop:'extracts|info|coordinates',inprop:'url',exintro:'1',explaintext:'1',exchars:'650',format:'json',origin:'*'});const url='https://en.wikipedia.org/w/api.php?'+params;const res=await apiFetch(url,'Wikipedia');const json=await res.json();const pages=Object.values(json.query?.pages||{});return pages.filter(p=>p.extract&&p.fullurl).map(p=>({title:p.title,text:p.extract,url:p.fullurl,category:'Wikipedia · nearby article',distance:p.coordinates?.[0]?km(selectedLocation,{lat:p.coordinates[0].lat,lon:p.coordinates[0].lon}):null})).sort((a,b)=>(a.distance??999)-(b.distance??999))}
-async function nature(){const params=new URLSearchParams({lat:selectedLocation.lat,lon:selectedLocation.lon,radius:'10',per_page:'30',order_by:'observed_on',quality_grade:'research'});const res=await apiFetch('https://api.inaturalist.org/v1/observations/species_counts?'+params,'iNaturalist');const data=await res.json();return (data.results||[]).filter(r=>r.taxon?.name).map(r=>({title:r.taxon.preferred_common_name||r.taxon.name,text:'Scientific name: '+r.taxon.name+'. This species has been observed in the surrounding 10 km area on iNaturalist. This is not evidence it is present at your exact location or today.',url:'https://www.inaturalist.org/taxa/'+r.taxon.id,category:'Nature · recorded nearby',distance:null}))}
-async function astronomy(){const params=new URLSearchParams({lat:selectedLocation.lat,lng:selectedLocation.lon,formatted:'0'});const res=await apiFetch('https://api.sunrise-sunset.org/json?'+params,'Sunrise-sunset');const d=await res.json();if(d.status!=='OK')throw Error('No astronomy data available.');const time=s=>new Date(s).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});return [{title:'The Sun above '+selectedLocation.name,text:'Today’s calculated sunrise is '+time(d.results.sunrise)+' and sunset is '+time(d.results.sunset)+'. Solar noon is around '+time(d.results.solar_noon)+'. These are astronomical calculations for your coordinates, not a forecast of clear skies.',url:'https://sunrise-sunset.org/api',category:'Astronomy · today',distance:null}]}
+async function nature(){
+  const radius=5;
+  const params=new URLSearchParams({lat:selectedLocation.lat,lon:selectedLocation.lon,
+    radius:String(radius),per_page:'80',quality_grade:'research'});
+  const res=await apiFetch('https://api.inaturalist.org/v1/observations/species_counts?'+params,'iNaturalist');
+  const data=await res.json();
+  const species=window.HereNowNature?.buildItems(data.results||[],radius)||[];
+  if(!species.length)throw Error('No wildlife records were returned within '+radius+' km. Try another place.');
+  return species;
+}
+async function astronomy(){
+  if(window.HereNowSky)return window.HereNowSky.discovery(selectedLocation);
+  const params=new URLSearchParams({lat:selectedLocation.lat,lng:selectedLocation.lon,formatted:'0'});
+  const res=await apiFetch('https://api.sunrise-sunset.org/json?'+params,'Sunrise-sunset');
+  const data=await res.json();
+  const tm=s=>new Date(s).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+  return [{title:'Your sky today',category:'Astronomy · solar times',
+    text:'Sunrise '+tm(data.results.sunrise)+' · Sunset '+tm(data.results.sunset),
+    url:'https://sunrise-sunset.org/api',meta:'For your selected location'}];
+}
 async function geologyStory(){
   const where=selectedLocation;
   window.HereNowMap?.showGeology(true);
@@ -102,6 +120,9 @@ function asArchiveItems(records){
   });
 }
 async function archiveStory(radius=75) {
+  const districtStories=window.HereNowLocalHistory?.discover(selectedLocation)||[];
+  // Verified area stories should never disappear because some old catalogues lack geotags.
+  if(districtStories.length)return districtStories;
   const service=window.HereNowArchives;
   if(!service)throw Error('The Swedish archive connection could not load');
   const records=await service.search(selectedLocation,radius);
@@ -129,7 +150,7 @@ function show(){
   figure.hidden=!p.image;
   if(p.image){
     photo.src=p.image;
-    photo.alt='Archive thumbnail for '+p.title;
+    photo.alt=p.imageAlt||('Historical archive thumbnail for '+p.title);
     $('discovery-photo-caption').textContent=(p.imageCredit||'Historical archive')+' · Open original record for image rights and full context.';
   }else photo.removeAttribute('src');
   const dive=$('discovery-deep-dive');
@@ -138,6 +159,7 @@ function show(){
   if(p.deepDive && window.HereNowSoil?.createCard) dive.appendChild(window.HereNowSoil.createCard(p.deepDive));
   $('expand-archive').hidden=!p.expandable;
   $('result-status').textContent=items.length>1?'Discovery '+(index+1)+' of '+items.length:'One discovery available';
+  window.HereNowDiscoveryUI?.render(p);
   window.scrollTo({top:0,behavior:'smooth'});
 }
 async function discover(){
@@ -152,10 +174,9 @@ async function discover(){
     if(topic==='geology'){
       setStatus('Checking SGU geology at this map point…');
       items=await geologyStory();
-    } else if(topic==='history'||topic==='culture'){
+    } else if(topic==='history'){
       setStatus('Searching Swedish heritage records within 75 metres…');
       items=await archiveStory(75);
-      if(topic==='culture')items.sort((a,b)=>Number(!!b.image)-Number(!!a.image));
     } else if(topic==='surprise'){
       setStatus('Looking for an archive story at this spot…');
       try{

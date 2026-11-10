@@ -54,7 +54,7 @@
 
   function popup(feature, layer) {
     const raw = feature.properties?.jg2_tx || feature.properties?.jg2 || 'Unclassified';
-    const content = window.HereNowSoil?.createCard(raw) || document.createTextNode(String(raw));
+    const content = window.HereNowSoil?.createSummary(raw) || document.createTextNode(String(raw));
     layer.bindPopup(content,{maxWidth:310,minWidth:245});
   }
 
