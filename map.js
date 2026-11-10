@@ -199,7 +199,7 @@
     lastSelectedPoint = point;
     lastSelectedZoom = options.zoom || 14;
     // Leaflet does not calculate tile dimensions correctly while hidden behind Globe.
-    if (!document.getElementById('map').hidden) {
+    if (!document.getElementById('map')?.hidden) {
       map.setView(point,lastSelectedZoom,{animate:false});
     }
     setStatus('Showing '+(place.name||'selected location')+'. Pan and zoom to explore.');
@@ -225,7 +225,7 @@
   function resize() {
     if (!map) return;
     setTimeout(()=>{
-      if (document.getElementById('map').hidden) return;
+      if (document.getElementById('map')?.hidden) return;
       map.invalidateSize({pan:false});
       if (lastSelectedPoint) map.setView(lastSelectedPoint,lastSelectedZoom,{animate:false});
       map.invalidateSize({pan:false});
@@ -248,7 +248,7 @@
     }).addTo(map);
     L.control.zoom({position:'bottomright'}).addTo(map);
     L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
-    map.on('moveend',()=>{if (!document.getElementById('map').hidden) scheduleRefresh();});
+    map.on('moveend',()=>{if (!document.getElementById('map')?.hidden) scheduleRefresh();});
     geologyButton.addEventListener('click',()=>showGeology(!geologyVisible));
   } catch (error) {
     geologyButton.disabled=true;
