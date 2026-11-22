@@ -186,8 +186,7 @@
     enabled=!enabled;
     // Temperature + Clouds deliberately coexist. Rain remains a separate palette.
     if(enabled){
-      window.HereNowRain?.hide?.();
-      selectedFrame=window.HereNowClouds?.currentFrame?.()||null;
+      selectedFrame=window.HereNowWeatherTimeline?.currentFrame?.()||window.HereNowClouds?.currentFrame?.()||null;
       forecastTime=selectedFrame?selectedFrame.time:null;
     }
     window.HereNowClouds?.syncTemperatureChoice?.(enabled);
@@ -198,6 +197,7 @@
     if(enabled){
       if(!selectedFrame)loadForecastTime();
       apply();
+      window.HereNowWeatherTimeline?.syncLayer?.('temperature');
     }else hide();
   });
   window.addEventListener('here-now-globe-map-ready',onGlobeReady);
