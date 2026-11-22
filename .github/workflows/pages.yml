@@ -25,6 +25,9 @@ jobs:
         uses: actions/checkout@v4
       - name: Validate frontend JavaScript
         run: |
+          node --check green-spaces-core.js
+          node --check green-spaces.js
+          node --test green-spaces.test.cjs
           node --check app.js
           node --check map.js
           node --check globe.js
@@ -42,7 +45,7 @@ jobs:
       - name: Stage only public website assets
         run: |
           mkdir -p _site
-          cp index.html app.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js chat.js style.css map.css _site/
+          cp index.html app.js green-spaces-core.js green-spaces.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js chat.js style.css map.css _site/
           touch _site/.nojekyll
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
