@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.8**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.9**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.9** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.10** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,16 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## ⚡ Always-on larger map cache + one upcoming weather-frame prefetch — v1.0.9 (November 2026)
+
+The globe-only release **v1.0.8 was already merged to main**; it remains the default. In v1.0.9 the larger **MapLibre `maxTileCacheSize` is always enabled**, with the former checkbox removed: 224 recent tiles per map source on desktop, 128 on normal mobile and 80 on low-memory devices. MapLibre can still evict tiles as needed; these are limits rather than an allocation or a guarantee of offline storage.
+
+A small **next-frame weather preloader** (`weather-prefetch.js`) now attaches one additional MapLibre source and nearly transparent layer for the **next real DWD ICON model time** in the existing unified 48h timeline. It automatically starts after the timeline loads and after subsequent Play/slider steps, and follows the visible globe viewport using the Open-Meteo `om://` tile protocol. For bounded bandwidth and memory, the preview source is capped at **zoom level 5**, there is **at most one** preview source for **one active layer** (priority Clouds, Rain, Temperature, then Wind), and it does not fetch all geographic tiles or all 48h forecast frames. An earlier request is superseded by a later timeline step. Turning all weather layers off hides the preloader; Save Data and 2G-class connections skip additional prefetch requests.
+
+Preloading through an extra almost-transparent layer is a **best-effort browser warm-up** of requests/worker state. It does **not** guarantee that MapLibre's decoded tile cache for the visible source will contain the future tile. In particular, high-zoom weather tiles beyond zoom 5 may still download/compute on demand, and the cache does not persist weather tiles offline. MapLibre does not currently expose a supported arbitrary-tile decoded-cache prefetch API. We use the public addSource/addLayer/setUrl APIs instead of unsupported internals.
+
+The prior v1.0.7 metadata prefetch, 5-minute session cache, and one synchronized Play button are unchanged. `node --test weather-prefetch.test.cjs globe-only.test.cjs` verifies bounded tile-zoom, correct next model times, at most one extra preview source, layer switching, final-frame cleanup, Data Saver and always-on memory limits. Real performance gains depend on Open-Meteo, MapLibre's weather worker, network and device GPU, and are **not claimed without on-device measurement**. The live Pages deploy checks for the new preloader script and absence of the former checkbox.
 
 ## 🌍 Globe-only and configurable map tile retention — v1.0.8 (November 2026)
 

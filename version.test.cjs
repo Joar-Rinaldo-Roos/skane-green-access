@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.8');
+ assert.equal(version.version,'1.0.9');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -46,7 +46,9 @@ test('release exposes both temperature and rain forecast controls and scripts',(
  assert.match(html,/weather-data-cache\.js\?v=/);
  assert.match(html,/globe-map-controller\.js\?v=/);
  assert.match(html,/tile-cache\.js\?v=/);
- assert.match(html,/id="tile-cache-extra"/);
+ assert.doesNotMatch(html,/id="tile-cache-extra"/);
+ assert.match(html,/weather-prefetch\.js\?v=/);
+ assert.match(html,/id="weather-prefetch-status"/);
  assert.doesNotMatch(html,/leaflet@/);
  assert.doesNotMatch(html,/id="toggle-globe"/);
  assert.equal((html.match(/class="legacy-weather-controls" hidden aria-hidden="true"/g)||[]).length,3);
@@ -69,6 +71,7 @@ test('Pages deploys and verifies the exact version visible on the live site',()=
  assert.match(deploy,/weather-play/);
  assert.match(deploy,/weather-data-cache\.js/);
  assert.match(deploy,/tile-cache\.js/);
+ assert.match(deploy,/weather-prefetch\.js/);
  assert.match(deploy,/globe-map-controller\.js/);
  assert.match(deploy,/curl -fsSL/);
 });

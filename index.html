@@ -28,13 +28,14 @@
   <script src="./weather-data-cache.js?v=1" defer></script>
   <script src="./next-rain-core.js?v=1" defer></script>
   <script src="./globe-map-controller.js?v=1" defer></script>
-  <script src="./tile-cache.js?v=1" defer></script>
+  <script src="./tile-cache.js?v=2" defer></script>
   <script src="./globe.js?v=12" defer></script>
   <script src="./temperature-layer.js?v=7" defer></script>
   <script src="./rain-forecast.js?v=5" defer></script>
   <script src="./cloud-cover.js?v=5" defer></script>
   <script src="./wind-layer.js?v=3" defer></script>
-  <script src="./weather-timeline.js?v=2" defer></script>
+  <script src="./weather-prefetch.js?v=1" defer></script>
+  <script src="./weather-timeline.js?v=3" defer></script>
   <script src="./next-rain.js?v=1" defer></script>
   <script src="./green-spaces.js?v=3" defer></script>
   <script src="./discovery-ui.js?v=10" defer></script>
@@ -46,7 +47,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.8" aria-label="Here and Now version 1.0.8" title="Website release v1.0.8">v1.0.8</span>
+        <span class="app-version" data-app-version="1.0.9" aria-label="Here and Now version 1.0.9" title="Website release v1.0.9">v1.0.9</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -86,12 +87,9 @@
           <div class="rain-control-ends"><span>Now</span><span id="weather-max-label">+48 h</span></div>
           <p id="weather-model-time" class="rain-model-time">DWD ICON Global · one model clock</p>
           <p id="weather-timeline-status" class="rain-note" role="status">Choose any weather layer to load its shared timeline.</p>
-          <p class="rain-note">One Play button controls Rain, Clouds, Temperature and Wind. Every enabled layer uses the same forecast timestamp. Toggle layers independently.</p>
+          <p id="weather-prefetch-status" class="rain-note" role="status">Upcoming visible-area forecast frames preload automatically when possible.</p>
+          <p class="rain-note">One Play button synchronizes active weather layers. A single next-frame preview loads at limited resolution for the visible globe; the larger in-memory tile cache is always enabled.</p>
         </section>
-        <div class="map-cache-options">
-          <label><input type="checkbox" id="tile-cache-extra"> Keep more map tiles in memory</label>
-          <p id="tile-cache-detail">Increase the in-memory cache for revisiting places. It does not predownload all forecast hours.</p>
-        </div>
         <p id="green-status" class="green-status" role="status" aria-live="polite">Green Spaces is off. Tap 🌳 Green spaces to load mapped parks and forests near the visible map center.</p>
         <p id="temperature-status" class="temperature-status" role="status" aria-live="polite">Temperature overlay is off. Tap 🌡️ Temp to view a global forecast on the 3D globe.</p>
         <p id="rain-status" class="rain-status" role="status" aria-live="polite">Rain forecast is off. Tap 🌧️ Rain forecast to see predicted precipitation move around the globe.</p>

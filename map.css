@@ -97,10 +97,6 @@
 
 /* Globe-only experience: one MapLibre renderer and OSM basemap. */
 #globe-map{height:clamp(300px,44dvh,480px);width:100%;background:#081c2a}
-.map-cache-options{margin:10px 5px 12px;padding:9px 11px;background:#f2f8f6;border:1px solid #d6e5df;border-radius:10px;font-size:.78rem;color:#385d4e}
-.map-cache-options label{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:650}
-.map-cache-options input{width:18px;height:18px;accent-color:#236b53}
-.map-cache-options p{margin:5px 0 0;font-size:.72rem;color:#60786e;line-height:1.45}
 #map[hidden],#globe-map[hidden]{display:none!important}
 #globe-map .maplibregl-control-container{font-size:11px}
 #globe-map .maplibregl-ctrl-attrib{font-size:10px}

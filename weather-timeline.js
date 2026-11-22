@@ -67,6 +67,7 @@
     index=next;
     render();
     updateActiveLayers(currentFrame());
+    window.HereNowWeatherPrefetch?.schedule?.(frames,index);
     say('All enabled weather layers show '+validStamp(currentFrame())+' from the same DWD ICON forecast hour.');
   }
   async function loadTimeline(){
@@ -96,6 +97,7 @@
             ' · '+frames.length+' frames';
           render();
           updateActiveLayers(currentFrame());
+          window.HereNowWeatherPrefetch?.schedule?.(frames,index);
           say('Shared forecast ready. Select layers and press Play to animate all of them together.');
         }
         return result;
@@ -105,10 +107,11 @@
   }
   async function activate(){
     panel.hidden=!active();
-    if(!active()){stop();render();return;}
+    if(!active()){stop();window.HereNowWeatherPrefetch?.clear?.();render();return;}
     render();
     if(frames.length){
       updateActiveLayers(currentFrame());
+      window.HereNowWeatherPrefetch?.schedule?.(frames,index);
       return;
     }
     say('Loading one shared weather forecast timeline…');
@@ -124,6 +127,7 @@
     const frame=currentFrame();
     if(frame){
       window[layer[1]]?.setForecastFrame?.(frame);
+      window.HereNowWeatherPrefetch?.schedule?.(frames,index);
     }else activate();
   }
   function togglePlay(){
