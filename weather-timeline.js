@@ -77,9 +77,14 @@
       const controller=new AbortController();
       const timeout=setTimeout(()=>controller.abort(),14000);
       try{
-        const response=await fetch(core.metadataUrl(),{signal:controller.signal,cache:'no-store'});
-        if(!response.ok)throw Error('DWD ICON model metadata HTTP '+response.status);
-        const result=core.buildTimeline(await response.json(),new Date(),48,3);
+        const metadata=window.HereNowWeatherData
+          ?await window.HereNowWeatherData.getMetadata()
+          :await (async()=>{
+             const response=await fetch(core.metadataUrl(),{signal:controller.signal,cache:'no-store'});
+             if(!response.ok)throw Error('DWD ICON model metadata HTTP '+response.status);
+             return response.json();
+           })();
+        const result=core.buildTimeline(metadata,new Date(),48,3);
         if(id===fetchId){
           // Preserve the previous frame index where possible during metadata refresh.
           const old=currentFrame();

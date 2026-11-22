@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./map.css">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
+  <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <script src="./diagnostics.js?v=5" defer></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script type="module" src="./globe-loader.mjs?v=8"></script>
@@ -25,14 +27,15 @@
   <script src="./cloud-cover-core.js?v=2" defer></script>
   <script src="./wind-core.js?v=1" defer></script>
   <script src="./weather-timeline-core.js?v=1" defer></script>
+  <script src="./weather-data-cache.js?v=1" defer></script>
   <script src="./next-rain-core.js?v=1" defer></script>
   <script src="./map.js?v=10" defer></script>
   <script src="./globe.js?v=11" defer></script>
-  <script src="./temperature-layer.js?v=6" defer></script>
-  <script src="./rain-forecast.js?v=4" defer></script>
-  <script src="./cloud-cover.js?v=4" defer></script>
-  <script src="./wind-layer.js?v=2" defer></script>
-  <script src="./weather-timeline.js?v=1" defer></script>
+  <script src="./temperature-layer.js?v=7" defer></script>
+  <script src="./rain-forecast.js?v=5" defer></script>
+  <script src="./cloud-cover.js?v=5" defer></script>
+  <script src="./wind-layer.js?v=3" defer></script>
+  <script src="./weather-timeline.js?v=2" defer></script>
   <script src="./next-rain.js?v=1" defer></script>
   <script src="./green-spaces.js?v=3" defer></script>
   <script src="./discovery-ui.js?v=10" defer></script>
@@ -44,7 +47,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.6" aria-label="Here and Now version 1.0.6" title="Website release v1.0.6">v1.0.6</span>
+        <span class="app-version" data-app-version="1.0.7" aria-label="Here and Now version 1.0.7" title="Website release v1.0.7">v1.0.7</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>

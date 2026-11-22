@@ -47,9 +47,13 @@
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),10000);
     try{
-      const result=await fetch(core.temperatureMetadataUrl(),{signal:controller.signal,cache:'no-store'});
-      if(!result.ok)throw Error('model metadata HTTP '+result.status);
-      const metadata=await result.json();
+      const metadata=window.HereNowWeatherData
+        ?await window.HereNowWeatherData.getMetadata()
+        :await (async()=>{
+           const result=await fetch(core.temperatureMetadataUrl(),{signal:controller.signal,cache:'no-store'});
+           if(!result.ok)throw Error('model metadata HTTP '+result.status);
+           return result.json();
+         })();
       if(!selectedFrame)forecastTime=core.selectForecastTime(metadata,new Date());
       setDetails();
       log(forecastTime?'Model time metadata resolved':'No valid forecast timestamps in model metadata');

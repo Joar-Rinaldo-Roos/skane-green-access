@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.6**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.7**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.7** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.8** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,16 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## ⚡ Early weather loading and shared cache — v1.0.7 (November 2026)
+
+The 3D weather overlays now share one `weather-data-cache.js` metadata loader. On a normal connection it starts fetching **DWD ICON Global `latest.json` during browser idle time**, before the first weather layer is activated, and prepares the existing Open-Meteo MapLibre `om` renderer early when MapLibre is available. HTML `preconnect` hints shorten connection setup to the weather-data host and unpkg CDN. All four overlays plus the shared timeline now call `HereNowWeatherData.getMetadata()` rather than duplicating concurrent network requests.
+
+- **Deduplicated requests:** One in-flight metadata request is shared between Temperature, Rain, Clouds, Wind and the master timeline, instead of separate parallel `fetch(..., {cache:'no-store'})` requests for the same model JSON.
+- **Short-lived browser cache:** Model metadata is reused in memory and in `sessionStorage` for **up to 5 minutes** (even after reloading a tab). This is a bounded cache, not an offline weather store, to reduce the chance of stale `valid_times_N` model indices after a new forecast run. Expired entries fetch fresh data; failed requests can be retried. When storage is blocked, the in-memory cache still works.
+- **Connection-aware preloading:** On `navigator.connection.saveData` or 2G/slow-2G connections, automatic prefetch is skipped; explicit weather layer activation continues to work. The warm-up is scheduled at browser idle or after a short fallback delay. A first-time visit still downloads the model JSON and renderer once; later activations can be quicker.
+- **Not a bulk tile downloader:** These optimizations do **not** predownload every hourly weather raster/vector tile or the whole world; the Open-Meteo MapLibre protocol still fetches and decodes visible tiles on demand. This avoids consuming huge amounts of bandwidth and memory on phones and avoids stale forecast tiles. Actual tile rendering speed is constrained by Open-Meteo, network latency, device CPU and graphics power.
+- Test with `node --test weather-data-cache.test.cjs` for concurrent deduplication, idle prefetch, session reuse, expiration, slow-connection skipping and retry behavior. GitHub Pages verifies v1.0.7 serves the new script.
 
 ## 🕒 One shared weather forecast timeline — v1.0.6 (November 2026)
 
