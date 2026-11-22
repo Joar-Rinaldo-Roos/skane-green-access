@@ -67,7 +67,7 @@
     index=newIndex;
     displayFrame();
     const map=window.HereNowGlobe?.getMap?.();
-    if(!map||!map.isStyleLoaded?.())return;
+    if(!map||(!map.getSource?.('hn-rain')&&!map.isStyleLoaded?.()))return;
     const frame=frames[index];
     const url=core.rainUrl(frame,variable);
     try{
@@ -133,7 +133,7 @@
         return;
       }
       const map=window.HereNowGlobe?.getMap?.();
-      if(!map||!map.isStyleLoaded?.()){
+      if(!map||(!map.getSource?.('hn-rain')&&!map.isStyleLoaded?.())){
         say('Waiting for the 3D globe to become ready…');
         return;
       }

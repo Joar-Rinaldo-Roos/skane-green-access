@@ -58,7 +58,7 @@
     if(!enabled||!Number.isSafeInteger(next)||next<0||next>=frames.length)return;
     index=next;display();
     const map=window.HereNowGlobe?.getMap?.();
-    if(!map||!map.isStyleLoaded?.())return;
+    if(!map||(!map.getSource?.('hn-wind')&&!map.isStyleLoaded?.()))return;
     const frame=frames[index],url=core.windUrl(frame);
     try{
       if(!map.getSource('hn-wind')){
@@ -119,7 +119,7 @@
         return; // globe-ready event resumes after MapLibre is initialized
       }
       const map=window.HereNowGlobe?.getMap?.();
-      if(!map||!map.isStyleLoaded?.()){
+      if(!map||(!map.getSource?.('hn-wind')&&!map.isStyleLoaded?.())){
         say('Waiting for the 3D globe…');
         return;
       }

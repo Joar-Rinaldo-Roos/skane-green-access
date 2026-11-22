@@ -36,8 +36,12 @@
         log('Location permission', permission.state);
       } catch (_) { log('Location permission', 'Unavailable in this browser'); }
     }
-    log('Map', window.L ? 'Leaflet loaded' : 'Leaflet library missing');
-    log('Globe', window.maplibregl ? 'MapLibre loaded' : 'MapLibre library missing');
+    // Leaflet was intentionally removed in the globe-only release.
+    log('Map', 'Globe-only mode (Leaflet not required)');
+    log('Globe', window.maplibregl ? 'MapLibre module available' :
+      window.HereNowGlobeLoader?.state==='loading' ? 'MapLibre module still loading' :
+      window.HereNowGlobeLoader?.state==='error' ? 'MapLibre module failed to load' :
+      'MapLibre module not ready during this check');
     if (window.maplibregl && typeof maplibregl.supported === 'function') {
       try { log('Globe', maplibregl.supported() ? 'WebGL check passed' : 'WebGL unavailable'); }
       catch (_) { log('Globe', 'WebGL check could not run'); }
