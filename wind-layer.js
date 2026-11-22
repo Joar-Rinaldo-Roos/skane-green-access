@@ -131,6 +131,7 @@
         display();
         listen(map);
         setFrame(0,true);
+        window.HereNowWeatherTimeline?.syncLayer?.('wind');
       }catch(error){
         if(!enabled||request!==sequence)return;
         say('Wind forecast unavailable: '+String(error?.message||'unknown error')+'. Turn Wind off and on to retry.');
@@ -185,5 +186,13 @@
     display();setup();
   });
   window.addEventListener('here-now-globe-map-ready',()=>{if(enabled)setup();});
-  window.HereNowWind={hide,isEnabled:()=>enabled,stopPlayback:stop};
+  function setForecastFrame(frame){
+    if(!enabled||!Number.isSafeInteger(frame?.index)||typeof frame.time!=='string'||!frames.length)return false;
+    let pos=frames.findIndex(f=>f.index===frame.index);
+    if(pos<0){pos=frames.length;frames.push(frame);}
+    stop();
+    setFrame(pos);
+    return true;
+  }
+  window.HereNowWind={hide,isEnabled:()=>enabled,stopPlayback:stop,setForecastFrame};
 })();

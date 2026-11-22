@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.5**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.6**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.6** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.7** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -66,11 +66,21 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add tests, deployment checks and accessibility improvements
 
 
+## 🕒 One shared weather forecast timeline — v1.0.6 (November 2026)
+
+One shared **Play/Pause button and 48-hour time slider** now control all enabled 3D global weather overlays: **🌡️ Temperature, 🌧️ Rain forecast, ☁️ Clouds and 💨 Wind**. The shared panel appears under the map whenever at least one weather layer is on and hides when all weather layers are off. The previous duplicate Rain, Cloud and Wind playback controls are hidden from the page (their private DOM elements remain for backward compatibility with the weather modules).
+
+The shared controller reads **one** copy of DWD ICON Global `latest.json` metadata, selects actual `valid_times_N` model indices approximately every three hours, and dispatches each chosen frame to all enabled layers via `setForecastFrame(frame)`. This makes temperature, precipitation, cloud cover and 10 m wind arrows use the **same valid hour** when overlaid. Each layer still uses its own original MapLibre source and colour scale; no interpolation or artificial animation of the forecast field is implied.
+
+Layers can be added or removed during playback without resetting the master clock: newly enabled layers join the currently selected index once their map source has initialized, and disabling just one layer does **not** stop playback while another remains selected. Dragging the shared slider pauses playback. Playback stops at the final published frame; pressing Play again restarts from the beginning. No GPS needed.
+
+Weather overlays can coexist, including Rain with Temperature/Clouds. When colours overlap, visual mixing may obscure data; the existing Cloud opacity slider remains available. The **“Also show Temperature beneath clouds”** checkbox is still an optional shortcut. `node --test weather-timeline.test.cjs weather-timeline.browser.test.cjs` checks one timeline's true model timestamps, all four model URLs, Play/Pause, scrubbing, layering mid-play and stopping when all layers are disabled. CI also runs previous weather and Pages regression tests. GitHub Pages validates the **v1.0.6** header plus the shared `weather-play` and `weather-hour` controls in served HTML. Real mobile graphics smoothness is not validated by these tests.
+
 ## 💨 Global 10 m wind direction and optional cloud/temperature combination — v1.0.5 (November 2026)
 
 **💨 Wind:** An optional **10 m surface wind** arrow overlay on the existing 3D MapLibre globe. This reuses the same Open-Meteo `om://` raster/vector protocol already loaded for other global weather layers. The implementation follows Open-Meteo's official `examples/vector/wind-arrows.html`: a vector tile source at `om://…/dwd_icon/latest.json?variable=wind_u_component_10m&time_step=valid_times_N&arrows=true` with the vector `source-layer: wind-arrows`. Open-Meteo interprets the U and V wind components into arrows; arrow tips indicate **where the air is moving**, while meteorological wind direction is conventionally named for *where wind comes from*. The arrow positions and forecast times are model estimates, not live measured wind, particles or real-time advection.
 
-Wind runs independently alongside Temperature, Clouds and even Rain. The wind arrow layer is deliberately rendered last (above underlying weather colours and geography). The Wind controls have their own 48-hour, approximately three-hourly **Play/Pause and timeline** using only the DWD ICON model's real published `valid_times`. If Wind and another weather timeline are simultaneously animating, their time selectors are **independent**, and should not be taken as a synchronized cross-layer forecast. Switching to Wind does not require GPS or the Mac; Wind automatically opens the globe. Long timelines and several active layers can consume more mobile bandwidth/graphics processing.
+Wind can overlay Temperature, Clouds and Rain, with one synchronized forecast clock. The wind arrow layer is deliberately rendered last (above underlying weather colours and geography). The shared weather controls have a 48-hour, approximately three-hourly **Play/Pause and timeline** using only the DWD ICON model's real published `valid_times`. All selected overlays now share one valid-time index (v1.0.6). Switching to Wind does not require GPS or the Mac; Wind automatically opens the globe. Long timelines and several active layers can consume more mobile bandwidth/graphics processing.
 
 **Clouds + Temperature are optional again:** Tap ☁️ Clouds to see cloud cover **alone**, not automatically force Temperature on. The Clouds panel now includes an unchecked-by-default **“Also show 🌡️ Temperature beneath clouds”** checkbox. Check it to enable the translucent combined view, uncheck it to return to clouds only. Manual 🌡️ Temp button presses also remain supported; when both are enabled, both advance to the *same* forecast hour as the Clouds timeline, unlike the independent Wind timeline. Temperature can still run by itself.
 

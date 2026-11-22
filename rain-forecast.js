@@ -148,6 +148,7 @@
         displayFrame();
         attachEvents(map);
         useFrame(index,true);
+        window.HereNowWeatherTimeline?.syncLayer?.('rain');
       }catch(error){
         if(!enabled||mySequence!==sequence)return;
         say('Rain forecast unavailable: '+(error?.message||'unknown error')+'. Try turning Rain off and on again.');
@@ -203,12 +204,17 @@
     button.setAttribute('aria-label','Hide global precipitation forecast');
     panel.hidden=false;slider.disabled=true;playButton.disabled=true;
     displayFrame();
-    // Disable Temperature first so hiding Clouds does not briefly reload today's tiles.
-    if(window.HereNowTemperature?.isEnabled?.())
-      document.getElementById('toggle-temperature')?.click();
-    window.HereNowClouds?.hide?.();
+    // Overlay visibility is independent; the shared controller synchronizes clocks.
     setup();
   });
   window.addEventListener('here-now-globe-map-ready',()=>{if(enabled)setup();});
-  window.HereNowRain={hide,isEnabled:()=>enabled,stopPlayback};
+  function setForecastFrame(frame){
+    if(!enabled||!Number.isSafeInteger(frame?.index)||typeof frame.time!=='string'||!frames.length)return false;
+    let pos=frames.findIndex(f=>f.index===frame.index);
+    if(pos<0){pos=frames.length;frames.push(frame);}
+    stopPlayback();
+    useFrame(pos);
+    return true;
+  }
+  window.HereNowRain={hide,isEnabled:()=>enabled,stopPlayback,setForecastFrame};
 })();
