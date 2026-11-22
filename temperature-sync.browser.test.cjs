@@ -10,7 +10,7 @@ const original=fs.readFileSync('temperature-layer.js','utf8');
 assert(original.includes('await import(PACKAGE)'));
 const script=original.replace('await import(PACKAGE)','await Promise.resolve({omProtocol(){}})');
 
-function harness({cloudFrame=null}={}){
+function harness({cloudFrame=null,prewarmed=false}={}){
   const nodes=new Map(),listeners=new Map(),sources=new Map(),layers=['osm','hn-clouds-raster'];
   const events=new Map(),urls=[],timeouts=new Map();
   let next=1,active=true,rainHidden=0,cloudHidden=0;
@@ -27,7 +27,7 @@ function harness({cloudFrame=null}={}){
     return nodes.get(id);
   }
   const map={
-    isStyleLoaded:()=>true,
+    isStyleLoaded:()=>!prewarmed,
     getSource:id=>sources.get(id)||null,
     getLayer:id=>layers.includes(id)?{id}:null,
     addSource(id,spec){sources.set(id,{...spec,setUrl(url){this.url=url;urls.push(url)}});urls.push(spec.url)},
@@ -36,8 +36,16 @@ function harness({cloudFrame=null}={}){
     setPaintProperty(){},
     on(name,fn){if(!events.has(name))events.set(name,[]);events.get(name).push(fn)}
   };
+  if(prewarmed){
+    // Reproduce the real user report: tiles loaded, global style still busy.
+    const frame={index:3,time:'2026-11-22T15:00:00Z'};
+    sources.set('hn-temperature',{...core.temperatureSource(frame),setUrl(url){this.url=url;urls.push(url)}});
+    layers.push('hn-temperature-raster');
+  }
   const win={
     HereNowTemperatureCore:core,
+    HereNowFirstFrames:prewarmed?{frameFor:()=>({index:3,time:'2026-11-22T15:00:00Z'}),claim:(key,url)=>
+      key==='temperature'&&url===core.temperatureUrl({index:3})}:undefined,
     HereNowGlobe:{isActive:()=>active,getMap:()=>map},
     HereNowClouds:{isEnabled:()=>!!cloudFrame,currentFrame:()=>cloudFrame,hide(){cloudHidden++}},
     HereNowRain:{hide(){rainHidden++}},
@@ -85,6 +93,17 @@ test('Cloud timeline moves an enabled temperature source and the timestamp to ex
  assert.match(h.node('temperature-forecast-time').textContent,/23/);;
  assert.equal(h.win.HereNowTemperature.setForecastFrame(null),true);
  assert(h.urls.at(-1).includes('time_step=current_time_1H'));
+});
+
+test('Temperature reveals loaded first-frame tiles even when the global map style is still busy',async()=>{
+ const h=harness({prewarmed:true});
+ h.node('toggle-temperature').click();
+ await h.flush();
+ assert.equal(h.win.HereNowTemperature.isEnabled(),true);
+ assert.equal(h.node('toggle-temperature').attributes['aria-pressed'],'true');
+ assert.equal(h.urls.length,0,'Existing preloaded source must not be downloaded again');
+ assert.doesNotMatch(h.node('temperature-status').textContent,/Opening the 3D globe/);
+ assert.doesNotMatch(h.node('temperature-status').textContent,/Waiting for map style/);
 });
 
 test('Temperature toggle does not hide Clouds or Rain when using unified timeline',async()=>{
