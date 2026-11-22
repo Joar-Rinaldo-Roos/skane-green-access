@@ -54,13 +54,12 @@
     if(!map||!map.isStyleLoaded?.())return;
     if(!map.getSource('hn-green')){
       map.addSource('hn-green',{type:'geojson',data:collection});
-      const before=map.getLayer('sgu-soil-fill')?'sgu-soil-fill':undefined;
       map.addLayer({id:'hn-green-fill',type:'fill',source:'hn-green',
         paint:{'fill-color':['match',['get','kind'],'Forest','#3d9b61','Park','#7ccb73','#a2cf7a'],'fill-opacity':0.47},
-        layout:{visibility:enabled?'visible':'none'}},before);
+        layout:{visibility:enabled?'visible':'none'}});
       map.addLayer({id:'hn-green-outline',type:'line',source:'hn-green',
         paint:{'line-color':'#245f41','line-width':1.2,'line-opacity':0.9},
-        layout:{visibility:enabled?'visible':'none'}},before);
+        layout:{visibility:enabled?'visible':'none'}});
       map.on('click','hn-green-fill',event=>{
         const feature=event.features?.[0];
         if(feature&&window.maplibregl){
