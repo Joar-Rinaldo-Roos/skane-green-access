@@ -267,6 +267,12 @@
     const p=map.getCenter();
     return {lat:p.lat,lon:p.lng,zoom:map.getZoom()};
   }
+  // Green Spaces button follows SGU's behavior: jump to useful street-level zoom.
+  function zoomTo(zoom=13){
+    if(!map||!Number.isFinite(zoom))return false;
+    map.setZoom(zoom,{animate:false});
+    return true;
+  }
   function resize() {
     if (!map) return;
     setTimeout(()=>{
@@ -277,7 +283,7 @@
       if (geologyVisible) scheduleRefresh();
     },110);
   }
-  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize,setViewProvider,subscribeGeology,isGeologyEnabled,scheduleGeologyRefresh:scheduleRefresh,getSoilAt,lookupSoilAt,getLeafletMap:()=>map};
+  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize,setViewProvider,subscribeGeology,isGeologyEnabled,scheduleGeologyRefresh:scheduleRefresh,getSoilAt,lookupSoilAt,getLeafletMap:()=>map,zoomTo};
 
   if (!window.L) {
     geologyButton.disabled=true;
