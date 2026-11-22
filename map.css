@@ -14,6 +14,7 @@
 .map-summary p{margin:0;color:#315e49;font-size:.87rem;line-height:1.45}
 .map-summary a{font-size:.78rem;color:#286349;white-space:nowrap}
 .map-note{margin:9px 4px 0;font-size:.75rem;color:#6a7d71;line-height:1.5}
+.green-status{font-size:.8rem;color:#3d7855;line-height:1.5;margin:9px 5px 0;padding:8px 10px;background:#edf7ed;border-radius:9px}
 .leaflet-container{font-family:inherit}
 .leaflet-control-attribution{font-size:10px}
 .panel-title{font-size:clamp(1.4rem,4.8vw,1.85rem);line-height:1.22;margin:0 0 12px}
