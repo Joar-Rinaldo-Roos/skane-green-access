@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.4');
+ assert.equal(version.version,'1.0.5');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -35,6 +35,11 @@ test('release exposes both temperature and rain forecast controls and scripts',(
  assert.match(html,/id="cloud-hour"/);
  assert.match(html,/id="cloud-opacity"/);
  assert.match(html,/id="cloud-opacity-value"/);
+ assert.match(html,/id="cloud-with-temperature"/);
+ assert.match(html,/id="toggle-wind"/);
+ assert.match(html,/id="wind-forecast-controls"/);
+ assert.match(html,/id="wind-play"/);
+ assert.match(html,/wind-layer\.js\?v=/);
  assert.match(html,/cloud-cover\.js\?v=/);
  assert.match(html,/next-rain\.js\?v=/);
 });
@@ -48,5 +53,7 @@ test('Pages deploys and verifies the exact version visible on the live site',()=
  assert.match(deploy,/next-rain-panel/);
  assert.match(deploy,/toggle-clouds/);
  assert.match(deploy,/cloud-opacity/);
+ assert.match(deploy,/cloud-with-temperature/);
+ assert.match(deploy,/toggle-wind/);
  assert.match(deploy,/curl -fsSL/);
 });
