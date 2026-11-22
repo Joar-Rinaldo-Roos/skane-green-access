@@ -100,6 +100,7 @@
       globeMap.resize();
       window.HereNowGreenSpaces?.repaint?.();
       window.HereNowGreenSpaces?.scheduleRefresh?.();
+      window.dispatchEvent(new Event('here-now-globe-map-ready'));
       if (currentPlace) setViewFromPlace(currentPlace,lastZoom);
       controller.scheduleGeologyRefresh?.();
       return;
@@ -127,6 +128,7 @@
         window.HereNowGreenSpaces?.repaint?.();
         window.HereNowGreenSpaces?.onMapReady?.();
         window.HereNowGreenSpaces?.scheduleRefresh?.();
+        window.dispatchEvent(new Event('here-now-globe-map-ready'));
         if(currentPlace) setViewFromPlace(currentPlace,lastZoom);
         controller.scheduleGeologyRefresh?.();
         if(globeActive)controller.setStatus('Globe ready. Find me zooms to your GPS location; Soil geology adds SGU polygons.');
