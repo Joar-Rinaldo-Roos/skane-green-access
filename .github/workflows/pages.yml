@@ -36,7 +36,7 @@ jobs:
           node --check next-rain.js
           node --test next-rain.test.cjs next-rain.browser.test.cjs
           node --test rain-forecast.test.cjs rain-forecast.browser.test.cjs
-          node --test temperature.test.cjs
+          node --test temperature.test.cjs temperature-sync.browser.test.cjs weather-composite.test.cjs
           node --test version.test.cjs
           node --check green-spaces-core.js
           node --check green-spaces.js
@@ -75,12 +75,12 @@ jobs:
           site="${SITE_URL%/}/"
           for attempt in $(seq 1 12); do
             if curl -fsSL --max-time 20 -H "Cache-Control: no-cache" "${site}?release=${GITHUB_SHA}&attempt=${attempt}" -o /tmp/here-now-live.html; then
-              if grep -Fq "data-app-version=\"${expected}\"" /tmp/here-now-live.html && grep -Fq 'id="toggle-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-rain"' /tmp/here-now-live.html && grep -Fq 'id="next-rain-panel"' /tmp/here-now-live.html && grep -Fq 'id="toggle-clouds"' /tmp/here-now-live.html; then
-                echo "Published website verified: v${expected}, with cloud cover and existing weather layers"
+              if grep -Fq "data-app-version=\"${expected}\"" /tmp/here-now-live.html && grep -Fq 'id="toggle-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-rain"' /tmp/here-now-live.html && grep -Fq 'id="next-rain-panel"' /tmp/here-now-live.html && grep -Fq 'id="toggle-clouds"' /tmp/here-now-live.html && grep -Fq 'id="cloud-opacity"' /tmp/here-now-live.html; then
+                echo "Published website verified: v${expected}, with synchronized clouds and temperature controls"
                 exit 0
               fi
             fi
-            echo "The published website does not yet show v${expected}, temperature, rain, clouds and next rain controls (attempt ${attempt}/12)"
+            echo "The published website does not yet show v${expected}, temperature, rain, synchronized clouds and next rain controls (attempt ${attempt}/12)"
             sleep 10
           done
           echo "::error::GitHub Pages is not serving v${expected} with Temp, rain, cloud cover and next-rain controls. Check Pages deployment source and CDN."
