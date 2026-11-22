@@ -20,15 +20,15 @@
   <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js" defer></script>
   <script src="./sky.js?v=10" defer></script>
   <script src="./green-spaces-core.js?v=3" defer></script>
-  <script src="./temperature-core.js?v=1" defer></script>
+  <script src="./temperature-core.js?v=2" defer></script>
   <script src="./rain-forecast-core.js?v=1" defer></script>
-  <script src="./cloud-cover-core.js?v=1" defer></script>
+  <script src="./cloud-cover-core.js?v=2" defer></script>
   <script src="./next-rain-core.js?v=1" defer></script>
   <script src="./map.js?v=10" defer></script>
   <script src="./globe.js?v=11" defer></script>
-  <script src="./temperature-layer.js?v=3" defer></script>
-  <script src="./rain-forecast.js?v=2" defer></script>
-  <script src="./cloud-cover.js?v=1" defer></script>
+  <script src="./temperature-layer.js?v=4" defer></script>
+  <script src="./rain-forecast.js?v=3" defer></script>
+  <script src="./cloud-cover.js?v=2" defer></script>
   <script src="./next-rain.js?v=1" defer></script>
   <script src="./green-spaces.js?v=3" defer></script>
   <script src="./discovery-ui.js?v=10" defer></script>
@@ -40,7 +40,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.3" aria-label="Here and Now version 1.0.3" title="Website release v1.0.3">v1.0.3</span>
+        <span class="app-version" data-app-version="1.0.4" aria-label="Here and Now version 1.0.4" title="Website release v1.0.4">v1.0.4</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -87,14 +87,14 @@
           <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Source: Open-Meteo / DWD ↗</a>
         </section>
         <div id="temperature-details" class="temperature-details" hidden>
-          <strong>🌡️ Global 2 m air-temperature forecast</strong>
+          <strong>🌡️ Global 2 m air-temperature forecast · pairs with clouds</strong>
           <span id="temperature-forecast-time">Nearest forecast hour</span>
           <span>DWD ICON global model · model prediction, not real-time observation. Data shown worldwide; local detail is limited by model resolution.</span>
           <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Forecast data: Open-Meteo / DWD ↗</a>
         </div>
-        <p id="cloud-status" class="cloud-status" role="status" aria-live="polite">Cloud cover is off. Tap ☁️ Clouds to explore the global cloud-cover forecast on the 3D globe.</p>
+        <p id="cloud-status" class="cloud-status" role="status" aria-live="polite">Cloud cover is off. Tap ☁️ Clouds to overlay them on temperature and explore the next 48 hours.</p>
         <section id="cloud-forecast-controls" class="cloud-forecast-controls rain-forecast-controls" aria-label="Global total cloud-cover forecast timeline" hidden>
-          <div class="rain-control-heading"><strong>☁️ Total cloud cover · next 48 hours</strong><span id="cloud-lead-time">—</span></div>
+          <div class="rain-control-heading"><strong>☁️ Clouds over temperature · next 48 hours</strong><span id="cloud-lead-time">—</span></div>
           <div class="rain-control-actions">
             <button id="cloud-play" type="button" aria-pressed="false" disabled>▶ Play</button>
             <output id="cloud-time-label" for="cloud-hour">Loading forecast times…</output>
@@ -102,8 +102,10 @@
           <label for="cloud-hour">Cloud-cover forecast timeline</label>
           <input id="cloud-hour" type="range" min="0" max="0" step="1" value="0" disabled>
           <div class="rain-control-ends"><span>Now</span><span id="cloud-max-label">+48 h</span></div>
+          <div class="cloud-opacity-heading"><label for="cloud-opacity">Cloud opacity over temperature</label><output id="cloud-opacity-value" for="cloud-opacity">45%</output></div>
+          <input id="cloud-opacity" type="range" min="15" max="75" step="5" value="45" aria-label="Cloud overlay transparency">
           <p id="cloud-model-time" class="rain-model-time">DWD ICON Global</p>
-          <p class="rain-note">Cloud cover means the predicted percentage of sky covered by clouds (0% clear, 100% overcast). This is a numerical forecast, not live satellite imagery or a rain prediction.</p>
+          <p class="rain-note">The cloud layer is translucent so you can also see forecast temperature colours underneath. Play changes both to the same model hour. Cloud cover means the predicted percentage of sky covered (0% clear, 100% overcast); it is not live satellite imagery or proof of rain.</p>
           <a href="https://open-meteo.com/en/docs/dwd-api" target="_blank" rel="noopener noreferrer">Source: Open-Meteo / DWD ICON ↗</a>
         </section>
         <p class="map-note">Tap a geological area for its English name and composition, then <strong>Read more</strong> to explore the ground’s formation and history below the map. Soil units come from SGU.</p>
