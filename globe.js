@@ -68,6 +68,8 @@
     button.setAttribute('aria-pressed','false');
     button.setAttribute('aria-label','Switch to 3D globe');
     controller.resize?.();
+    window.HereNowGreenSpaces?.repaint?.();
+    window.HereNowGreenSpaces?.scheduleRefresh?.();
     controller.setStatus('2D street map active. Soil geology remains available.');
   }
   function failGlobe(message) {
@@ -96,6 +98,8 @@
     controller.setStatus('3D globe active. Drag to rotate; pinch to zoom.');
     if (globeMap) {
       globeMap.resize();
+      window.HereNowGreenSpaces?.repaint?.();
+      window.HereNowGreenSpaces?.scheduleRefresh?.();
       if (currentPlace) setViewFromPlace(currentPlace,lastZoom);
       controller.scheduleGeologyRefresh?.();
       return;
@@ -120,11 +124,13 @@
         globeReady=true;
         syncMarker();
         paintSoil();
+        window.HereNowGreenSpaces?.repaint?.();
+        window.HereNowGreenSpaces?.scheduleRefresh?.();
         if(currentPlace) setViewFromPlace(currentPlace,lastZoom);
         controller.scheduleGeologyRefresh?.();
         if(globeActive)controller.setStatus('Globe ready. Find me zooms to your GPS location; Soil geology adds SGU polygons.');
       });
-      globeMap.on('moveend',()=>{if(globeActive)controller.scheduleGeologyRefresh?.();});
+      globeMap.on('moveend',()=>{if(globeActive){controller.scheduleGeologyRefresh?.();window.HereNowGreenSpaces?.scheduleRefresh?.();}});
       globeMap.on('error',event=>{diag('MapLibre resource/render error; globe may be partially available');});
     } catch(error) {
       failGlobe('The 3D globe could not start. The 2D map remains available.');
@@ -166,6 +172,7 @@
     currentPlace=null;
     syncMarker();
   };
+  window.HereNowGlobe={getMap:()=>globeReady?globeMap:null,isActive:()=>globeActive};
   // The ES-module loader dispatches this after MapLibre is actually available.
   window.addEventListener('here-now-globe-ready',toGlobe);
   if(window.maplibregl) toGlobe();
