@@ -63,9 +63,9 @@ test('map toggle auto-zooms out-of-range views but does not zoom an already deta
 });
 test('first query is lightweight and excludes huge relation geometries',()=>{
  const q=buildOverpassQuery({lat:55.705,lon:13.191},700);
- assert.match(q,/\\[timeout:12\\]/);
- assert.doesNotMatch(q,/relation\\[/);
- assert.match(q,/way\\[/);
+ assert.match(q,/\[timeout:12\]/);
+ assert.doesNotMatch(q,/relation\[/);
+ assert.match(q,/way\[/);
 });
 test('request retries a different Overpass server after timeout',async()=>{
  const attempted=[];
@@ -79,7 +79,7 @@ test('request retries a different Overpass server after timeout',async()=>{
   }
  });
  assert.equal(attempted.length,2);
- assert.match(attempted[1],/^https:\\/\\/second\\.test/);
+ assert.match(attempted[1],/^https:\/\/second\.test/);
  assert.equal(result.data.elements.length,1);
 });
 test('runtime errors from Overpass are treated as failures, not empty results',async()=>{
