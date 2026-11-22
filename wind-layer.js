@@ -91,9 +91,14 @@
       const abort=new AbortController();
       const timeout=setTimeout(()=>abort.abort(),14000);
       try{
-        const response=await fetch(core.metadataUrl(),{signal:abort.signal,cache:'no-store'});
-        if(!response.ok)throw Error('Open-Meteo model metadata HTTP '+response.status);
-        return core.buildWindFrames(await response.json(),new Date(),48,3);
+        const metadata=window.HereNowWeatherData
+          ?await window.HereNowWeatherData.getMetadata()
+          :await (async()=>{
+             const response=await fetch(core.metadataUrl(),{signal:abort.signal,cache:'no-store'});
+             if(!response.ok)throw Error('Open-Meteo model metadata HTTP '+response.status);
+             return response.json();
+           })();
+        return core.buildWindFrames(metadata,new Date(),48,3);
       }finally{clearTimeout(timeout);}
     })().catch(error=>{metadataPromise=null;metadataAt=0;throw error;});
     return metadataPromise;
