@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.0');
+ assert.equal(version.version,'1.0.1');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
