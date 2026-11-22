@@ -59,7 +59,9 @@ function harness(){
  const fakeWindow={
    HereNowTileCache:{maxTiles:()=>224},
    HereNowDiagnostics:{log(){}},
-   maplibregl:{Map,supported:()=>true},
+   maplibregl:{Map,supported:()=>true,Marker:class Marker{
+     constructor(){}setLngLat(){return this}addTo(){return this}remove(){}
+   }},
    HereNowSoil:{createSummary:()=>({})},
    addEventListener:(event,fn)=>{listeners.set(event,fn)},
    dispatchEvent:()=>{},
