@@ -188,3 +188,14 @@ Start with [the Mac setup guide](backend/README.md). This setup script downloads
 The first version timed out on a public Overpass API instance on Android. The layer now uses a smaller **700 m query for mapped ways**, with a sequential fallback between two public Overpass providers, aborts/timeouts, and the previous request throttling/caching. Multi-part relation-only areas may be omitted by the lightweight query; no missing data should be interpreted as absence of greenery. When **Green Spaces** is enabled on a zoomed-out globe or 2D map, it automatically zooms to level 13, like the geology toggle. The popup includes an OpenStreetMap source link and never claims public access. Green-space styling is drawn above SGU soil polygons so both toggles remain visible. Production public servers may still be busy; integration with a reliable OGC/cached data backend is a future improvement.
 
 **Test scope:** Github Actions tests cover query shape, GeoJSON conversion, zoom helper and simulated provider failover. They do not constitute a live Samsung network test. Public Overpass instances are rate-limited shared infrastructure; the map sends coordinates to the selected provider only on user toggle, and avoids parallel provider requests.
+
+### Green Spaces: reliable 3D globe vector tiles (November 2026)
+
+Android reported that the two public Overpass providers repeatedly returned HTTP 502, even after reducing query size. This indicates upstream service capacity or gateway errors rather than invalid GPS data. Live Overpass requests are not suitable as the default display source for our 3D globe.
+
+**New 3D globe behavior:** The 🌳 Green Spaces toggle uses OpenFreeMap's OSM-derived **pre-generated OpenMapTiles vector tiles** with MapLibre, rendering the `landcover` source layer for woods and grassy land and the `park` source layer for parks. No Overpass request occurs when navigating the 3D globe. Existing autozoom to zoom 13 remains. Tap an area for its mapped name/type where provided and a link to its OpenStreetMap vicinity. This is a **map visualization**, not verified walking access or a complete OSM feature registry; vector tile simplification/zoom availability and naming vary.
+
+**2D fallback:** The separate Leaflet 2D view still uses the prior Overpass prototype for clickable individual OSM polygons. It may encounter 502/timeout errors and should later be migrated to vector tiles or a cached OGC data service too.
+
+**Checks:** `node --test green-spaces.test.cjs green-vector.test.cjs` covers green geometry and vector style definitions. GitHub Actions also performs an external network smoke test of OpenFreeMap's public TileJSON endpoint for this PR; this test does not guarantee live Android browser rendering. The provider may change its hosting conditions. Required attribution: © OpenMapTiles © OpenStreetMap contributors.
+

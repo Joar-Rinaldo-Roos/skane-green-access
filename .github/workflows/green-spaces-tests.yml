@@ -22,5 +22,8 @@ jobs:
           node --check map.js
           node --check globe.js
           node --check app.js
+      - name: Fetch live OpenFreeMap TileJSON (network integration smoke test)
+        run: |
+          node --input-type=module -e 'const controller=new AbortController();const t=setTimeout(()=>controller.abort(),15000);try{const r=await fetch("https://tiles.openfreemap.org/planet/latest",{signal:controller.signal});if(!r.ok)throw Error("TileJSON HTTP "+r.status);const j=await r.json();if(!Array.isArray(j.tiles)||!j.tiles.length)throw Error("No tiles in TileJSON");console.log("OpenFreeMap TileJSON reachable; "+j.tiles.length+" tile URL templates")}finally{clearTimeout(t)}'
       - name: Green-space geometry and query tests
-        run: node --test green-spaces.test.cjs
+        run: node --test green-spaces.test.cjs green-vector.test.cjs

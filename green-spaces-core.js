@@ -53,6 +53,38 @@
     }
     throw Error('Overpass providers unavailable ('+(lastError?.message||'unknown error')+').');
   }
+  // OpenFreeMap delivers pre-generated OSM vector tiles through a CDN.
+  // A tile layer is map imagery/geometry, not an accessibility measurement.
+  function vectorSource(){
+    return {type:'vector',url:'https://tiles.openfreemap.org/planet/latest',
+      attribution:'© OpenMapTiles © OpenStreetMap contributors'};
+  }
+  function vectorLayers(enabled=false){
+    const visibility=enabled?'visible':'none';
+    return [
+      {id:'hn-green-wood-tiles',type:'fill',source:'hn-green-tiles','source-layer':'landcover',
+       filter:['==',['get','class'],'wood'],
+       paint:{'fill-color':'#429665','fill-opacity':0.56},
+       layout:{visibility}},
+      {id:'hn-green-grass-tiles',type:'fill',source:'hn-green-tiles','source-layer':'landcover',
+       filter:['==',['get','class'],'grass'],
+       paint:{'fill-color':'#a5ce65','fill-opacity':0.48},
+       layout:{visibility}},
+      {id:'hn-green-park-tiles',type:'fill',source:'hn-green-tiles','source-layer':'park',
+       paint:{'fill-color':'#67be6c','fill-opacity':0.56},
+       layout:{visibility}}
+    ];
+  }
+  function vectorDetail(properties={},lat,lon){
+    const candidate=String(properties.name||properties.name_en||properties.subclass||properties.class||'Green area').trim();
+    const name=candidate.slice(0,120)||'Green area';
+    const kind=String(properties.subclass||properties.class||'vegetated land').replace(/_/g,' ').slice(0,90);
+    const latitude=Number(lat),longitude=Number(lon);
+    const url=Number.isFinite(latitude)&&Number.isFinite(longitude)
+      ?'https://www.openstreetmap.org/#map/16/'+Number(latitude.toFixed(5))+'/'+Number(longitude.toFixed(5))
+      :'https://www.openstreetmap.org/';
+    return {name,kind,note:'Map coverage is approximate. Public access and walking entrances have not been verified.',url};
+  }
   function kindFromTags(tags={}){
     if(tags.leisure==='park')return 'Park';
     if(tags.leisure==='garden')return 'Garden';
@@ -121,7 +153,7 @@
     if(!validPoint(point))throw Error('Invalid coordinates');
     return point.lat.toFixed(2)+','+point.lon.toFixed(2);
   }
-  const api={buildOverpassQuery,toGeoJSON,cacheKey,kindFromTags,desiredZoom,fetchOverpass};
+  const api={buildOverpassQuery,toGeoJSON,cacheKey,kindFromTags,desiredZoom,fetchOverpass,vectorSource,vectorLayers,vectorDetail};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   if(root)root.HereNowGreenCore=api;
 })(typeof window==='undefined'?null:window);
