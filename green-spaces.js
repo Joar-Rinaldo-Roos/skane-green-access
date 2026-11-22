@@ -6,12 +6,11 @@
   const button=document.getElementById('toggle-green-spaces');
   const status=document.getElementById('green-status');
   if(!core||!button||!status)return;
-  const URL='https://overpass-api.de/api/interpreter?data=';
   const EMPTY={type:'FeatureCollection',features:[]};
-  const CACHE_MS=5*60*1000, MIN_REFRESH_MS=15000, SEARCH_RADIUS=1200;
+  const CACHE_MS=5*60*1000, MIN_REFRESH_MS=15000, SEARCH_RADIUS=700;
   const cache=new Map();
   let enabled=false,collection=EMPTY,leafletLayer=null,requestId=0,abort=null;
-  let latestKey='',lastStarted=0,timer=null,remaining=null;
+  let latestKey='',lastStarted=0,timer=null;
   const log=msg=>window.HereNowDiagnostics?.log('Green spaces',msg);
   const say=msg=>{status.textContent=msg;log(msg);};
   const style=feature=>{
@@ -94,7 +93,7 @@
     if(!enabled)return;
     const p=point();
     if(!p){say('Map is not ready yet. Try again after it loads.');return;}
-    if(p.zoom<12){say('Zoom in to street level (12+) to load nearby parks and forests.');return;}
+    if(p.zoom<12){say('Zoom closer, then move the map to update mapped green spaces. The layer auto-zooms when first enabled.');return;}
     const key=core.cacheKey(p);
     const found=cache.get(key);
     if(found&&Date.now()-found.when<CACHE_MS){
@@ -104,7 +103,10 @@
       return;
     }
     if(Date.now()-lastStarted<MIN_REFRESH_MS){
-      if(timer===null)timer=setTimeout(()=>{timer=null;fetchGreenSpaces();},MIN_REFRESH_MS-(Date.now()-lastStarted));
+      if(timer===null){
+        say('Waiting briefly before the next map request to respect public data servers…');
+        timer=setTimeout(()=>{timer=null;fetchGreenSpaces();},MIN_REFRESH_MS-(Date.now()-lastStarted));
+      }
       return;
     }
     cancel();
@@ -112,34 +114,41 @@
     latestKey=key;
     abort=new AbortController();
     const controller=abort;
-    const timeout=setTimeout(()=>controller.abort(),22000);
     lastStarted=Date.now();
     say('Finding mapped parks and forests near the current map center…');
     try {
-      const q=core.buildOverpassQuery(p,SEARCH_RADIUS);
-      const response=await fetch(URL+encodeURIComponent(q),{signal:controller.signal,headers:{Accept:'application/json'}});
-      if(!response.ok)throw Error('Overpass HTTP '+response.status);
-      const data=await response.json();
+      const result=await core.fetchOverpass(p,{radius:SEARCH_RADIUS,signal:controller.signal});
+      const data=result.data;
+      log('Mapped green areas received from '+new URL(result.endpoint).hostname);
       if(id!==requestId||!enabled)return;
       const all=Array.isArray(data?.elements)?data.elements.length:0;
       collection=core.toGeoJSON(data,120);
       cache.set(key,{when:Date.now(),data:collection});
       if(cache.size>25)cache.delete(cache.keys().next().value);
       repaint();
-      if(!collection.features.length) say('No closed green-area polygons found in this 1.2 km search. Try another location.');
-      else say('Showing '+collection.features.length+' mapped green areas from OSM (1.2 km search'+(all>120?'; results may be incomplete':'')+'). Tap a green shape for details. Accessibility not verified.');
+      if(!collection.features.length) say('No closed green-area polygons found in this 700 m search. Try another location.');
+      else say('Showing '+collection.features.length+' mapped green areas from OSM (700 m search'+(all>120?'; results may be incomplete':'')+'). Tap a green shape for details. Accessibility not verified.');
     }catch(error){
       if(id!==requestId||!enabled)return;
       const msg=error.name==='AbortError'?'request timed out':error.message;
       collection=EMPTY;
       repaint();
       say('Green-space data unavailable ('+msg+'). Try again later or change location.');
-    }finally{clearTimeout(timeout);if(abort===controller)abort=null;}
+    }finally{if(abort===controller)abort=null;}
   }
   function scheduleRefresh(){
     if(!enabled)return;
     if(timer!==null)clearTimeout(timer);
     timer=setTimeout(()=>{timer=null;fetchGreenSpaces();},1100);
+  }
+  function zoomForGreenSpaces(){
+    const p=point();
+    if(!p)return false;
+    if(p.zoom>=12)return true;
+    const zoom=core.desiredZoom(p.zoom,13);
+    const globe=window.HereNowGlobe;
+    if(globe?.isActive?.())return Boolean(globe.zoomTo?.(zoom));
+    return Boolean(window.HereNowMap?.zoomTo?.(zoom));
   }
   function toggle(){
     enabled=!enabled;
@@ -152,8 +161,13 @@
       return;
     }
     repaint();
+    if(!zoomForGreenSpaces()){
+      say('Opening map view… Green Spaces will load when the map is ready.');
+      return;
+    }
     fetchGreenSpaces();
   }
   button.addEventListener('click',toggle);
-  window.HereNowGreenSpaces={scheduleRefresh,repaint,refresh:fetchGreenSpaces,isEnabled:()=>enabled};
+  window.HereNowGreenSpaces={scheduleRefresh,repaint,refresh:fetchGreenSpaces,isEnabled:()=>enabled,
+    onMapReady:()=>{if(enabled){zoomForGreenSpaces();fetchGreenSpaces();}}};
 })();
