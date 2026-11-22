@@ -248,6 +248,7 @@
     }
     setStatus('Showing '+(place.name||'selected location')+'. Pan and zoom to explore.');
     if (geologyVisible) scheduleRefresh();
+    window.HereNowGreenSpaces?.scheduleRefresh?.();
   }
 
   function clearLocation() {
@@ -276,7 +277,7 @@
       if (geologyVisible) scheduleRefresh();
     },110);
   }
-  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize,setViewProvider,subscribeGeology,isGeologyEnabled,scheduleGeologyRefresh:scheduleRefresh,getSoilAt,lookupSoilAt};
+  window.HereNowMap={setLocation,clearLocation,showGeology,setStatus,getView,resize,setViewProvider,subscribeGeology,isGeologyEnabled,scheduleGeologyRefresh:scheduleRefresh,getSoilAt,lookupSoilAt,getLeafletMap:()=>map};
 
   if (!window.L) {
     geologyButton.disabled=true;
@@ -292,7 +293,7 @@
     }).addTo(map);
     L.control.zoom({position:'bottomright'}).addTo(map);
     L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
-    map.on('moveend',()=>{if (!document.getElementById('map')?.hidden) scheduleRefresh();});
+    map.on('moveend',()=>{if (!document.getElementById('map')?.hidden){scheduleRefresh();window.HereNowGreenSpaces?.scheduleRefresh?.();}});
     geologyButton.addEventListener('click',()=>showGeology(!geologyVisible));
   } catch (error) {
     geologyButton.disabled=true;
