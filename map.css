@@ -25,6 +25,7 @@
 .rain-forecast-controls[hidden]{display:none}
 .legacy-weather-controls[hidden]{display:none!important}
 .weather-timeline{background:#eaf4f0;border-color:#c1ded1;margin:12px 5px 12px}
+.weather-startup-status{margin:9px 5px 10px;color:#4a7063;font-size:.73rem;line-height:1.45}
 #weather-play{background:#216651;color:#fff;padding:10px 14px;min-height:44px;min-width:100px}
 #weather-play:disabled{opacity:.55}
 #weather-hour{width:100%;margin:0;accent-color:#26755b;min-height:32px;touch-action:pan-y}
