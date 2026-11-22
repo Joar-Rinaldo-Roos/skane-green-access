@@ -64,6 +64,11 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
+      # Validate the deployment workflow's artifact handling as part of the
+      # release gate. This test does not require external network access.
+      - name: Validate Pages artifact visibility guard
+        run: |
+          node --test pages-workflow.test.cjs
       # Pages/Actions artifact APIs can briefly disagree after upload:
       # a successful upload may return "Found 0 artifacts" to deploy-pages.
       # Poll the official Actions API before letting deploy-pages resolve it.
