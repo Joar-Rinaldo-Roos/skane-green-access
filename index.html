@@ -6,14 +6,12 @@
   <meta name="theme-color" content="#173c35">
   <meta name="description" content="Discover local history, animals and the sky above you on a location-aware globe.">
   <title>Here &amp; Now — Discover your surroundings</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./map.css">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
   <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com" crossorigin>
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <script src="./diagnostics.js?v=5" defer></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script type="module" src="./globe-loader.mjs?v=8"></script>
   <script src="./soil-info.js?v=9" defer></script>
   <script src="./archive.js?v=9" defer></script>
@@ -29,8 +27,9 @@
   <script src="./weather-timeline-core.js?v=1" defer></script>
   <script src="./weather-data-cache.js?v=1" defer></script>
   <script src="./next-rain-core.js?v=1" defer></script>
-  <script src="./map.js?v=10" defer></script>
-  <script src="./globe.js?v=11" defer></script>
+  <script src="./globe-map-controller.js?v=1" defer></script>
+  <script src="./tile-cache.js?v=1" defer></script>
+  <script src="./globe.js?v=12" defer></script>
   <script src="./temperature-layer.js?v=7" defer></script>
   <script src="./rain-forecast.js?v=5" defer></script>
   <script src="./cloud-cover.js?v=5" defer></script>
@@ -47,7 +46,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.7" aria-label="Here and Now version 1.0.7" title="Website release v1.0.7">v1.0.7</span>
+        <span class="app-version" data-app-version="1.0.8" aria-label="Here and Now version 1.0.8" title="Website release v1.0.8">v1.0.8</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -58,11 +57,10 @@
             <p class="map-eyebrow">EXPLORE YOUR SURROUNDINGS</p>
             <h1 id="map-title">See what's here.</h1>
           </div>
-          <p>Explore on a 3D globe. Find me zooms to your location; 2D map is also available.</p>
+          <p>Explore with the 3D globe. Find me zooms to your location; no duplicate 2D map downloads.</p>
         </div>
         <div class="map-frame">
-          <div id="map" role="region" aria-label="Interactive street map of Lund, Sweden. Pan or zoom to explore."></div>
-          <div id="globe-map" role="region" aria-label="Rotatable 3D globe with geological overlays from SGU." hidden></div>
+          <div id="globe-map" role="region" aria-label="Rotatable 3D globe with geological overlays from SGU."></div>
           <div class="map-toolbar" role="group" aria-label="Map controls">
             <button id="locate" type="button" aria-label="Find my current location">◎ Find me</button>
             <button id="toggle-geology" type="button" aria-pressed="false" aria-label="Show SGU soil geology features">🪨 Soil geology</button>
@@ -71,7 +69,6 @@
             <button id="toggle-rain" type="button" aria-pressed="false" aria-label="Show global precipitation forecast">🌧️ Rain forecast</button>
             <button id="toggle-clouds" type="button" aria-pressed="false" aria-label="Show total cloud cover forecast">☁️ Clouds</button>
             <button id="toggle-wind" type="button" aria-pressed="false" aria-label="Show global wind direction forecast arrows">💨 Wind</button>
-            <button id="toggle-globe" type="button" aria-pressed="false" aria-label="Switch to a rotatable globe">🌐 Globe</button>
           </div>
         </div>
         <div class="map-summary">
@@ -91,6 +88,10 @@
           <p id="weather-timeline-status" class="rain-note" role="status">Choose any weather layer to load its shared timeline.</p>
           <p class="rain-note">One Play button controls Rain, Clouds, Temperature and Wind. Every enabled layer uses the same forecast timestamp. Toggle layers independently.</p>
         </section>
+        <div class="map-cache-options">
+          <label><input type="checkbox" id="tile-cache-extra"> Keep more map tiles in memory</label>
+          <p id="tile-cache-detail">Increase the in-memory cache for revisiting places. It does not predownload all forecast hours.</p>
+        </div>
         <p id="green-status" class="green-status" role="status" aria-live="polite">Green Spaces is off. Tap 🌳 Green spaces to load mapped parks and forests near the visible map center.</p>
         <p id="temperature-status" class="temperature-status" role="status" aria-live="polite">Temperature overlay is off. Tap 🌡️ Temp to view a global forecast on the 3D globe.</p>
         <p id="rain-status" class="rain-status" role="status" aria-live="polite">Rain forecast is off. Tap 🌧️ Rain forecast to see predicted precipitation move around the globe.</p>
