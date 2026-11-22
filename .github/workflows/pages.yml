@@ -29,7 +29,7 @@ jobs:
           node --check temperature-layer.js
           node --check rain-forecast-core.js
           node --check rain-forecast.js
-          node --test rain-forecast.test.cjs
+          node --test rain-forecast.test.cjs rain-forecast.browser.test.cjs
           node --test temperature.test.cjs
           node --test version.test.cjs
           node --check green-spaces-core.js
