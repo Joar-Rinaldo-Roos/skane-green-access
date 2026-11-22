@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.10**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.11**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.11** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.12** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,16 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## ⚡ Real first-frame weather sources preloaded and readiness bug fixed — v1.0.11 (November 2026)
+
+This release fixes v1.0.10's startup message staying stuck while the MapLibre globe was visible. A globe-ready event can fire while MapLibre is still updating its style with soil/green layers; v1.0.10 returned immediately if `isStyleLoaded()` was temporarily false. v1.0.11 now **retries map-style readiness with visible progress and a bounded timeout**. If renderer setup fails, the status explains the problem rather than keeping the original "waiting for globe" text.
+
+More importantly, the preloader now warms the **actual, native-resolution weather sources and layers** that the layer buttons use: `hn-temperature`, `hn-rain`, `hn-clouds` and `hn-wind`. It reuses the one DWD ICON Global forecast metadata request and Open-Meteo protocol, uses identical model `valid_times_N` timestamps, and creates the original MapLibre sources at their original `maxzoom=12`. Four layers are staged 650ms apart and painted at **0.002 opacity** without setting their user-facing enabled flags. Each weather module now checks whether its exact first-frame URL was preloaded and **claims its real source without making a redundant `setUrl` call**, restoring the intended opacity upon activation. Temperature also starts with the preloaded forecast time if no separate master clock has been selected yet.
+
+The new status shows **how many real sources have been requested and reported loaded** by MapLibre; unlike the previous preview, these are the same sources the buttons reveal. Not every pixel of a global field or all zoom levels is downloaded up front—MapLibre requests tiles for the visible viewport. Four real sources at once consume additional bandwidth and decoded tile memory. Startup work is skipped for Save Data / 2G-class connections, background staging is cancelled on weather-button selection, and the regular overlay activation remains available even if preloading fails. We have not measured actual speed improvement on the user's device.
+
+New automated tests in `first-frame-preload.test.cjs` reproduce the globe-style readiness race and verify native source IDs, four-source staging, shared timestamps, Data Saver, cancellation, status updates and claiming real sources without duplicate URL loads. Previous weather, globe-only and Pages checks remain.
 
 ## ⏩ First weather frames preload automatically — v1.0.10 (November 2026)
 
