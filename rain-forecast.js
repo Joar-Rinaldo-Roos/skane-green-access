@@ -18,7 +18,7 @@
 
   const INTERVAL_MS=4500;
   let enabled=false,frames=[],variable='precipitation',index=0;
-  let setupPending=null,metadataPending=null,playTimer=null,sliderTimer=null;
+  let setupPending=null,setupSequence=-1,metadataPending=null,metadataFetchedAt=0,playTimer=null,sliderTimer=null;
   let sequence=0,boundMap=null,frameLoadPending=false,sourceLoaded=false;
   let lastDisplayedUrl='';
   const log=message=>window.HereNowDiagnostics?.log('Rain forecast',message);
@@ -98,7 +98,8 @@
     }
   }
   async function loadModel(){
-    if(metadataPending)return metadataPending;
+    if(metadataPending&&Date.now()-metadataFetchedAt<5*60*1000)return metadataPending;
+    metadataFetchedAt=Date.now();
     metadataPending=(async()=>{
       const controller=new AbortController();
       const timer=setTimeout(()=>controller.abort(),14000);
@@ -108,17 +109,20 @@
         const metadata=await response.json();
         return core.buildRainFrames(metadata,new Date(),48,3);
       }finally{clearTimeout(timer);}
-    })().catch(error=>{metadataPending=null;throw error;});
+    })().catch(error=>{metadataPending=null;metadataFetchedAt=0;throw error;});
     return metadataPending;
   }
   async function setup(){
     if(!enabled)return;
-    if(setupPending)return setupPending;
+    if(setupPending&&setupSequence===sequence)return setupPending;
     const mySequence=sequence;
-    setupPending=(async()=>{
+    setupSequence=mySequence;
+    const thisSetup=(async()=>{
       if(!window.HereNowGlobe?.isActive?.()){
         say('Switching to the 3D globe for the rain forecast…');
         document.getElementById('toggle-globe')?.click();
+        // The globe-ready event resumes setup after the map becomes usable.
+        return;
       }
       const map=window.HereNowGlobe?.getMap?.();
       if(!map||!map.isStyleLoaded?.()){
@@ -150,7 +154,8 @@
         slider.disabled=true;playButton.disabled=true;
         log('Forecast initialization error: '+(error?.message||'unknown error'));
       }
-    })().finally(()=>{setupPending=null;});
+    })();
+    setupPending=thisSetup.finally(()=>{if(setupSequence===mySequence)setupPending=null;});
     return setupPending;
   }
   function startPlayback(){
