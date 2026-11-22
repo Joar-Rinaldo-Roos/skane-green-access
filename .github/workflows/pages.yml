@@ -52,6 +52,9 @@ jobs:
           node --check app.js
           node --check map.js
           node --check globe.js
+          node --check globe-map-controller.js
+          node --check tile-cache.js
+          node --test globe-only.test.cjs
           node --check globe-loader.mjs
           node --check diagnostics.js
           node --check soil-info.js
@@ -66,7 +69,7 @@ jobs:
       - name: Stage only public website assets
         run: |
           mkdir -p _site
-          cp index.html version.json app.js temperature-core.js temperature-layer.js rain-forecast-core.js rain-forecast.js cloud-cover-core.js cloud-cover.js wind-core.js wind-layer.js weather-timeline-core.js weather-timeline.js weather-data-cache.js next-rain-core.js next-rain.js green-spaces-core.js green-spaces.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js chat.js style.css map.css _site/
+          cp index.html version.json app.js globe-map-controller.js tile-cache.js temperature-core.js temperature-layer.js rain-forecast-core.js rain-forecast.js cloud-cover-core.js cloud-cover.js wind-core.js wind-layer.js weather-timeline-core.js weather-timeline.js weather-data-cache.js next-rain-core.js next-rain.js green-spaces-core.js green-spaces.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js chat.js style.css map.css _site/
           touch _site/.nojekyll
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
@@ -119,8 +122,8 @@ jobs:
           site="${SITE_URL%/}/"
           for attempt in $(seq 1 12); do
             if curl -fsSL --max-time 20 -H "Cache-Control: no-cache" "${site}?release=${GITHUB_SHA}&attempt=${attempt}" -o /tmp/here-now-live.html; then
-              if grep -Fq "data-app-version=\"${expected}\"" /tmp/here-now-live.html && grep -Fq 'id="toggle-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-rain"' /tmp/here-now-live.html && grep -Fq 'id="next-rain-panel"' /tmp/here-now-live.html && grep -Fq 'id="toggle-clouds"' /tmp/here-now-live.html && grep -Fq 'id="cloud-opacity"' /tmp/here-now-live.html && grep -Fq 'id="cloud-with-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-wind"' /tmp/here-now-live.html && grep -Fq 'id="weather-play"' /tmp/here-now-live.html && grep -Fq 'id="weather-hour"' /tmp/here-now-live.html && grep -Fq 'weather-data-cache.js?v=1' /tmp/here-now-live.html; then
-                echo "Published website verified: v${expected}, shared weather timeline and cached metadata prefetch script"
+              if grep -Fq "data-app-version=\"${expected}\"" /tmp/here-now-live.html && grep -Fq 'id="toggle-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-rain"' /tmp/here-now-live.html && grep -Fq 'id="next-rain-panel"' /tmp/here-now-live.html && grep -Fq 'id="toggle-clouds"' /tmp/here-now-live.html && grep -Fq 'id="cloud-opacity"' /tmp/here-now-live.html && grep -Fq 'id="cloud-with-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-wind"' /tmp/here-now-live.html && grep -Fq 'id="weather-play"' /tmp/here-now-live.html && grep -Fq 'id="weather-hour"' /tmp/here-now-live.html && grep -Fq 'weather-data-cache.js?v=1' /tmp/here-now-live.html && grep -Fq 'globe-map-controller.js?v=1' /tmp/here-now-live.html && grep -Fq 'tile-cache.js?v=1' /tmp/here-now-live.html && grep -Fq 'id="tile-cache-extra"' /tmp/here-now-live.html && ! grep -Fq 'id="toggle-globe"' /tmp/here-now-live.html; then
+                echo "Published website verified: v${expected}, globe-only map and configurable larger tile cache"
                 exit 0
               fi
             fi

@@ -51,7 +51,6 @@ test('Globe opens automatically when MapLibre module becomes available',()=>{
   const a=boot();
   a.window.maplibregl=a.maplibregl;
   a.handlers['window:here-now-globe-ready']();
-  assert.equal(a.elem['map'].hidden,true);
   assert.equal(a.elem['globe-map'].hidden,false);
   assert.equal(a.Globe.last.options.zoom,3.3);
   a.Globe.last.handlers['style.load']();
@@ -66,21 +65,19 @@ test('Find me zooms globe to GPS position at 15 instead of distant zoom 4',()=>{
   assert.equal(a.Globe.last.jump.center[1],55.73);
   assert.equal(a.Globe.last.marker.coords[0],13.2);
 });
-test('SGU GeoJSON draws over globe and stays enabled when toggling to 2D',()=>{
+test('SGU GeoJSON stays enabled on the single globe map',()=>{
   const a=boot(true,true);a.Globe.last.handlers.load();
   const soil={type:'FeatureCollection',features:[{type:'Feature',properties:{jg2_tx:'Morän',_hereNowColor:'#aabbcc'},geometry:{type:'Polygon',coordinates:[[[13,55],[14,55],[14,56],[13,55]]]}}]};
   a.callbacks.soil({type:'data',collection:soil,enabled:true});
   assert.equal(a.Globe.last.sources['sgu-geology'].data.features.length,1);
   assert.equal(a.Globe.last.layers['sgu-soil-fill'].layout.visibility,'visible');
-  a.handlers['toggle-globe:click']();
-  assert.equal(a.elem.map.hidden,false);
-  assert.ok(a.logs.includes('resize'));
+  assert.equal(a.Globe.last.options.maxTileCacheSize,72);
   assert.equal(a.Globe.last.layers['sgu-soil-fill'].layout.visibility,'visible');
 });
-test('WebGL unavailable leaves 2D map functioning',()=>{
+test('WebGL unavailable reports globe limitation without a 2D fallback',()=>{
   const a=boot(false);
   a.window.maplibregl=a.maplibregl;
   a.handlers['window:here-now-globe-ready']();
-  assert.equal(a.elem.map.hidden,false);
   assert.ok(a.logs.at(-1).includes('WebGL'));
+  assert.equal(a.Globe.last,undefined);
 });

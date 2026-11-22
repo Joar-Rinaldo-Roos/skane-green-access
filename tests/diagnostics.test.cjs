@@ -6,7 +6,7 @@ const root = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 
 test('diagnostics library is loaded before app scripts and deployed', () => {
   const html = root('index.html');
-  assert.ok(html.indexOf('diagnostics.js') < html.indexOf('map.js'));
+  assert.ok(html.indexOf('diagnostics.js') < html.indexOf('globe-map-controller.js'));
   for(const id of ['diagnostics-output','copy-diagnostics','check-diagnostics','map-mode']) {
     assert.ok(html.includes('id="' + id + '"'));
   }
