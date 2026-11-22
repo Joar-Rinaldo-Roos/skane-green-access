@@ -19,15 +19,20 @@ jobs:
         run: |
           node --check temperature-core.js
           node --check temperature-layer.js
+          node --check rain-forecast-core.js
+          node --check rain-forecast.js
+          node --check rain-forecast-smoke.mjs
           node --check globe.js
           node --check temperature-smoke.mjs
       - name: Temperature geometry and timestamp unit tests
-        run: node --test temperature.test.cjs
+        run: node --test temperature.test.cjs rain-forecast.test.cjs
       - name: Verify release number and visible header contract
         run: node --test version.test.cjs
       - name: Inspect existing public Pages content
         run: |
           curl -fsSL --max-time 20 "https://joar-rinaldo-roos.github.io/skane-green-access/?inspect=${GITHUB_SHA}" -o /tmp/pages-live.html
-          if grep -Fq 'id="toggle-temperature"' /tmp/pages-live.html; then echo "Live Pages already includes Temp"; else echo "Live Pages is currently MISSING Temp (stale build or wrong Pages source)"; fi
+          if grep -Fq 'data-app-version="1.0.1"' /tmp/pages-live.html && grep -Fq 'id="toggle-rain"' /tmp/pages-live.html; then echo "Live Pages already includes the v1.0.1 rain layer"; else echo "Live Pages is still serving an earlier release (expected until PR deploy)"; fi
       - name: Check live model metadata and weather renderer files
         run: node temperature-smoke.mjs
+      - name: Verify live precipitation forecast variables and future time steps
+        run: node rain-forecast-smoke.mjs
