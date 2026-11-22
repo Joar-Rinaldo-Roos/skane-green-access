@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.11**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.12**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.12** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.13** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,16 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## 🌡️ Instant reveal of preloaded weather when map style is busy — v1.0.12 (November 2026)
+
+Real-device diagnostic logs exposed a race after v1.0.11: the startup preloader reported **4/4 real weather sources ready**, while tapping Temperature still logged "Opening the 3D globe; temperature will appear when the map is ready…" repeatedly. The globe had already initialized, but its global `map.isStyleLoaded()` check was false while other raster/vector sources updated. A broad global style-loaded gate is unnecessarily strict for an existing source with a matching layer.
+
+In v1.0.12, **Temperature, Rain, Clouds and Wind** each allow an already-registered weather source to be *shown or updated* even if the rest of the MapLibre style is still loading. New sources continue to wait for style readiness before calling `map.addSource`/`map.addLayer`. The existing first-frame `claim` logic avoids re-fetching an identical forecast URL and restores the layer's normal visibility and opacity. All four overlays remain independently optional under the unified 48-hour forecast timeline.
+
+The browser diagnostic no longer complains "Leaflet library missing": Leaflet was deliberately removed from this globe-only app in v1.0.8. It now notes **"Globe-only mode (Leaflet not required)"** and describes the MapLibre module's asynchronous startup state correctly.
+
+Tests now reproduce the exact device situation: preloaded sources and layers exist, `map.isStyleLoaded()` is false, and tapping Temperature/Rain/Clouds/Wind must reveal and claim the existing layer, without downloading the same model tile URL again. The test suite does not measure mobile frame-render latency, which still needs a user-device check.
 
 ## ⚡ Real first-frame weather sources preloaded and readiness bug fixed — v1.0.11 (November 2026)
 
