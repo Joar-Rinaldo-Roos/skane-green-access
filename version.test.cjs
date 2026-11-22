@@ -20,9 +20,13 @@ test('top-right page header visibly displays the same version as release manifes
  assert.match(html,/class="header-meta"/);
 });
 
-test('release keeps the temperature toggle and declares the client weather script',()=>{
+test('release exposes both temperature and rain forecast controls and scripts',()=>{
  assert.match(html,/id="toggle-temperature"/);
  assert.match(html,/temperature-layer\.js\?v=/);
+ assert.match(html,/id="toggle-rain"/);
+ assert.match(html,/rain-forecast\.js\?v=/);
+ assert.match(html,/id="rain-hour"/);
+ assert.match(html,/id="rain-play"/);
 });
 
 test('Pages deploys and verifies the exact version visible on the live site',()=>{
@@ -30,5 +34,6 @@ test('Pages deploys and verifies the exact version visible on the live site',()=
  assert.match(deploy,/version\.json/);
  assert.match(deploy,/data-app-version/);
  assert.match(deploy,/toggle-temperature/);
+ assert.match(deploy,/toggle-rain/);
  assert.match(deploy,/curl -fsSL/);
 });
