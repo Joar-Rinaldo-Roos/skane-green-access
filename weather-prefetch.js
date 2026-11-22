@@ -122,4 +122,4 @@
   }
   root.HereNowWeatherPrefetch={schedule,clear,setEnabled};
   root.addEventListener?.('here-now-globe-map-ready',()=>{mapBound=null;currentUrl='';currentType='';});
-})();
+})(typeof window==='undefined'?null:window);
