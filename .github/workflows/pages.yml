@@ -92,6 +92,11 @@ jobs:
             count=$(printf '%s' "$response" | node -e "let data='';process.stdin.on('data',c=>data+=c);process.stdin.on('end',()=>{const j=JSON.parse(data);console.log((j.artifacts||[]).filter(a=>a.name==='github-pages'&&!a.expired).length)})")
             if [ "$count" = 1 ]; then
               echo "One Pages artifact is visible to the Actions API."
+              # The deploy-pages action queries a separate artifact service that can
+              # lag the public Actions API by several seconds after upload.
+              # Do not rerun this job: retries would create duplicate artifacts.
+              echo "Giving GitHub Pages artifact services time to synchronize…"
+              sleep 20
               exit 0
             fi
             if [ "$count" -gt 1 ]; then
