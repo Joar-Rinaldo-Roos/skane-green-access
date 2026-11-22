@@ -68,12 +68,16 @@
         displayedUrl=url;
         listen(map);
       }else{
-        if(map.getLayer('hn-wind-arrows'))
+        if(map.getLayer('hn-wind-arrows')){
           map.setLayoutProperty('hn-wind-arrows','visibility','visible');
-        if(force||url!==displayedUrl){
+          map.setPaintProperty('hn-wind-arrows','line-opacity',0.88);
+        }
+        if(url!==displayedUrl){
           const source=map.getSource('hn-wind');
-          if(typeof source.setUrl!=='function')throw Error('MapLibre cannot update wind forecast hours');
-          source.setUrl(url);
+          if(!window.HereNowFirstFrames?.claim?.('wind',url)){
+            if(typeof source.setUrl!=='function')throw Error('MapLibre cannot update wind forecast hours');
+            source.setUrl(url);
+          }
           displayedUrl=url;
         }
       }

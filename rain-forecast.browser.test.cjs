@@ -36,6 +36,7 @@ function harness({startIn2D=false}={}){
     },
     addLayer(spec){layers.set(spec.id,{...spec})},
     setLayoutProperty(id,name,value){const layer=layers.get(id);if(layer)layer.layout[name]=value},
+    setPaintProperty(id,name,value){const layer=layers.get(id);if(layer)layer.paint[name]=value},
     on(name,fn){if(!mapHandlers.has(name))mapHandlers.set(name,[]);mapHandlers.get(name).push(fn)}
   };
   const now=Date.now();

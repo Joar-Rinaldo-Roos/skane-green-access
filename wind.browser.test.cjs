@@ -28,6 +28,7 @@ function harness({twoD=false}={}){
   addSource(key,spec){const source={...spec,setUrl(url){this.url=url;requests.push(url)}};sources.set(key,source);requests.push(spec.url)},
   addLayer(spec){layers.set(spec.id,{...spec})},
   setLayoutProperty(id,key,value){layers.get(id).layout[key]=value},
+  setPaintProperty(id,key,value){layers.get(id).paint[key]=value},
   on(key,fn){if(!events.has(key))events.set(key,[]);events.get(key).push(fn)}
  };
  const now=Date.now();

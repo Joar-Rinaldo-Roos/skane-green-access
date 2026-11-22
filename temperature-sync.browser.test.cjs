@@ -33,6 +33,7 @@ function harness({cloudFrame=null}={}){
     addSource(id,spec){sources.set(id,{...spec,setUrl(url){this.url=url;urls.push(url)}});urls.push(spec.url)},
     addLayer(spec,before){const i=layers.indexOf(before);layers.splice(i<0?layers.length:i,0,spec.id)},
     setLayoutProperty(){},
+    setPaintProperty(){},
     on(name,fn){if(!events.has(name))events.set(name,[]);events.get(name).push(fn)}
   };
   const win={

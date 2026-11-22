@@ -119,13 +119,16 @@
         sourceLoaded=false;
         log('MapLibre global forecast temperature source added');
       }else{
-        if(map.getLayer('hn-temperature-raster'))
+        if(map.getLayer('hn-temperature-raster')){
           map.setLayoutProperty('hn-temperature-raster','visibility','visible');
+          map.setPaintProperty('hn-temperature-raster','raster-opacity',0.72);
+        }
         if(lastRasterUrl!==wanted){
           const source=map.getSource('hn-temperature');
           if(typeof source.setUrl!=='function')
             throw Error('MapLibre cannot switch temperature forecast hours');
-          source.setUrl(wanted);
+          // A real first-frame source already exists; claim it without re-fetching.
+          if(!window.HereNowFirstFrames?.claim?.('temperature',wanted))source.setUrl(wanted);
           lastRasterUrl=wanted;
           sourceLoaded=false;
         }
@@ -160,7 +163,7 @@
         try{
           const source=map.getSource('hn-temperature');
           if(typeof source.setUrl!=='function')throw Error('Temperature raster time update unavailable');
-          source.setUrl(url);
+          if(!window.HereNowFirstFrames?.claim?.('temperature',url))source.setUrl(url);
           lastRasterUrl=url;
           sourceLoaded=false;
           say((selectedFrame?'Temperature and clouds now show the SAME forecast hour. ':'Temperature returned to the current forecast. ')+timeDescription()+'.');
@@ -190,7 +193,8 @@
     enabled=!enabled;
     // Temperature + Clouds deliberately coexist. Rain remains a separate palette.
     if(enabled){
-      selectedFrame=window.HereNowWeatherTimeline?.currentFrame?.()||window.HereNowClouds?.currentFrame?.()||null;
+      selectedFrame=window.HereNowWeatherTimeline?.currentFrame?.()||window.HereNowClouds?.currentFrame?.()||
+        window.HereNowFirstFrames?.frameFor?.('temperature')||null;
       forecastTime=selectedFrame?selectedFrame.time:null;
     }
     window.HereNowClouds?.syncTemperatureChoice?.(enabled);

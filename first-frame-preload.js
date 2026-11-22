@@ -1,161 +1,207 @@
-/* Here & Now v1.0.10 — automatically warm FIRST forecast frame of all 4 layers.
- * Once the globe is usable, stagger 4 low-zoom (maxzoom 4) near-transparent
- * Open-Meteo sources in the CURRENT viewport. No layer is selected by this.
- * The actual visible weather layers still load at their requested resolution.
- * This is best-effort worker/HTTP preloading, not a persistent offline cache.
+/* Here & Now v1.0.11 — preload REAL first-frame sources behind the globe.
+ * v1.0.10 only built separate low-resolution preview sources and could miss the
+ * globe-ready event while MapLibre was updating style on load. Neither the
+ * previews nor their tile cache could be claimed by the real weather layers.
+ *
+ * After MapLibre becomes style-ready, create the ORIGINAL hn-temperature,
+ * hn-rain, hn-clouds and hn-wind source/layer IDs at their native maxzoom.
+ * Each layer is rendered at 0.002 opacity to load tiles without switching UI.
+ * Enabling a layer simply restores its normal opacity and claims the source.
+ * One current DWD ICON valid_times_N timestamp shared by all four.
+ *
+ * The startup load is staggered and skipped on Data Saver / 2G. Four real
+ * weather sources consume bandwidth and GPU memory; they follow the viewport
+ * and do NOT download the entire world or the 48-hour model.
  */
 (function(root){
  'use strict';
- const MAX_ZOOM=4;
- const START_DELAY_MS=1200;
+ const START_DELAY_MS=350;
+ const RETRY_MS=700;
+ const RETRY_LIMIT=15;
  const STAGGER_MS=650;
+ const PREVIEW_OPACITY=0.002;
  const TYPES=[
-   {key:'temperature',source:'HereNowTemperatureCore',builder:'temperatureSource',
-      variable:'temperature_2m',type:'raster'},
-   {key:'rain',source:'HereNowRainCore',builder:'rainSource',
-      variable:'precipitation',type:'raster'},
-   {key:'clouds',source:'HereNowCloudCore',builder:'cloudSource',
-      variable:'cloud_cover',type:'raster'},
-   {key:'wind',source:'HereNowWindCore',builder:'windSource',
-      variable:'wind_u_component_10m',type:'vector'}
+   {key:'temperature',core:'HereNowTemperatureCore',sourceBuilder:'temperatureSource',
+    layerBuilder:'temperatureLayer',sourceId:'hn-temperature',layerId:'hn-temperature-raster',
+    variable:'temperature_2m',opacity:'raster-opacity'},
+   {key:'rain',core:'HereNowRainCore',sourceBuilder:'rainSource',
+    layerBuilder:'rainLayer',sourceId:'hn-rain',layerId:'hn-rain-raster',
+    variable:'precipitation',opacity:'raster-opacity'},
+   {key:'clouds',core:'HereNowCloudCore',sourceBuilder:'cloudSource',
+    layerBuilder:'cloudLayer',sourceId:'hn-clouds',layerId:'hn-clouds-raster',
+    variable:'cloud_cover',opacity:'raster-opacity'},
+   {key:'wind',core:'HereNowWindCore',sourceBuilder:'windSource',
+    layerBuilder:'windLayer',sourceId:'hn-wind',layerId:'hn-wind-arrows',
+    variable:'wind_u_component_10m',opacity:'line-opacity'}
  ];
  function allowed(win){
-   const conn=win?.navigator?.connection;
-   return !Boolean(conn?.saveData||conn?.effectiveType==='2g'||conn?.effectiveType==='slow-2g');
+   const network=win?.navigator?.connection;
+   return !Boolean(network?.saveData||network?.effectiveType==='2g'||
+     network?.effectiveType==='slow-2g');
  }
  function initialFrame(win,metadata,now=new Date()){
    return win?.HereNowWeatherTimelineCore?.buildTimeline(metadata,now,48,3)?.frames?.[0]||null;
  }
- function sourceId(key){return 'hn-first-'+key;}
- function layerId(key){return 'hn-first-'+key+'-preview';}
  function specs(win,metadata,frame){
    const variables=metadata?.variables||[];
-   if(!frame||!Number.isSafeInteger(frame.index)||!Array.isArray(variables))return [];
-   return TYPES.filter(item=>{
-     const present=variables.includes(item.variable)||
-       (item.key==='rain'&&variables.includes('rain'));
-     const windCompanion=item.key!=='wind'||variables.includes('wind_v_component_10m');
-     return present&&windCompanion&&typeof win?.[item.source]?.[item.builder]==='function';
-   }).map(item=>{
-     const actualVar=item.key==='rain'&&!variables.includes('precipitation')?'rain':undefined;
-     const original=win[item.source][item.builder](frame,actualVar);
-     const source={...original,maxzoom:Math.min(MAX_ZOOM,original.maxzoom||MAX_ZOOM)};
-     return {key:item.key,source};
-   }).filter(item=>['raster','vector'].includes(item.source.type)&&
-     typeof item.source.url==='string'&&item.source.url.startsWith('om://'));
+   if(!Number.isSafeInteger(frame?.index)||!Array.isArray(variables))return [];
+   return TYPES.filter(t=>{
+     return (variables.includes(t.variable)||(t.key==='rain'&&variables.includes('rain'))) &&
+       (t.key!=='wind'||variables.includes('wind_v_component_10m')) &&
+       typeof win?.[t.core]?.[t.sourceBuilder]==='function' &&
+       typeof win?.[t.core]?.[t.layerBuilder]==='function';
+   }).map(t=>{
+     const variable=t.key==='rain'&&!variables.includes('precipitation')?'rain':undefined;
+     const source=win[t.core][t.sourceBuilder](frame,variable);
+     const layer=win[t.core][t.layerBuilder](true);
+     return {...t,source,layer};
+   }).filter(t=>['raster','vector'].includes(t.source?.type)&&
+     t.source.url?.startsWith('om://')&&t.layer.id===t.layerId);
  }
- function layer(spec){
-   const common={id:layerId(spec.key),source:sourceId(spec.key),
-     layout:{visibility:'visible'}};
-   return spec.source.type==='vector'?
-     {...common,type:'line','source-layer':'wind-arrows',
-       paint:{'line-color':'#172f39','line-opacity':0.002,'line-width':0.5}}:
-     {...common,type:'raster',
-       paint:{'raster-opacity':0.002,'raster-fade-duration':0}};
+ function prepLayer(spec){
+   return {...spec.layer,
+     layout:{...spec.layer.layout,visibility:'visible'},
+     paint:{...spec.layer.paint,[spec.opacity]:PREVIEW_OPACITY}};
  }
- function before(map){
-   for(const id of ['hn-temperature-raster','hn-rain-raster','hn-clouds-raster',
-                    'hn-wind-arrows','sgu-soil-fill','hn-green-wood-tiles']){
-     if(map.getLayer(id))return id;
-   }
-   return undefined;
+ function before(map,key){
+   if(key==='wind')return undefined;
+   const candidates=key==='temperature'?
+     ['hn-clouds-raster','sgu-soil-fill','hn-green-wood-tiles']:
+     key==='rain'?['hn-temperature-raster','sgu-soil-fill','hn-green-wood-tiles']:
+       ['sgu-soil-fill','hn-green-wood-tiles'];
+   return candidates.find(id=>Boolean(map.getLayer(id)));
  }
- const helpers={MAX_ZOOM,START_DELAY_MS,STAGGER_MS,TYPES,allowed,initialFrame,specs,layer,sourceId,layerId};
+ const helpers={START_DELAY_MS,RETRY_MS,RETRY_LIMIT,STAGGER_MS,PREVIEW_OPACITY,
+   TYPES,allowed,initialFrame,specs,prepLayer,before};
  if(typeof module!=='undefined'&&module.exports)module.exports=helpers;
  if(!root?.document)return;
  const status=root.document.getElementById('weather-first-frames-status');
- const say=msg=>{if(status)status.textContent=msg;};
- const log=msg=>root.HereNowDiagnostics?.log('First weather frames',msg);
- let mapReady=null,started=false,launchTimer=null;
- const stepTimers=new Set(),queued=new Set(),loaded=new Set();
- let bootId=0;
+ const say=text=>{if(status)status.textContent=text;};
+ const log=text=>root.HereNowDiagnostics?.log('First weather frames',text);
+ let mapReady=null,launchTimer=null,starting=false,attempts=0,bootId=0;
+ const timers=new Set(),prepared=new Map(),requested=new Set(),loaded=new Set();
  function anyActive(){
    return ['HereNowTemperature','HereNowRain','HereNowClouds','HereNowWind']
-     .some(name=>root[name]?.isEnabled?.());
+     .some(name=>Boolean(root[name]?.isEnabled?.()));
  }
- function cancelPending(){
+ function cancelTimers(){
    if(launchTimer!==null){clearTimeout(launchTimer);launchTimer=null;}
-   for(const timer of stepTimers)clearTimeout(timer);
-   stepTimers.clear();
+   for(const id of timers)clearTimeout(id);
+   timers.clear();
  }
- function stopForUser(){
-   if(!started)return;
-   cancelPending();
-   if(queued.size)log('Prioritizing selected weather layer over remaining background preloads.');
+ function userSelected(){
+   cancelTimers();
+   if(starting){
+     say('Weather layer selected. '+loaded.size+'/'+requested.size+
+       ' background sources reported ready; prioritizing your selection.');
+   }
  }
- async function start(id){
+ function report(){
+   say('First weather frames: '+loaded.size+'/'+requested.size+
+     ' real layer sources ready. Choose Temperature, Rain, Clouds or Wind.');
+ }
+ function claim(key,url){
+   const found=prepared.get(key);
+   const map=root.HereNowGlobe?.getMap?.();
+   if(!found||!map||found.map!==map||found.url!==url||
+      !map.getSource(found.sourceId)||!map.getLayer(found.layerId))return false;
+   prepared.delete(key);
+   return true;
+ }
+ function frameFor(key){
+   const item=prepared.get(key);
+   return item?.map===root.HereNowGlobe?.getMap?.()?item.frame:null;
+ }
+ function addOne(map,spec,frame,id){
+   if(id!==bootId||map!==mapReady||anyActive())return;
+   try{
+     if(map.getSource(spec.sourceId)||map.getLayer(spec.layerId))return;
+     // Source IDs and native maximum zoom exactly match eventual visible layers.
+     map.addSource(spec.sourceId,spec.source);
+     map.addLayer(prepLayer(spec),before(map,spec.key));
+     prepared.set(spec.key,{map,url:spec.source.url,sourceId:spec.sourceId,
+       layerId:spec.layerId,frame});
+     requested.add(spec.key);
+     report();
+   }catch(error){
+     log(spec.key+' source prewarm failed: '+String(error?.message||error));
+     say('Could not preload '+spec.key+'; normal weather selection remains available.');
+   }
+ }
+ async function run(id){
    launchTimer=null;
+   const map=mapReady;
+   if(!map||id!==bootId||anyActive()||starting)return;
    if(!allowed(root)){
-     say('Automatic frame preloading skipped on Data Saver / slow network.');
+     say('Background weather preloading skipped on Data Saver or a slow connection.');
      return;
    }
-   const map=root.HereNowGlobe?.getMap?.();
-   if(!map?.isStyleLoaded?.()||map!==mapReady||anyActive())return;
-   started=true;
-   say('Preparing first Temperature, Rain, Clouds and Wind forecast frames…');
+   if(!map.isStyleLoaded?.()){
+     if(++attempts<=RETRY_LIMIT){
+       say('Globe displayed. Waiting for its map style to finish loading before weather preloading…');
+       launchTimer=setTimeout(()=>run(id),RETRY_MS);
+     }else say('Globe is displayed, but weather preload could not start. Weather buttons still work.');
+     return;
+   }
+   starting=true;
+   say('Globe ready. Fetching first-frame weather data for all four layers…');
    try{
      const data=root.HereNowWeatherData;
      if(!data?.getMetadata||!root.HereNowTemperature?.ensureProtocol)
-       throw Error('Weather metadata or renderer is not yet ready');
-     // Reuse the same short-lived model metadata cache as the user-facing timeline.
-     const [metadata]=await Promise.all([data.getMetadata(),root.HereNowTemperature.ensureProtocol()]);
-     if(id!==bootId||map!==root.HereNowGlobe?.getMap?.()||anyActive())return;
+       throw Error('Weather metadata cache or renderer unavailable');
+     const [metadata]=await Promise.all([
+       data.getMetadata(),root.HereNowTemperature.ensureProtocol()
+     ]);
+     if(id!==bootId||map!==mapReady||anyActive())return;
      const frame=initialFrame(root,metadata);
-     if(!frame)throw Error('No current forecast frame');
+     if(!frame)throw Error('No published current model timestamp');
      const items=specs(root,metadata,frame);
-     if(items.length!==4)
-       log('Model offers '+items.length+' of 4 global first-frame variables');
-     if(!items.length)throw Error('No compatible weather source available');
-     items.forEach((spec,i)=>{
+     if(!items.length)throw Error('No compatible weather layers in model');
+     if(items.length<4)log('Only '+items.length+' of four model variables available');
+     for(const [i,spec] of items.entries()){
        const timer=setTimeout(()=>{
-         stepTimers.delete(timer);
-         if(id!==bootId||anyActive()||!map.isStyleLoaded?.())return;
-         try{
-           if(!map.getSource(sourceId(spec.key))){
-             map.addSource(sourceId(spec.key),spec.source);
-             map.addLayer(layer(spec),before(map));
-           }
-           queued.add(spec.key);
-           say('Preparing weather frames: '+queued.size+'/'+items.length+' requested; '+
-             loaded.size+' loaded. No overlays enabled yet.');
-         }catch(error){
-           log(spec.key+' first-frame preview failed: '+String(error?.message||error));
-         }
+         timers.delete(timer);
+         addOne(map,spec,frame,id);
        },i*STAGGER_MS);
-       stepTimers.add(timer);
-     });
+       timers.add(timer);
+     }
    }catch(error){
-     log('First-frame preloading unavailable: '+String(error?.message||error));
-     say('Weather preloading unavailable; layers will still load when selected.');
+     log('Startup preloader unavailable: '+String(error?.message||error));
+     say('Weather preloading unavailable: '+String(error?.message||error)+
+       '. You can still tap any weather layer.');
    }
  }
  function onGlobeReady(){
    const map=root.HereNowGlobe?.getMap?.();
-   if(!map||!map.isStyleLoaded?.()||map===mapReady)return;
-   cancelPending();
-   ++bootId;mapReady=map;started=false;
-   queued.clear();loaded.clear();
+   if(!map||map===mapReady)return;
+   cancelTimers();
+   mapReady=map;bootId++;attempts=0;starting=false;
+   prepared.clear();requested.clear();loaded.clear();
    if(!allowed(root)){
-     say('Automatic frame preloading skipped on Data Saver / slow network.');
+     say('Background weather preloading skipped on Data Saver or a slow connection.');
      return;
    }
+   say('Globe detected. Preparing automatic weather loading…');
    map.on('sourcedata',event=>{
      if(map!==mapReady||!event?.isSourceLoaded)return;
-     const key=TYPES.find(item=>sourceId(item.key)===event.sourceId)?.key;
-     if(!key||!queued.has(key)||loaded.has(key))return;
-     loaded.add(key);
-     say('First weather frames: '+loaded.size+'/'+queued.size+
-       ' requested previews loaded. Ready to choose a layer.');
+     const item=TYPES.find(t=>t.sourceId===event.sourceId);
+     if(!item||!requested.has(item.key))return;
+     loaded.add(item.key);
+     report();
+   });
+   map.on('error',event=>{
+     if(map!==mapReady)return;
+     const item=TYPES.find(t=>t.sourceId===event.sourceId);
+     if(item&&requested.has(item.key))log(item.key+' preload tile error: '+
+       String(event.error?.message||'unknown').slice(0,180));
    });
    const id=bootId;
-   launchTimer=setTimeout(()=>start(id),START_DELAY_MS);
+   launchTimer=setTimeout(()=>run(id),START_DELAY_MS);
  }
- for(const id of ['toggle-temperature','toggle-rain','toggle-clouds','toggle-wind']){
-   root.document.getElementById(id)?.addEventListener('click',stopForUser);
- }
+ root.HereNowFirstFrames={claim,frameFor,requested:()=>requested.size,
+   loaded:()=>loaded.size,onGlobeReady,userSelected};
+ for(const name of ['toggle-temperature','toggle-rain','toggle-clouds','toggle-wind'])
+   root.document.getElementById(name)?.addEventListener('click',userSelected);
  root.addEventListener?.('here-now-globe-map-ready',onGlobeReady);
- // Also handle a MapLibre globe that became ready before this script executed.
  onGlobeReady();
- root.HereNowFirstFrames={start:()=>{onGlobeReady();return started;},stopForUser,
-   requested:()=>queued.size,loaded:()=>loaded.size};
 })(typeof window==='undefined'?null:window);

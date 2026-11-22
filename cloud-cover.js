@@ -99,10 +99,12 @@
           map.setLayoutProperty('hn-clouds-raster','visibility','visible');
           applyOpacity();
         }
-        if(force||lastDisplayedUrl!==url){
+        if(lastDisplayedUrl!==url){
           const source=map.getSource('hn-clouds');
-          if(typeof source.setUrl!=='function')throw Error('This MapLibre version cannot update weather raster time steps');
-          source.setUrl(url);
+          if(!window.HereNowFirstFrames?.claim?.('clouds',url)){
+            if(typeof source.setUrl!=='function')throw Error('This MapLibre version cannot update weather raster time steps');
+            source.setUrl(url);
+          }
           lastDisplayedUrl=url;
         }
       }

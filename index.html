@@ -30,12 +30,12 @@
   <script src="./globe-map-controller.js?v=1" defer></script>
   <script src="./tile-cache.js?v=2" defer></script>
   <script src="./globe.js?v=12" defer></script>
-  <script src="./temperature-layer.js?v=7" defer></script>
-  <script src="./rain-forecast.js?v=5" defer></script>
-  <script src="./cloud-cover.js?v=5" defer></script>
-  <script src="./wind-layer.js?v=3" defer></script>
+  <script src="./temperature-layer.js?v=8" defer></script>
+  <script src="./rain-forecast.js?v=6" defer></script>
+  <script src="./cloud-cover.js?v=6" defer></script>
+  <script src="./wind-layer.js?v=4" defer></script>
   <script src="./weather-prefetch.js?v=1" defer></script>
-  <script src="./first-frame-preload.js?v=1" defer></script>
+  <script src="./first-frame-preload.js?v=2" defer></script>
   <script src="./weather-timeline.js?v=3" defer></script>
   <script src="./next-rain.js?v=1" defer></script>
   <script src="./green-spaces.js?v=3" defer></script>
@@ -48,7 +48,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.10" aria-label="Here and Now version 1.0.10" title="Website release v1.0.10">v1.0.10</span>
+        <span class="app-version" data-app-version="1.0.11" aria-label="Here and Now version 1.0.11" title="Website release v1.0.11">v1.0.11</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -77,7 +77,7 @@
           <p id="map-status" role="status" aria-live="polite">Map starts in Lund. Use Find me or search for a place below.</p>
           <a href="https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html" target="_blank" rel="noopener noreferrer">Open SGU’s original map ↗</a>
         </div>
-        <p id="weather-first-frames-status" class="weather-startup-status" role="status" aria-live="polite">Weather layers are preparing in the background once the globe loads.</p>
+        <p id="weather-first-frames-status" class="weather-startup-status" role="status" aria-live="polite">Starting 3D globe. Waiting to preload Temperature, Rain, Clouds and Wind…</p>
         <section id="weather-timeline" class="weather-timeline rain-forecast-controls" aria-label="Shared 48-hour forecast timeline for all weather overlays" hidden>
           <div class="rain-control-heading"><strong>🕒 One timeline · all weather layers</strong><span id="weather-lead-time">—</span></div>
           <div class="rain-control-actions">
