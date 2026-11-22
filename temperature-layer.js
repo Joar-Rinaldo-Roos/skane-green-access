@@ -92,8 +92,15 @@
       if(button)button.click();
     }
     const map=globe?.getMap?.();
-    if(!map||!map.isStyleLoaded?.()){
-      say('Opening the 3D globe; temperature will appear when the map is ready…');
+    if(!map){
+      say('Waiting for the 3D globe to initialize before showing Temperature…');
+      return;
+    }
+    // A preloaded source already exists in the style even while MapLibre is
+    // fetching other weather tiles. Do not gate visibility on isStyleLoaded().
+    const prewarmed=Boolean(map.getSource?.('hn-temperature')&&map.getLayer?.('hn-temperature-raster'));
+    if(!prewarmed&&!map.isStyleLoaded?.()){
+      say('Waiting for map style before creating the Temperature source…');
       return;
     }
     if(!protocolReady){
@@ -105,7 +112,7 @@
       }
     }
     if(!enabled)return;
-    if(!map.isStyleLoaded?.())return;
+    if(!prewarmed&&!map.isStyleLoaded?.())return;
     try{
       attachMapListeners(map);
       const wanted=core.temperatureUrl(selectedFrame);
@@ -157,7 +164,7 @@
     setDetails();
     if(!enabled)return true;
     const map=window.HereNowGlobe?.getMap?.();
-    if(map?.getSource?.('hn-temperature')&&map.isStyleLoaded?.()){
+    if(map?.getSource?.('hn-temperature')&&map.getLayer?.('hn-temperature-raster')){
       const url=core.temperatureUrl(selectedFrame);
       if(url!==lastRasterUrl){
         try{
