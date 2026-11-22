@@ -47,5 +47,6 @@ test('Pages deploys and verifies the exact version visible on the live site',()=
  assert.match(deploy,/toggle-rain/);
  assert.match(deploy,/next-rain-panel/);
  assert.match(deploy,/toggle-clouds/);
+ assert.match(deploy,/cloud-opacity/);
  assert.match(deploy,/curl -fsSL/);
 });
