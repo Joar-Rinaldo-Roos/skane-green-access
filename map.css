@@ -23,6 +23,14 @@
 .rain-status{font-size:.8rem;color:#315d77;line-height:1.5;margin:8px 5px 0;padding:8px 10px;background:#eef5fa;border-radius:9px}
 .rain-forecast-controls{margin:8px 5px 4px;padding:14px;background:#f4f9fc;border:1px solid #cbdfe9;border-radius:12px;display:grid;gap:10px;color:#2d5061;font-size:.82rem;line-height:1.45}
 .rain-forecast-controls[hidden]{display:none}
+.legacy-weather-controls[hidden]{display:none!important}
+.weather-timeline{background:#eaf4f0;border-color:#c1ded1;margin:12px 5px 12px}
+#weather-play{background:#216651;color:#fff;padding:10px 14px;min-height:44px;min-width:100px}
+#weather-play:disabled{opacity:.55}
+#weather-hour{width:100%;margin:0;accent-color:#26755b;min-height:32px;touch-action:pan-y}
+#weather-hour:disabled{opacity:.5}
+#weather-time-label{font-weight:700;font-size:.85rem}
+#weather-lead-time{font-size:.78rem;background:#d6eadd;padding:5px 9px;border-radius:8px;font-weight:750}
 .rain-control-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .rain-control-heading strong{font-size:.87rem}
 #rain-lead-time{font-size:.78rem;background:#dbeef8;padding:5px 9px;border-radius:8px;font-weight:750;white-space:nowrap}
