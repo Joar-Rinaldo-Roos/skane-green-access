@@ -80,12 +80,16 @@
         attachEvents(map);
         lastDisplayedUrl=url;
       }else{
-        if(map.getLayer('hn-rain-raster'))
+        if(map.getLayer('hn-rain-raster')){
           map.setLayoutProperty('hn-rain-raster','visibility','visible');
-        if(force||lastDisplayedUrl!==url){
+          map.setPaintProperty('hn-rain-raster','raster-opacity',0.77);
+        }
+        if(lastDisplayedUrl!==url){
           const source=map.getSource('hn-rain');
-          if(typeof source.setUrl!=='function')throw Error('This MapLibre version cannot update weather raster time steps');
-          source.setUrl(url);
+          if(!window.HereNowFirstFrames?.claim?.('rain',url)){
+            if(typeof source.setUrl!=='function')throw Error('This MapLibre version cannot update weather raster time steps');
+            source.setUrl(url);
+          }
           lastDisplayedUrl=url;
         }
       }
