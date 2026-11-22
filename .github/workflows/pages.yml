@@ -64,6 +64,37 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
+      # Validate the deployment workflow's artifact handling as part of the
+      # release gate. This test does not require external network access.
+      - name: Validate Pages artifact visibility guard
+        run: |
+          node --test pages-workflow.test.cjs
+      # Pages/Actions artifact APIs can briefly disagree after upload:
+      # a successful upload may return "Found 0 artifacts" to deploy-pages.
+      # Poll the official Actions API before letting deploy-pages resolve it.
+      - name: Wait until Pages artifact is visible to Actions API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 20); do
+            response=$(curl -fsSL --retry 2 --max-time 20 \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100")
+            count=$(printf '%s' "$response" | node -e "let data='';process.stdin.on('data',c=>data+=c);process.stdin.on('end',()=>{const j=JSON.parse(data);console.log((j.artifacts||[]).filter(a=>a.name==='github-pages'&&!a.expired).length)})")
+            if [ "$count" = 1 ]; then
+              echo "One Pages artifact is visible to the Actions API."
+              exit 0
+            fi
+            if [ "$count" -gt 1 ]; then
+              echo "::error::Multiple github-pages artifacts detected. Trigger a fresh workflow run, not a job rerun."
+              exit 1
+            fi
+            echo "Pages artifact not yet indexed (attempt ${attempt}/20); retrying."
+            sleep 6
+          done
+          echo "::error::The uploaded github-pages artifact was not indexed in time."
+          exit 1
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
