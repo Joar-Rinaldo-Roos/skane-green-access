@@ -86,12 +86,12 @@ test('Cloud timeline moves an enabled temperature source and the timestamp to ex
  assert(h.urls.at(-1).includes('time_step=current_time_1H'));
 });
 
-test('Temperature toggle does not hide Clouds; rain remains an exclusive alternative',async()=>{
+test('Temperature toggle does not hide Clouds or Rain when using unified timeline',async()=>{
  const h=harness({cloudFrame:{index:2,time:'2026-11-22T15:00:00Z'}});
  h.node('toggle-temperature').click();
  await h.flush();
  assert.equal(h.cloudHidden,0);
- assert.equal(h.rainHidden,1);
+ assert.equal(h.rainHidden,0);
  h.node('toggle-temperature').click();
  assert.equal(h.win.HereNowTemperature.isEnabled(),false);
  assert.equal(h.cloudHidden,0);
