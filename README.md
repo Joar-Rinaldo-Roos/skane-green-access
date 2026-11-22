@@ -55,6 +55,19 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## Green Spaces map overlay (November 2026)
+
+**🌳 Green spaces** is a map toggle alongside the geology layer. It shows mapped **parks, gardens, forests, nature reserves and recreation green areas** on both the 3D MapLibre globe and 2D Leaflet map.
+
+- Uses OpenStreetMap Overpass API to fetch nearby OSM ways and multipolygon relations on demand, within about **1.2 km of the visible map center** (at street-level zoom 12+).
+- Converts closed OSM polygon geometries into GeoJSON and renders transparent colored shapes on both map views. Tap an area to see its mapped name/type and the original OSM object link.
+- Updates when the map moves, with 15-second minimum request spacing, a 5-minute in-memory query cache, a capped output size, timeouts and a user-visible error message. The toggle starts **off** and does not fetch until selected.
+- This visualizes **mapped green spaces, not measured green access**. The app does not yet compute walking routes, verify entry points or confirm public accessibility. Incomplete OSM tagging and unclosed multipolygon fragments may cause areas to be omitted.
+- Data source: OpenStreetMap contributors via a public Overpass API instance. Its availability, CORS and rate limits can vary; no availability guarantee. Queries send the selected map center coordinates to Overpass.
+- Tests: `node --test green-spaces.test.cjs`. The GitHub Actions CI runs these tests and syntax checks; Pages deployment also requires them to pass.
+- Works independently of the Mac GPT backend. Actual Android browser/network rendering still requires on-device validation.
+
 ## Previous prototype
 
 This repository began as a Skåne green-space proximity project. Its original Python files (`analysis.py`, `app.py`, `download.py`, `demo.py`, `tests/`) are retained for reference and have **not** been incorporated into Here & Now. The original prototype's live OSM/Streamlit integration has not been validated end-to-end.
