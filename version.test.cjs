@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.11');
+ assert.equal(version.version,'1.0.12');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -49,10 +49,11 @@ test('release exposes both temperature and rain forecast controls and scripts',(
  assert.doesNotMatch(html,/id="tile-cache-extra"/);
  assert.match(html,/weather-prefetch\.js\?v=/);
  assert.match(html,/first-frame-preload\.js\?v=2/);
- assert.match(html,/temperature-layer\.js\?v=8/);
- assert.match(html,/rain-forecast\.js\?v=6/);
- assert.match(html,/cloud-cover\.js\?v=6/);
- assert.match(html,/wind-layer\.js\?v=4/);
+ assert.match(html,/temperature-layer\.js\?v=9/);
+ assert.match(html,/rain-forecast\.js\?v=7/);
+ assert.match(html,/cloud-cover\.js\?v=7/);
+ assert.match(html,/wind-layer\.js\?v=5/);
+ assert.match(html,/diagnostics\.js\?v=6/);
  assert.match(html,/id="weather-first-frames-status"/);
  assert.match(html,/id="weather-prefetch-status"/);
  assert.doesNotMatch(html,/leaflet@/);
