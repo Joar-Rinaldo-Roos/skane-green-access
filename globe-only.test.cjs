@@ -79,7 +79,7 @@ function harness(){
 }
 test('globe initializes once without a 2D toggle and uses configured memory cache',()=>{
  const h=harness();
- assert.equal(h.created,0);
+ assert.equal(h.created,1); // preloaded MapLibre automatically starts the globe
  h.invoke('here-now-globe-ready');
  assert.equal(h.created,1);
  assert.equal(h.options.container,'globe-map');
