@@ -1,12 +1,10 @@
-/* Globe-first MapLibre projection, synchronized with Leaflet and SGU OGC Features.
- * Only the map basemap uses OSM; coloured polygons come directly from SGU. */
+/* v1.0.8: single MapLibre globe. No Leaflet 2D map or duplicated OSM requests.
+ * SGU soil polygons remain available from the lightweight globe controller. */
 (function () {
   'use strict';
-  const button=document.getElementById('toggle-globe');
-  const street=document.getElementById('map');
   const globeContainer=document.getElementById('globe-map');
   const controller=window.HereNowMap;
-  if (!button || !street || !globeContainer || !controller) return;
+  if (!globeContainer || !controller) return;
 
   const EMPTY={type:'FeatureCollection',features:[]};
   let globeMap=null, globeReady=false, globeActive=false, globeMarker=null;
@@ -60,24 +58,12 @@
     globeMap.setLayoutProperty('sgu-soil-outline','visibility',geologyEnabled?'visible':'none');
   }
 
-  function toStreet() {
-    globeActive=false;
-    globeContainer.hidden=true;
-    street.hidden=false;
-    button.textContent='🌐 Globe';
-    button.setAttribute('aria-pressed','false');
-    button.setAttribute('aria-label','Switch to 3D globe');
-    controller.resize?.();
-    window.HereNowGreenSpaces?.repaint?.();
-    window.HereNowGreenSpaces?.scheduleRefresh?.();
-    controller.setStatus('2D street map active. Soil geology remains available.');
-  }
   function failGlobe(message) {
     diag(message);
     if (globeMap) {try {globeMap.remove();}catch (_){} globeMap=null;}
     globeReady=false;
-    toStreet();
-    controller.setStatus(message);
+    globeActive=false;
+    controller.setStatus(message+' WebGL is required for the 3D globe.');
   }
   function toGlobe() {
     if (!window.maplibregl) {
@@ -86,15 +72,11 @@
       return;
     }
     if (typeof maplibregl.supported==='function' && !maplibregl.supported()) {
-      controller.setStatus('WebGL is not available in this browser. The 2D street map is available.');
+      controller.setStatus('WebGL is not available. This globe-only version requires WebGL.');
       diag('WebGL unsupported');return;
     }
     globeActive=true;
     globeContainer.hidden=false;
-    street.hidden=true;
-    button.textContent='🗺️ 2D map';
-    button.setAttribute('aria-pressed','true');
-    button.setAttribute('aria-label','Switch to 2D street map');
     controller.setStatus('3D globe active. Drag to rotate; pinch to zoom.');
     if (globeMap) {
       globeMap.resize();
@@ -118,7 +100,10 @@
         center:currentPlace?[currentPlace.lon,currentPlace.lat]:[local.lon,local.lat],
         zoom:currentPlace?lastZoom:3.3,
         minZoom:0.5,maxZoom:18,
-        attributionControl:true
+        attributionControl:true,
+        // Per-source cache in MapLibre: retain more recently visited visible tiles.
+        // Keep a bounded limit on mobile to avoid excessive decoded raster memory.
+        maxTileCacheSize:window.HereNowTileCache?.maxTiles?.()||72
       });
       globeMap.on('style.load',()=>globeMap.setProjection({type:'globe'}));
       globeMap.on('load',()=>{
@@ -136,12 +121,11 @@
       globeMap.on('moveend',()=>{if(globeActive){controller.scheduleGeologyRefresh?.();window.HereNowGreenSpaces?.scheduleRefresh?.();window.HereNowNextRain?.onMapMoved?.();}});
       globeMap.on('error',event=>{diag('MapLibre resource/render error; globe may be partially available');});
     } catch(error) {
-      failGlobe('The 3D globe could not start. The 2D map remains available.');
+      failGlobe('The 3D globe could not start.');
     }
   }
-  button.addEventListener('click',()=>{if(globeActive)toStreet();else toGlobe();});
 
-  // The active map's viewport, not the hidden Leaflet viewport, drives SGU queries.
+  // The globe viewport drives SGU queries and all map-center discovery.
   controller.setViewProvider?.(()=>{
     if(!globeActive||!globeMap||!globeReady)return null;
     const p=globeMap.getCenter();
@@ -181,7 +165,7 @@
     return true;
   }
   window.HereNowGlobe={getMap:()=>globeReady?globeMap:null,isActive:()=>globeActive,zoomTo};
-  // The ES-module loader dispatches this after MapLibre is actually available.
+  // Automatically initialize the globe as soon as MapLibre is available.
   window.addEventListener('here-now-globe-ready',toGlobe);
   if(window.maplibregl) toGlobe();
 })();
