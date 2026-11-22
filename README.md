@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.2**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.3**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.3** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.4** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,16 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## ☁️ Global cloud cover forecast — v1.0.3 (November 2026)
+
+- **☁️ Clouds** adds a global **total cloud cover** forecast layer on the existing 3D MapLibre globe. It reuses the working Open-Meteo MapLibre OM protocol renderer and the DWD ICON Global weather model. The data variable is `cloud_cover` (the predicted share of sky covered by clouds, **0% = clear, 100% = overcast**).
+- Unlike live satellite photos, this is **numerical model forecast cloud cover**, which can diverge from the sky at any given location. Resolution remains global-model resolution even when zoomed in. A model forecast does not mean precipitation is expected.
+- The **48-hour timeline** selects only timestamps actually present in the latest model metadata (`https://openmeteo.s3.amazonaws.com/data_spatial/dwd_icon/latest.json`), approximately every three hours. **▶ Play / Ⅱ Pause** animates through frames; the forecast-valid time and model-run reference time are visible.
+- The MapLibre raster source uses `om://…/dwd_icon/latest.json?variable=cloud_cover&time_step=valid_times_N` at zoom levels from world to local, with a semi-transparent overlay. The source is not queried until Clouds is activated. No GPS, user coordinates, Mac backend, or API key is needed.
+- **Clouds, Rain forecast and Temperature are exclusive weather overlays** to avoid blending unrelated colour scales, while SGU geology and Green Spaces remain available. Switching away pauses animation and hides the previous forecast overlay.
+- Network/code tests: `node --test cloud-cover.test.cjs cloud-cover.browser.test.cjs` covers real forecast indices, raster URLs, toggle, slider and Play/Pause. GitHub Actions runs `node cloud-cover-smoke.mjs` to verify that `cloud_cover` is actually in the latest DWD ICON global metadata and that there are at least 36 hours of future forecasts. These checks cannot substitute for testing real graphics rendering on a Samsung/Android or Mac browser.
+- Github Pages deployment checks that live HTML contains the expected v1.0.3 release number and **☁️ Clouds** button. The upstream Open-Meteo weather-map-layer library is experimental, and model/tiles may load slowly on mobile.
 
 ## 🌧️ Next rain at the map center — v1.0.2 (November 2026)
 
