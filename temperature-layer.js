@@ -190,6 +190,7 @@
       selectedFrame=window.HereNowClouds?.currentFrame?.()||null;
       forecastTime=selectedFrame?selectedFrame.time:null;
     }
+    window.HereNowClouds?.syncTemperatureChoice?.(enabled);
     toggle.classList.toggle('layer-active',enabled);
     toggle.setAttribute('aria-pressed',String(enabled));
     toggle.setAttribute('aria-label',enabled?'Hide global temperature forecast':'Show global temperature forecast');

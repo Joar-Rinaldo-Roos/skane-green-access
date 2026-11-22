@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.4**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.5**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.5** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.6** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,16 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## 💨 Global 10 m wind direction and optional cloud/temperature combination — v1.0.5 (November 2026)
+
+**💨 Wind:** An optional **10 m surface wind** arrow overlay on the existing 3D MapLibre globe. This reuses the same Open-Meteo `om://` raster/vector protocol already loaded for other global weather layers. The implementation follows Open-Meteo's official `examples/vector/wind-arrows.html`: a vector tile source at `om://…/dwd_icon/latest.json?variable=wind_u_component_10m&time_step=valid_times_N&arrows=true` with the vector `source-layer: wind-arrows`. Open-Meteo interprets the U and V wind components into arrows; arrow tips indicate **where the air is moving**, while meteorological wind direction is conventionally named for *where wind comes from*. The arrow positions and forecast times are model estimates, not live measured wind, particles or real-time advection.
+
+Wind runs independently alongside Temperature, Clouds and even Rain. The wind arrow layer is deliberately rendered last (above underlying weather colours and geography). The Wind controls have their own 48-hour, approximately three-hourly **Play/Pause and timeline** using only the DWD ICON model's real published `valid_times`. If Wind and another weather timeline are simultaneously animating, their time selectors are **independent**, and should not be taken as a synchronized cross-layer forecast. Switching to Wind does not require GPS or the Mac; Wind automatically opens the globe. Long timelines and several active layers can consume more mobile bandwidth/graphics processing.
+
+**Clouds + Temperature are optional again:** Tap ☁️ Clouds to see cloud cover **alone**, not automatically force Temperature on. The Clouds panel now includes an unchecked-by-default **“Also show 🌡️ Temperature beneath clouds”** checkbox. Check it to enable the translucent combined view, uncheck it to return to clouds only. Manual 🌡️ Temp button presses also remain supported; when both are enabled, both advance to the *same* forecast hour as the Clouds timeline, unlike the independent Wind timeline. Temperature can still run by itself.
+
+**Tests:** `node --test wind.test.cjs wind.browser.test.cjs cloud-cover.browser.test.cjs` covers genuine global wind vector component requirements, time indices, the official OM arrows protocol, toggle, Play/Pause, and optional Temperature pairing. A live `node wind-smoke.mjs` verifies global u/v wind components and at least 30 hours of future forecast data; the test uses no GPS. The previous Open-Meteo and Green Spaces regressions remain in CI. GitHub Pages checks that live HTML exposes `v1.0.5`, Wind and the cloud/temperature checkbox, but real Samsung rendering must still be tested manually.
 
 ## 🌡️☁️ Combined temperature + cloud cover — v1.0.4 (November 2026)
 
