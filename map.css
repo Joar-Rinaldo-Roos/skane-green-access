@@ -47,6 +47,16 @@
 .cloud-opacity-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:.78rem;font-weight:600;color:#365368}
 #cloud-opacity{width:100%;margin:0;min-height:27px;accent-color:#63849d;touch-action:pan-y}
 #cloud-opacity-value{font-size:.76rem;font-variant-numeric:tabular-nums;color:#355568}
+.cloud-combination-toggle{display:flex;align-items:center;gap:9px;line-height:1.45;cursor:pointer;font-weight:650;color:#355568}
+#cloud-with-temperature{width:19px;height:19px;accent-color:#45667f;flex-shrink:0}
+.wind-status{font-size:.8rem;color:#3a5b61;line-height:1.5;margin:8px 5px 0;padding:8px 10px;background:#eef6f6;border-radius:9px}
+.wind-forecast-controls{background:#f3f8f8;border-color:#cadfdf}
+.wind-forecast-controls #wind-lead-time{background:#d9eeee}
+#wind-play{background:#28666c;color:white;padding:10px 14px;min-height:44px;min-width:95px}
+#wind-play:disabled{opacity:.55}
+#wind-time-label{font-weight:650;font-size:.83rem}
+#wind-hour{width:100%;margin:0;accent-color:#32747e;min-height:27px;touch-action:pan-y}
+#wind-hour:disabled{opacity:.45}
 
 
 .next-rain-panel{background:#fff;border:1px solid #dce8e4;border-radius:18px;padding:17px 19px;margin:0 0 16px;box-shadow:0 7px 24px #173f3112}
