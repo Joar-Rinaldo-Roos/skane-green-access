@@ -1,7 +1,7 @@
 /* Here & Now v1.0.3 — Global total cloud cover forecast / 48-hour animation.
  * Uses actual forecast time indices from DWD ICON metadata via Open-Meteo.
  * This is predictive cloud cover in percent, NOT satellite cloud imagery.
- * Cloud, cloud_cover and temperature colours are mutually exclusive. */
+ * Cloud, rain and temperature colours are mutually exclusive. */
 (function(){
   'use strict';
   const core=window.HereNowCloudCore;
@@ -90,9 +90,9 @@
         }
       }
       sourceLoaded=false;frameLoadPending=true;
-      say('Loading forecast cloud_cover for '+validStamp(frame)+'…');
+      say('Loading forecast cloud cover for '+validStamp(frame)+'…');
     }catch(error){
-      say('Cannot display this cloud_cover frame: '+(error?.message||'unknown error'));
+      say('Cannot display this cloud-cover frame: '+(error?.message||'unknown error'));
       log('Map layer update error: '+(error?.message||'unknown error'));
       stopPlayback();
     }
@@ -182,7 +182,7 @@
     const map=window.HereNowGlobe?.getMap?.();
     if(map?.getLayer?.('hn-clouds-raster')){
       try{map.setLayoutProperty('hn-clouds-raster','visibility','none');}
-      catch(error){log('Unable to hide rain layer: '+error.message);}
+      catch(error){log('Unable to hide cloud layer: '+error.message);}
     }
     say('Cloud cover hidden.');
   }
