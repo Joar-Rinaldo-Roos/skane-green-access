@@ -20,8 +20,10 @@
   <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js" defer></script>
   <script src="./sky.js?v=10" defer></script>
   <script src="./green-spaces-core.js?v=3" defer></script>
+  <script src="./temperature-core.js?v=1" defer></script>
   <script src="./map.js?v=10" defer></script>
-  <script src="./globe.js?v=10" defer></script>
+  <script src="./globe.js?v=11" defer></script>
+  <script src="./temperature-layer.js?v=1" defer></script>
   <script src="./green-spaces.js?v=3" defer></script>
   <script src="./discovery-ui.js?v=10" defer></script>
   <script src="./app.js?v=11" defer></script>
@@ -49,6 +51,7 @@
             <button id="locate" type="button" aria-label="Find my current location">◎ Find me</button>
             <button id="toggle-geology" type="button" aria-pressed="false" aria-label="Show SGU soil geology features">🪨 Soil geology</button>
             <button id="toggle-green-spaces" type="button" aria-pressed="false" aria-label="Show mapped green spaces">🌳 Green spaces</button>
+            <button id="toggle-temperature" type="button" aria-pressed="false" aria-label="Show global temperature forecast">🌡️ Temp</button>
             <button id="toggle-globe" type="button" aria-pressed="false" aria-label="Switch to a rotatable globe">🌐 Globe</button>
           </div>
         </div>
@@ -57,6 +60,13 @@
           <a href="https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html" target="_blank" rel="noopener noreferrer">Open SGU’s original map ↗</a>
         </div>
         <p id="green-status" class="green-status" role="status" aria-live="polite">Green Spaces is off. Tap 🌳 Green spaces to load mapped parks and forests near the visible map center.</p>
+        <p id="temperature-status" class="temperature-status" role="status" aria-live="polite">Temperature overlay is off. Tap 🌡️ Temp to view a global forecast on the 3D globe.</p>
+        <div id="temperature-details" class="temperature-details" hidden>
+          <strong>🌡️ Global 2 m air-temperature forecast</strong>
+          <span id="temperature-forecast-time">Nearest forecast hour</span>
+          <span>DWD ICON global model · model prediction, not real-time observation. Data shown worldwide; local detail is limited by model resolution.</span>
+          <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Forecast data: Open-Meteo / DWD ↗</a>
+        </div>
         <p class="map-note">Tap a geological area for its English name and composition, then <strong>Read more</strong> to explore the ground’s formation and history below the map. Soil units come from SGU.</p>
         <section id="geology-details" class="geology-details-panel" aria-label="Read more about soil geology" hidden>
           <div class="geology-details-heading"><h2>Under the surface</h2><button id="close-geology-details" type="button" aria-label="Close geology details">✕ Close</button></div>
