@@ -33,6 +33,9 @@ jobs:
           node --check cloud-cover.js
           node --check wind-core.js
           node --check wind-layer.js
+          node --check weather-timeline-core.js
+          node --check weather-timeline.js
+          node --test weather-timeline.test.cjs weather-timeline.browser.test.cjs
           node --test wind.test.cjs wind.browser.test.cjs
           node --test cloud-cover.test.cjs cloud-cover.browser.test.cjs
           node --check next-rain-core.js
@@ -61,7 +64,7 @@ jobs:
       - name: Stage only public website assets
         run: |
           mkdir -p _site
-          cp index.html version.json app.js temperature-core.js temperature-layer.js rain-forecast-core.js rain-forecast.js cloud-cover-core.js cloud-cover.js wind-core.js wind-layer.js next-rain-core.js next-rain.js green-spaces-core.js green-spaces.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js chat.js style.css map.css _site/
+          cp index.html version.json app.js temperature-core.js temperature-layer.js rain-forecast-core.js rain-forecast.js cloud-cover-core.js cloud-cover.js wind-core.js wind-layer.js weather-timeline-core.js weather-timeline.js next-rain-core.js next-rain.js green-spaces-core.js green-spaces.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js chat.js style.css map.css _site/
           touch _site/.nojekyll
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
@@ -109,8 +112,8 @@ jobs:
           site="${SITE_URL%/}/"
           for attempt in $(seq 1 12); do
             if curl -fsSL --max-time 20 -H "Cache-Control: no-cache" "${site}?release=${GITHUB_SHA}&attempt=${attempt}" -o /tmp/here-now-live.html; then
-              if grep -Fq "data-app-version=\"${expected}\"" /tmp/here-now-live.html && grep -Fq 'id="toggle-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-rain"' /tmp/here-now-live.html && grep -Fq 'id="next-rain-panel"' /tmp/here-now-live.html && grep -Fq 'id="toggle-clouds"' /tmp/here-now-live.html && grep -Fq 'id="cloud-opacity"' /tmp/here-now-live.html && grep -Fq 'id="cloud-with-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-wind"' /tmp/here-now-live.html; then
-                echo "Published website verified: v${expected}, with optional clouds+temp and wind arrows"
+              if grep -Fq "data-app-version=\"${expected}\"" /tmp/here-now-live.html && grep -Fq 'id="toggle-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-rain"' /tmp/here-now-live.html && grep -Fq 'id="next-rain-panel"' /tmp/here-now-live.html && grep -Fq 'id="toggle-clouds"' /tmp/here-now-live.html && grep -Fq 'id="cloud-opacity"' /tmp/here-now-live.html && grep -Fq 'id="cloud-with-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-wind"' /tmp/here-now-live.html && grep -Fq 'id="weather-play"' /tmp/here-now-live.html && grep -Fq 'id="weather-hour"' /tmp/here-now-live.html; then
+                echo "Published website verified: v${expected}, with one synchronized Play and timeline for all weather layers"
                 exit 0
               fi
             fi
