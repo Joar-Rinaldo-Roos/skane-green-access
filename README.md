@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.9**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.10**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.10** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.11** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,16 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## ⏩ First weather frames preload automatically — v1.0.10 (November 2026)
+
+The globe now begins warming **all four first-forecast overlays** *before any weather layer is enabled*: 🌡️ Temperature, 🌧️ Rain, ☁️ Clouds, and 💨 Wind. Once MapLibre is ready, the new `first-frame-preload.js` waits briefly for the initial map load, reuses `HereNowWeatherData.getMetadata()` and the existing Open-Meteo renderer/protocol, chooses the single current DWD ICON Global model `valid_times_N` frame via `weather-timeline-core.js`, and stages **four** near-transparent MapLibre sources in 650ms increments. Nothing is switched on in the UI; all user controls remain optional, and the one shared 48h timeline remains intact.
+
+Each warm source uses **only the visible globe viewport at a maximum tile zoom of 4**, for a fixed upper bound of four extra sources—not a complete global/offline download. Automatic requests are skipped on Save Data and 2G/slow-2G connections, and remaining background work is cancelled when the user selects any weather layer, prioritizing interactive work. A small status text reports queued previews and how many source requests MapLibre says are loaded. If weather metadata or one preview fails, the ordinary weather overlays still work on demand.
+
+The existing v1.0.9 next-frame preloader continues to work after a weather overlay is selected. The larger MapLibre per-source in-memory tile cache is still always enabled (desktop 224, normal mobile 128, low-memory 80).
+
+**Important limitation:** These are best-effort low-resolution Open-Meteo previews through standard MapLibre sources. A preview being loaded is *not a guarantee* that a later high-resolution or differently configured visible layer reuses its decoded tiles; a first tap can still trigger network and GPU work. We do not claim a measured performance improvement without phone testing. No GPS, credentials, or persistent offline tile storage are required. `node --test first-frame-preload.test.cjs` covers four matching model times, staging, no toggles selected, no invented variables, Data Saver, errors, and cancellation when a user starts a weather layer.
 
 ## ⚡ Always-on larger map cache + one upcoming weather-frame prefetch — v1.0.9 (November 2026)
 
