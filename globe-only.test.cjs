@@ -41,7 +41,7 @@ function harness(){
    click(){local.get('click')?.()}
   });
  }return nodes.get(id);}
- class Map{
+ class FakeGlobeMap{
   constructor(opts){created++;options=opts;map=this;this.handlers=new Map();this.sources=new globalThis.Map();this.layers=new globalThis.Map();this.center={lat:55.7047,lng:13.1910};this.zoom=3.3;}
   on(event,arg,cb){const fn=cb||arg;this.handlers.set(event,fn)}
   addSource(id,src){this.sources.set(id,{...src,setData(data){this.data=data}})}
@@ -59,7 +59,7 @@ function harness(){
  const fakeWindow={
    HereNowTileCache:{maxTiles:()=>224},
    HereNowDiagnostics:{log(){}},
-   maplibregl:{Map,supported:()=>true,Marker:class Marker{
+   maplibregl:{Map:FakeGlobeMap,supported:()=>true,Marker:class Marker{
      constructor(){}setLngLat(){return this}addTo(){return this}remove(){}
    }},
    HereNowSoil:{createSummary:()=>({})},
