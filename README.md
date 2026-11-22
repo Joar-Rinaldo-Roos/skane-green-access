@@ -1,5 +1,15 @@
 # Here & Now — location-based curiosity app
 
+## Website version and release verification
+
+**Current release: v1.0.0**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+
+For the next website changes, bump the version to **v1.0.1** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+
+The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
+
+
+
 **Here & Now** is a responsive, browser-based discovery app that answers: **“What is interesting about where I am?”**
 
 Choose your **current GPS location** or search for a **place in Sweden**, then choose a topic. The app fetches information from linked public sources and presents one discovery at a time.
