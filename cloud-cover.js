@@ -83,7 +83,7 @@
     if(window.HereNowTemperature?.isEnabled?.())
       window.HereNowTemperature?.setForecastFrame?.(frame);
     const map=window.HereNowGlobe?.getMap?.();
-    if(!map||!map.isStyleLoaded?.())return;
+    if(!map||(!map.getSource?.('hn-clouds')&&!map.isStyleLoaded?.()))return;
     const url=core.cloudUrl(frame,variable);
     try{
       if(!map.getSource('hn-clouds')){
@@ -148,7 +148,7 @@
         return;
       }
       const map=window.HereNowGlobe?.getMap?.();
-      if(!map||!map.isStyleLoaded?.()){
+      if(!map||(!map.getSource?.('hn-clouds')&&!map.isStyleLoaded?.())){
         say('Waiting for the 3D globe to become ready…');
         return;
       }
