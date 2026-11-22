@@ -16,7 +16,8 @@
   const modelLabel=document.getElementById('cloud-model-time');
   const opacity=document.getElementById('cloud-opacity');
   const opacityValue=document.getElementById('cloud-opacity-value');
-  if(!core||!button||!panel||!status||!playButton||!slider||!stamp||!progress||!maxLabel||!modelLabel||!opacity||!opacityValue)return;
+  const combine=document.getElementById('cloud-with-temperature');
+  if(!core||!button||!panel||!status||!playButton||!slider||!stamp||!progress||!maxLabel||!modelLabel||!opacity||!opacityValue||!combine)return;
 
   const INTERVAL_MS=4500;
   let enabled=false,frames=[],variable='cloud_cover',index=0;
@@ -205,6 +206,14 @@
     say('Cloud cover hidden. Temperature returns to the current forecast.');
   }
   playButton.addEventListener('click',startPlayback);
+  combine.addEventListener('change',()=>{
+    if(!enabled)return;
+    const want=Boolean(combine.checked);
+    if(want!==Boolean(window.HereNowTemperature?.isEnabled?.()))
+      document.getElementById('toggle-temperature')?.click();
+    if(want&&frames[index]&&window.HereNowTemperature?.isEnabled?.())
+      window.HereNowTemperature?.setForecastFrame?.(frames[index]);
+  });
   opacity.addEventListener('input',applyOpacity);
   slider.addEventListener('input',()=>{
     stopPlayback();
@@ -223,11 +232,11 @@
     panel.hidden=false;slider.disabled=true;playButton.disabled=true;
     displayFrame();
     window.HereNowRain?.hide?.();
-    // Clouds is a translucent layer ON TOP of temperature by default.
-    if(!window.HereNowTemperature?.isEnabled?.())
-      document.getElementById('toggle-temperature')?.click();
+    // Clouds starts alone unless Temperature was explicitly enabled by the user.
+    combine.checked=Boolean(window.HereNowTemperature?.isEnabled?.());
     setup();
   });
   window.addEventListener('here-now-globe-map-ready',()=>{if(enabled)setup();});
-  window.HereNowClouds={hide,isEnabled:()=>enabled,stopPlayback,currentFrame:()=>enabled?frames[index]||null:null};
+  window.HereNowClouds={hide,isEnabled:()=>enabled,stopPlayback,currentFrame:()=>enabled?frames[index]||null:null,
+    syncTemperatureChoice:on=>{if(enabled)combine.checked=Boolean(on);}};
 })();
