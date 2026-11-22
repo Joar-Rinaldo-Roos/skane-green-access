@@ -49,30 +49,67 @@
       if(!map.hasLayer(leafletLayer))leafletLayer.addTo(map);
     }else if(map.hasLayer(leafletLayer))map.removeLayer(leafletLayer);
   }
+  // The globe reads OSM-derived VECTOR TILES instead of submitting live Overpass
+  // queries on every pan. Leaflet 2D retains the optional Overpass prototype.
+  let tileWatch=null,tileVerified=false;
   function paintGlobe(){
     const map=window.HereNowGlobe?.getMap?.();
-    if(!map||!map.isStyleLoaded?.())return;
-    if(!map.getSource('hn-green')){
-      map.addSource('hn-green',{type:'geojson',data:collection});
-      map.addLayer({id:'hn-green-fill',type:'fill',source:'hn-green',
-        paint:{'fill-color':['match',['get','kind'],'Forest','#3d9b61','Park','#7ccb73','#a2cf7a'],'fill-opacity':0.47},
-        layout:{visibility:enabled?'visible':'none'}});
-      map.addLayer({id:'hn-green-outline',type:'line',source:'hn-green',
-        paint:{'line-color':'#245f41','line-width':1.2,'line-opacity':0.9},
-        layout:{visibility:enabled?'visible':'none'}});
-      map.on('click','hn-green-fill',event=>{
-        const feature=event.features?.[0];
-        if(feature&&window.maplibregl){
-          new maplibregl.Popup({maxWidth:'300px'}).setLngLat(event.lngLat)
-            .setDOMContent(popupNode(feature.properties)).addTo(map);
+    if(!map||!map.isStyleLoaded?.())return false;
+    try {
+      if(!map.getSource('hn-green-tiles')){
+        map.addSource('hn-green-tiles',core.vectorSource());
+        for(const layer of core.vectorLayers(enabled))map.addLayer(layer);
+        const popupFor=event=>{
+          const feature=event.features?.[0];
+          if(!feature||!window.maplibregl)return;
+          const detail=core.vectorDetail(feature.properties,event.lngLat.lat,event.lngLat.lng);
+          const box=document.createElement('div');
+          const title=document.createElement('strong');
+          title.textContent=detail.name;box.appendChild(title);
+          const kind=document.createElement('p');
+          kind.textContent=detail.kind+' · OpenStreetMap-derived vector map';box.appendChild(kind);
+          const note=document.createElement('p');note.textContent=detail.note;box.appendChild(note);
+          const link=document.createElement('a');
+          link.href=detail.url;link.target='_blank';link.rel='noopener noreferrer';
+          link.textContent='Explore this location in OpenStreetMap ↗';
+          box.appendChild(link);
+          new maplibregl.Popup({maxWidth:'300px'})
+            .setLngLat(event.lngLat).setDOMContent(box).addTo(map);
+        };
+        for(const layer of core.vectorLayers()){
+          map.on('click',layer.id,popupFor);
         }
-      });
-      map.on('mouseenter','hn-green-fill',()=>{map.getCanvas().style.cursor='pointer';});
-      map.on('mouseleave','hn-green-fill',()=>{map.getCanvas().style.cursor='';});
-    }
-    map.getSource('hn-green')?.setData(collection);
-    for(const id of ['hn-green-fill','hn-green-outline']){
-      if(map.getLayer(id))map.setLayoutProperty(id,'visibility',enabled?'visible':'none');
+        map.on('sourcedata',event=>{
+          if(event.sourceId!=='hn-green-tiles'||!event.isSourceLoaded||!enabled)return;
+          tileVerified=true;
+          if(tileWatch){clearTimeout(tileWatch);tileWatch=null;}
+          say('Green land-cover tiles loaded. Woods, grassy areas and parks are highlighted on the 3D globe. Tap an area for more information. Public access not verified.');
+        });
+        map.on('error',event=>{
+          const source=String(event.sourceId||'');
+          const msg=String(event.error?.message||'');
+          if(source==='hn-green-tiles'||msg.includes('openfreemap')){
+            log('Green tile load error: '+msg.slice(0,150));
+            if(enabled)say('Green map tiles could not load. Check your connection or try again later.');
+          }
+        });
+      }
+      for(const layer of core.vectorLayers(enabled)){
+        if(map.getLayer(layer.id))map.setLayoutProperty(layer.id,'visibility',enabled?'visible':'none');
+      }
+      if(enabled && !tileVerified && !tileWatch){
+        say('Loading green vector-map tiles for the current globe view…');
+        tileWatch=setTimeout(()=>{
+          tileWatch=null;
+          if(enabled&&!tileVerified) say('Green map tiles are still loading. Check network connectivity or try the street map.');
+        },16000);
+      }
+      if(!enabled&&tileWatch){clearTimeout(tileWatch);tileWatch=null;}
+      return true;
+    }catch(error){
+      log('Green tile renderer failed: '+error.message);
+      if(enabled)say('Green tile renderer unavailable: '+error.message);
+      return false;
     }
   }
   function repaint(){paintLeaflet();paintGlobe();}
@@ -90,6 +127,11 @@
   }
   async function fetchGreenSpaces(){
     if(!enabled)return;
+    // MapLibre globe uses persistent vector tiles; no Overpass call or hard radius.
+    if(window.HereNowGlobe?.isActive?.()){
+      if(!paintGlobe())say('The globe is still starting. Green spaces will load when ready.');
+      return;
+    }
     const p=point();
     if(!p){say('Map is not ready yet. Try again after it loads.');return;}
     if(p.zoom<12){say('Zoom closer, then move the map to update mapped green spaces. The layer auto-zooms when first enabled.');return;}
