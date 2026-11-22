@@ -140,6 +140,8 @@
   }
   toggle.addEventListener('click',()=>{
     enabled=!enabled;
+    // The two global weather palettes are alternatives, not competing overlays.
+    if(enabled)window.HereNowRain?.hide?.();
     toggle.classList.toggle('layer-active',enabled);
     toggle.setAttribute('aria-pressed',String(enabled));
     toggle.setAttribute('aria-label',enabled?'Hide global temperature forecast':'Show global temperature forecast');
@@ -150,5 +152,5 @@
     }else hide();
   });
   window.addEventListener('here-now-globe-map-ready',onGlobeReady);
-  window.HereNowTemperature={onGlobeReady,isEnabled:()=>enabled};
+  window.HereNowTemperature={onGlobeReady,isEnabled:()=>enabled,ensureProtocol:loadProtocol};
 })();
