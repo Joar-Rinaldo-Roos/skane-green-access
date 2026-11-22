@@ -39,7 +39,7 @@
     for(let i=0,j=ring.length-1;i<ring.length;j=i++){
       const a=ring[i],b=ring[j];
       if(((a[1]>point[1])!==(b[1]>point[1])) &&
-         point[0]<(b[0]-a[0])*(point[1]-a[1])/(b[1]-a[1])+a[0]))inside=!inside;
+         point[0]<(b[0]-a[0])*(point[1]-a[1])/(b[1]-a[1])+a[0])inside=!inside;
     }
     return inside;
   }
