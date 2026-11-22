@@ -1,7 +1,7 @@
 /* Here & Now v1.0.3 — Global total cloud cover forecast / 48-hour animation.
  * Uses actual forecast time indices from DWD ICON metadata via Open-Meteo.
  * This is predictive cloud cover in percent, NOT satellite cloud imagery.
- * Cloud, rain and temperature colours are mutually exclusive. */
+ * Temperature and cloud cover use the SAME forecast frame; rain stays separate. */
 (function(){
   'use strict';
   const core=window.HereNowCloudCore;
@@ -14,7 +14,9 @@
   const progress=document.getElementById('cloud-lead-time');
   const maxLabel=document.getElementById('cloud-max-label');
   const modelLabel=document.getElementById('cloud-model-time');
-  if(!core||!button||!panel||!status||!playButton||!slider||!stamp||!progress||!maxLabel||!modelLabel)return;
+  const opacity=document.getElementById('cloud-opacity');
+  const opacityValue=document.getElementById('cloud-opacity-value');
+  if(!core||!button||!panel||!status||!playButton||!slider||!stamp||!progress||!maxLabel||!modelLabel||!opacity||!opacityValue)return;
 
   const INTERVAL_MS=4500;
   let enabled=false,frames=[],variable='cloud_cover',index=0;
@@ -61,27 +63,41 @@
       }
     });
   }
+  function applyOpacity(){
+    const percent=Math.max(15,Math.min(75,Number(opacity.value)||45));
+    opacityValue.textContent=percent+'%';
+    const map=window.HereNowGlobe?.getMap?.();
+    if(map?.getLayer?.('hn-clouds-raster')){
+      try{map.setPaintProperty('hn-clouds-raster','raster-opacity',percent/100);}
+      catch(error){log('Cloud transparency update failed: '+(error?.message||'unknown error'));}
+    }
+  }
   function useFrame(newIndex,force=false){
     if(!enabled||!frames.length||!Number.isSafeInteger(newIndex)||
        newIndex<0||newIndex>=frames.length)return;
     index=newIndex;
     displayFrame();
+    const frame=frames[index];
+    // Forecast frames share one metadata source: exactly matching model hour.
+    if(window.HereNowTemperature?.isEnabled?.())
+      window.HereNowTemperature?.setForecastFrame?.(frame);
     const map=window.HereNowGlobe?.getMap?.();
     if(!map||!map.isStyleLoaded?.())return;
-    const frame=frames[index];
     const url=core.cloudUrl(frame,variable);
     try{
       if(!map.getSource('hn-clouds')){
         map.addSource('hn-clouds',core.cloudSource(frame,variable));
         const before=map.getLayer('sgu-soil-fill')?'sgu-soil-fill':
-          map.getLayer('hn-green-wood-tiles')?'hn-green-wood-tiles':
-          map.getLayer('hn-temperature-raster')?'hn-temperature-raster':undefined;
+          map.getLayer('hn-green-wood-tiles')?'hn-green-wood-tiles':undefined;
         map.addLayer(core.cloudLayer(true),before);
+        applyOpacity();
         attachEvents(map);
         lastDisplayedUrl=url;
       }else{
-        if(map.getLayer('hn-clouds-raster'))
+        if(map.getLayer('hn-clouds-raster')){
           map.setLayoutProperty('hn-clouds-raster','visibility','visible');
+          applyOpacity();
+        }
         if(force||lastDisplayedUrl!==url){
           const source=map.getSource('hn-clouds');
           if(typeof source.setUrl!=='function')throw Error('This MapLibre version cannot update weather raster time steps');
@@ -90,7 +106,7 @@
         }
       }
       sourceLoaded=false;frameLoadPending=true;
-      say('Loading forecast cloud cover for '+validStamp(frame)+'…');
+      say('Loading clouds'+(window.HereNowTemperature?.isEnabled?.()?' over synchronized temperature':'')+' for '+validStamp(frame)+'…');
     }catch(error){
       say('Cannot display this cloud-cover frame: '+(error?.message||'unknown error'));
       log('Map layer update error: '+(error?.message||'unknown error'));
@@ -184,9 +200,12 @@
       try{map.setLayoutProperty('hn-clouds-raster','visibility','none');}
       catch(error){log('Unable to hide cloud layer: '+error.message);}
     }
-    say('Cloud cover hidden.');
+    if(window.HereNowTemperature?.isEnabled?.())
+      window.HereNowTemperature?.setForecastFrame?.(null);
+    say('Cloud cover hidden. Temperature returns to the current forecast.');
   }
   playButton.addEventListener('click',startPlayback);
+  opacity.addEventListener('input',applyOpacity);
   slider.addEventListener('input',()=>{
     stopPlayback();
     const chosen=Number(slider.value);
@@ -204,10 +223,11 @@
     panel.hidden=false;slider.disabled=true;playButton.disabled=true;
     displayFrame();
     window.HereNowRain?.hide?.();
-    if(window.HereNowTemperature?.isEnabled?.())
+    // Clouds is a translucent layer ON TOP of temperature by default.
+    if(!window.HereNowTemperature?.isEnabled?.())
       document.getElementById('toggle-temperature')?.click();
     setup();
   });
   window.addEventListener('here-now-globe-map-ready',()=>{if(enabled)setup();});
-  window.HereNowClouds={hide,isEnabled:()=>enabled,stopPlayback};
+  window.HereNowClouds={hide,isEnabled:()=>enabled,stopPlayback,currentFrame:()=>enabled?frames[index]||null:null};
 })();
