@@ -133,7 +133,7 @@
         controller.scheduleGeologyRefresh?.();
         if(globeActive)controller.setStatus('Globe ready. Find me zooms to your GPS location; Soil geology adds SGU polygons.');
       });
-      globeMap.on('moveend',()=>{if(globeActive){controller.scheduleGeologyRefresh?.();window.HereNowGreenSpaces?.scheduleRefresh?.();}});
+      globeMap.on('moveend',()=>{if(globeActive){controller.scheduleGeologyRefresh?.();window.HereNowGreenSpaces?.scheduleRefresh?.();window.HereNowNextRain?.onMapMoved?.();}});
       globeMap.on('error',event=>{diag('MapLibre resource/render error; globe may be partially available');});
     } catch(error) {
       failGlobe('The 3D globe could not start. The 2D map remains available.');
