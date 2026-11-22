@@ -6,18 +6,52 @@
     return point && Number.isFinite(point.lat) && Number.isFinite(point.lon) &&
       Math.abs(point.lat)<=90 && Math.abs(point.lon)<=180;
   }
-  function buildOverpassQuery(point,radius=1200){
+  function buildOverpassQuery(point,radius=700){
     if(!validPoint(point))throw Error('Invalid coordinates');
     if(!Number.isInteger(radius)||radius<200||radius>2000)throw Error('Invalid search radius');
     const circle='(around:'+radius+','+point.lat.toFixed(5)+','+point.lon.toFixed(5)+')';
-    return '[out:json][timeout:20][maxsize:10000000];('+
+    return '[out:json][timeout:12][maxsize:6000000];('+
       'way["leisure"~"^(park|garden|nature_reserve)$"]'+circle+';'+
       'way["landuse"~"^(forest|grass|recreation_ground)$"]'+circle+';'+
       'way["natural"="wood"]'+circle+';'+
-      'relation["leisure"~"^(park|garden|nature_reserve)$"]'+circle+';'+
-      'relation["landuse"~"^(forest|grass|recreation_ground)$"]'+circle+';'+
-      'relation["natural"="wood"]'+circle+';'+
       ');out geom;';
+  }
+  function desiredZoom(current,min=13){
+    return Number.isFinite(current)?Math.max(min,current):min;
+  }
+  // One lightweight query per provider. No parallel retries against shared public servers.
+  async function fetchOverpass(point,{radius=700,timeoutMs=14000,
+    endpoints=['https://overpass.private.coffee/api/interpreter','https://overpass-api.de/api/interpreter'],
+    fetchFn=fetch,signal}={}){
+    const query=buildOverpassQuery(point,radius);
+    if(!Array.isArray(endpoints)||!endpoints.length)throw Error('No Overpass endpoints configured');
+    let lastError=null;
+    for(const endpoint of endpoints){
+      if(signal?.aborted)throw Object.assign(Error('Request cancelled'),{name:'AbortError'});
+      const controller=new AbortController();
+      const onAbort=()=>controller.abort();
+      if(signal)signal.addEventListener('abort',onAbort,{once:true});
+      const timeout=setTimeout(()=>controller.abort(),timeoutMs);
+      try{
+        const response=await fetchFn(endpoint+'?data='+encodeURIComponent(query),{
+          headers:{Accept:'application/json'},signal:controller.signal
+        });
+        if(!response.ok)throw Error('HTTP '+response.status);
+        const data=await response.json();
+        if(!Array.isArray(data?.elements))throw Error('Invalid Overpass response');
+        if(data.remark&&/error|timed out|timeout|out of memory/i.test(data.remark)){
+          throw Error('Overpass runtime error: '+String(data.remark).slice(0,140));
+        }
+        return {data,endpoint};
+      }catch(error){
+        if(signal?.aborted)throw Object.assign(Error('Request cancelled'),{name:'AbortError'});
+        lastError=error.name==='AbortError'?Error('request timed out'):error;
+      }finally{
+        clearTimeout(timeout);
+        if(signal)signal.removeEventListener('abort',onAbort);
+      }
+    }
+    throw Error('Overpass providers unavailable ('+(lastError?.message||'unknown error')+').');
   }
   function kindFromTags(tags={}){
     if(tags.leisure==='park')return 'Park';
@@ -87,7 +121,7 @@
     if(!validPoint(point))throw Error('Invalid coordinates');
     return point.lat.toFixed(2)+','+point.lon.toFixed(2);
   }
-  const api={buildOverpassQuery,toGeoJSON,cacheKey,kindFromTags};
+  const api={buildOverpassQuery,toGeoJSON,cacheKey,kindFromTags,desiredZoom,fetchOverpass};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   if(root)root.HereNowGreenCore=api;
 })(typeof window==='undefined'?null:window);
