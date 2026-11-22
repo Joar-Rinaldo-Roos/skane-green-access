@@ -5,16 +5,22 @@
   'use strict';
   const MODEL_META='https://openmeteo.s3.amazonaws.com/data_spatial/dwd_icon/latest.json';
   function temperatureMetadataUrl(){return MODEL_META;}
-  function temperatureUrl(){
-    return 'om://'+MODEL_META+'?time_step=current_time_1H&variable=temperature_2m';
+  function temperatureUrl(frame){
+    let timeStep='current_time_1H';
+    if(frame!==undefined&&frame!==null){
+      if(!Number.isSafeInteger(frame?.index)||frame.index<0||frame.index>10000)
+        throw Error('Invalid model time index');
+      timeStep='valid_times_'+frame.index;
+    }
+    return 'om://'+MODEL_META+'?'+new URLSearchParams({time_step:timeStep,variable:'temperature_2m'}).toString();
   }
-  function temperatureSource(){
-    return {type:'raster',url:temperatureUrl(),maxzoom:12,tileSize:512,
+  function temperatureSource(frame){
+    return {type:'raster',url:temperatureUrl(frame),maxzoom:12,tileSize:512,
       attribution:'Weather model © Open-Meteo · DWD ICON Global'};
   }
   function temperatureLayer(enabled=true){
     return {id:'hn-temperature-raster',type:'raster',source:'hn-temperature',
-      paint:{'raster-opacity':0.67,'raster-fade-duration':0},
+      paint:{'raster-opacity':0.72,'raster-fade-duration':0},
       layout:{visibility:enabled?'visible':'none'}};
   }
   function selectForecastTime(metadata,now=new Date()){
