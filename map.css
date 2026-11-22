@@ -36,6 +36,15 @@
 .rain-control-ends{display:flex;justify-content:space-between;font-size:.74rem;color:#577889}
 .rain-model-time,.rain-note{margin:0;font-size:.76rem;color:#547183}
 .rain-forecast-controls a{font-size:.76rem;color:#1f667e}
+.cloud-status{font-size:.8rem;color:#425e73;line-height:1.5;margin:8px 5px 0;padding:8px 10px;background:#eff4f8;border-radius:9px}
+.cloud-forecast-controls{background:#f2f6f9;border-color:#d4dee7;color:#364f64}
+.cloud-forecast-controls #cloud-lead-time{background:#dae6ef}
+#cloud-play{background:#45667f;color:white;padding:10px 14px;min-height:44px;min-width:95px}
+#cloud-play:disabled{opacity:.55}
+#cloud-time-label{font-weight:650;font-size:.83rem}
+#cloud-hour{width:100%;margin:0;accent-color:#597c97;min-height:27px;touch-action:pan-y}
+#cloud-hour:disabled{opacity:.45}
+
 
 .next-rain-panel{background:#fff;border:1px solid #dce8e4;border-radius:18px;padding:17px 19px;margin:0 0 16px;box-shadow:0 7px 24px #173f3112}
 .next-rain-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
