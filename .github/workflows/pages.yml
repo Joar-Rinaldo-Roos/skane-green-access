@@ -27,7 +27,7 @@ jobs:
         run: |
           node --check green-spaces-core.js
           node --check green-spaces.js
-          node --test green-spaces.test.cjs
+          node --test green-spaces.test.cjs green-vector.test.cjs
           node --check app.js
           node --check map.js
           node --check globe.js
