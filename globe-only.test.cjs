@@ -16,20 +16,16 @@ test('globe-only HTML never starts Leaflet or creates a duplicate street map',()
  assert.match(html,/src="\.\/tile-cache\.js/);
  assert.doesNotMatch(html,/src="\.\/map\.js/);
 });
-test('MapLibre can retain more tiles, with bounds on mobile and low-memory devices',()=>{
+test('MapLibre larger tile cache is always on with bounded mobile/low-memory limits',()=>{
  const desktop={userAgent:'Macintosh',deviceMemory:8};
  const mobile={userAgent:'Mozilla Android',deviceMemory:4};
  const low={userAgent:'Mozilla Android',deviceMemory:2};
- assert.equal(cache.tileLimit(false,desktop),128);
- assert.equal(cache.tileLimit(true,desktop),224);
- assert.equal(cache.tileLimit(false,mobile),72);
- assert.equal(cache.tileLimit(true,mobile),128);
- assert.equal(cache.tileLimit(false,low),48);
- assert.equal(cache.tileLimit(true,low),80);
- const storage=new Map(),store={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
- assert.equal(cache.readExtra(store),false);
- assert.equal(cache.saveExtra(store,true),true);
- assert.equal(cache.readExtra(store),true);
+ assert.equal(cache.tileLimit(desktop),224);
+ assert.equal(cache.tileLimit(mobile),128);
+ assert.equal(cache.tileLimit(low),80);
+ assert.doesNotMatch(html,/id="tile-cache-extra"/);
+ assert.doesNotMatch(html,/id="tile-cache-detail"/);
+ assert.equal(cache.tileLimit({userAgent:'Android'}),128);
 });
 function harness(){
  const events=new Map(),listeners=new Map(),nodes=new Map();
