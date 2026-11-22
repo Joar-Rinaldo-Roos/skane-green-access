@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.1**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.2**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.2** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.3** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,18 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## 🌧️ Next rain at the map center — v1.0.2 (November 2026)
+
+Here & Now now answers **“When will it rain next here?”** in a simple card directly beneath the map. It queries the **center of the active globe or 2D map**, not GPS; the initial map center defaults to Lund, and the user can pan anywhere and tap **↻ Update forecast** to get a forecast for that new center. Moving more than roughly 0.001° invalidates the old prediction instead of silently continuing to show it for the wrong place. The initial page load fetches the forecast automatically.
+
+- Uses the public Open-Meteo hourly point forecast at `https://api.open-meteo.com/v1/forecast`, with `hourly=rain,showers,precipitation_probability`, `forecast_hours=48`, `timezone=UTC`, and `models=best_match`. This is a **location-specific best-match model**, distinct from the globe-wide DWD ICON visualization.
+- `rain` covers large-scale rain and `showers` covers convective showers; both are combined. An hour counts as next measurable rain if predicted total reaches **at least 0.2 mm in one hour**. The API timestamps represent the **end of the preceding hour**. The card shows the full interval and predicted millimetres, and labels **precipitation probability** as probability of *any* precipitation, not necessarily rain.
+- When the model forecasts no hours above the threshold, the card says so with a caveat; it does not claim certain dry conditions. Null or missing rain fields are not silently interpreted as zero. Rain likelihood and model forecasts can be wrong; this is **not live radar**.
+- Open-Meteo time values are requested in UTC and shown in the **device's timezone**, explicitly labelled. Map coordinates sent to Open-Meteo are rounded to five decimal places for the forecast request, but app diagnostics avoid logging precise position. The displayed map-center label rounds coordinates to two decimal places.
+- No GPS permission, optional Mac backend, or API key is needed. The card has a refresh button and an abort timeout; error messages appear on failure.
+- Tests: `node --test next-rain.test.cjs next-rain.browser.test.cjs` covers forecast API request arguments, distinguishing rain from snow/precipitation probability, times and units, map-center selection, stale forecast invalidation, and network failures. `node next-rain-smoke.mjs` runs a live API call for Lund example coordinates in GitHub Actions; it **does not** access the user's location.
+- The Pages deployment test checks that v1.0.2 and the Next Rain card are present in the publicly served HTML. Real browser/network behaviour should still be checked on a phone or Mac.
 
 ## 🌧️ Animated global rain forecast — v1.0.1 (November 2026)
 

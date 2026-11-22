@@ -22,10 +22,12 @@
   <script src="./green-spaces-core.js?v=3" defer></script>
   <script src="./temperature-core.js?v=1" defer></script>
   <script src="./rain-forecast-core.js?v=1" defer></script>
+  <script src="./next-rain-core.js?v=1" defer></script>
   <script src="./map.js?v=10" defer></script>
   <script src="./globe.js?v=11" defer></script>
   <script src="./temperature-layer.js?v=2" defer></script>
   <script src="./rain-forecast.js?v=1" defer></script>
+  <script src="./next-rain.js?v=1" defer></script>
   <script src="./green-spaces.js?v=3" defer></script>
   <script src="./discovery-ui.js?v=10" defer></script>
   <script src="./app.js?v=11" defer></script>
@@ -36,7 +38,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.1" aria-label="Here and Now version 1.0.1" title="Website release v1.0.1">v1.0.1</span>
+        <span class="app-version" data-app-version="1.0.2" aria-label="Here and Now version 1.0.2" title="Website release v1.0.2">v1.0.2</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -94,6 +96,21 @@
         </section>
       </section>
 
+
+      <section id="next-rain-panel" class="next-rain-panel" aria-labelledby="next-rain-title">
+        <div class="next-rain-heading">
+          <div>
+            <h2 id="next-rain-title">🌧️ When will it rain here?</h2>
+            <p id="next-rain-place">Map center · GPS not required</p>
+          </div>
+          <button id="next-rain-refresh" type="button">↻ Update forecast</button>
+        </div>
+        <p id="next-rain-headline" class="next-rain-answer" aria-live="polite">Checking the next 48 hours…</p>
+        <p id="next-rain-detail" class="next-rain-detail">Looking at the center of your map.</p>
+        <p id="next-rain-status" class="next-rain-status" role="status">Weather forecast uses the map center, even if GPS is unavailable.</p>
+        <p class="next-rain-note">Forecasts combine rain and showers. “Next rain” means at least 0.2 mm in a forecast hour. All times use your device’s timezone. The forecast is an estimate, not a guarantee. The map-center coordinates are sent to Open-Meteo only for this forecast.</p>
+        <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Hourly forecast data: Open-Meteo ↗</a>
+      </section>
 
       <section id="ask-panel" class="panel ask-panel" aria-labelledby="ask-title">
         <div class="ask-heading">
