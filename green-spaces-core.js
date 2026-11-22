@@ -81,7 +81,7 @@
     const kind=String(properties.subclass||properties.class||'vegetated land').replace(/_/g,' ').slice(0,90);
     const latitude=Number(lat),longitude=Number(lon);
     const url=Number.isFinite(latitude)&&Number.isFinite(longitude)
-      ?'https://www.openstreetmap.org/#map/16/'+latitude.toFixed(5).replace(/0+$/,'').replace(/\\.$/,'')+'/'+longitude.toFixed(5).replace(/0+$/,'').replace(/\\.$/,'')
+      ?'https://www.openstreetmap.org/#map/16/'+Number(latitude.toFixed(5))+'/'+Number(longitude.toFixed(5))
       :'https://www.openstreetmap.org/';
     return {name,kind,note:'Map coverage is approximate. Public access and walking entrances have not been verified.',url};
   }
