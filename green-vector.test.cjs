@@ -23,7 +23,7 @@ test('green tile layers cover named parks plus OSM wood and grass without farmla
 test('vector tile popup identifies limited evidence instead of inventing accessibility',()=>{
  const text=vectorDetail({name:'Park',subclass:'garden'},55.71,13.19);
  assert.equal(text.name,'Park');
- assert.match(text.note,/not verified/i);
+ assert.match(text.note,/not been verified/i);
  assert.match(text.url,/^https:\/\/www\.openstreetmap\.org\/\#map\/16\/55\.71\/13\.19$/);
 });
 
