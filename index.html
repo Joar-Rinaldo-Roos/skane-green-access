@@ -19,8 +19,10 @@
   <script src="./local-history.js?v=10" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js" defer></script>
   <script src="./sky.js?v=10" defer></script>
+  <script src="./green-spaces-core.js?v=1" defer></script>
   <script src="./map.js?v=9" defer></script>
   <script src="./globe.js?v=9" defer></script>
+  <script src="./green-spaces.js?v=1" defer></script>
   <script src="./discovery-ui.js?v=10" defer></script>
   <script src="./app.js?v=11" defer></script>
   <script src="./chat.js?v=11" defer></script>
@@ -46,6 +48,7 @@
           <div class="map-toolbar" role="group" aria-label="Map controls">
             <button id="locate" type="button" aria-label="Find my current location">◎ Find me</button>
             <button id="toggle-geology" type="button" aria-pressed="false" aria-label="Show SGU soil geology features">🪨 Soil geology</button>
+            <button id="toggle-green-spaces" type="button" aria-pressed="false" aria-label="Show mapped green spaces">🌳 Green spaces</button>
             <button id="toggle-globe" type="button" aria-pressed="false" aria-label="Switch to a rotatable globe">🌐 Globe</button>
           </div>
         </div>
@@ -53,6 +56,7 @@
           <p id="map-status" role="status" aria-live="polite">Map starts in Lund. Use Find me or search for a place below.</p>
           <a href="https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html" target="_blank" rel="noopener noreferrer">Open SGU’s original map ↗</a>
         </div>
+        <p id="green-status" class="green-status" role="status" aria-live="polite">Green Spaces is off. Tap 🌳 Green spaces to load mapped parks and forests near the visible map center.</p>
         <p class="map-note">Tap a geological area for its English name and composition, then <strong>Read more</strong> to explore the ground’s formation and history below the map. Soil units come from SGU.</p>
         <section id="geology-details" class="geology-details-panel" aria-label="Read more about soil geology" hidden>
           <div class="geology-details-heading"><h2>Under the surface</h2><button id="close-geology-details" type="button" aria-label="Close geology details">✕ Close</button></div>
