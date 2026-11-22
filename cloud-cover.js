@@ -165,6 +165,7 @@
         displayFrame();
         attachEvents(map);
         useFrame(index,true);
+        window.HereNowWeatherTimeline?.syncLayer?.('clouds');
       }catch(error){
         if(!enabled||mySequence!==sequence)return;
         say('Cloud cover unavailable: '+(error?.message||'unknown error')+'. Try turning Clouds off and on again.');
@@ -231,12 +232,19 @@
     button.setAttribute('aria-label','Hide global cloud cover forecast');
     panel.hidden=false;slider.disabled=true;playButton.disabled=true;
     displayFrame();
-    window.HereNowRain?.hide?.();
     // Clouds starts alone unless Temperature was explicitly enabled by the user.
     combine.checked=Boolean(window.HereNowTemperature?.isEnabled?.());
     setup();
   });
   window.addEventListener('here-now-globe-map-ready',()=>{if(enabled)setup();});
-  window.HereNowClouds={hide,isEnabled:()=>enabled,stopPlayback,currentFrame:()=>enabled?frames[index]||null:null,
+  function setForecastFrame(frame){
+    if(!enabled||!Number.isSafeInteger(frame?.index)||typeof frame.time!=='string'||!frames.length)return false;
+    let pos=frames.findIndex(f=>f.index===frame.index);
+    if(pos<0){pos=frames.length;frames.push(frame);}
+    stopPlayback();
+    useFrame(pos);
+    return true;
+  }
+  window.HereNowClouds={hide,isEnabled:()=>enabled,setForecastFrame,stopPlayback,currentFrame:()=>enabled?frames[index]||null:null,
     syncTemperatureChoice:on=>{if(enabled)combine.checked=Boolean(on);}};
 })();
