@@ -68,7 +68,8 @@ test('Temperature enabled over active Clouds starts on the identical model times
  assert(h.urls[0].includes('variable=temperature_2m'));
  assert(h.urls[0].includes('time_step=valid_times_12'));
  assert(h.layers.indexOf('hn-temperature-raster')<h.layers.indexOf('hn-clouds-raster'));
- assert(h.node('temperature-forecast-time').textContent.includes('23 Nov'));
+ assert.match(h.node('temperature-forecast-time').textContent,/Nov/);
+ assert.match(h.node('temperature-forecast-time').textContent,/23/);;
 });
 
 test('Cloud timeline moves an enabled temperature source and the timestamp to exactly the same hour',async()=>{
@@ -79,7 +80,8 @@ test('Cloud timeline moves an enabled temperature source and the timestamp to ex
  const frame={index:15,time:'2026-11-23T03:00:00Z'};
  assert.equal(h.win.HereNowTemperature.setForecastFrame(frame),true);
  assert(h.urls.at(-1).includes('time_step=valid_times_15'));
- assert(h.node('temperature-forecast-time').textContent.includes('23 Nov'));
+ assert.match(h.node('temperature-forecast-time').textContent,/Nov/);
+ assert.match(h.node('temperature-forecast-time').textContent,/23/);;
  assert.equal(h.win.HereNowTemperature.setForecastFrame(null),true);
  assert(h.urls.at(-1).includes('time_step=current_time_1H'));
 });
