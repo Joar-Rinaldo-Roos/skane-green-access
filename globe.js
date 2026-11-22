@@ -101,8 +101,8 @@
         zoom:currentPlace?lastZoom:3.3,
         minZoom:0.5,maxZoom:18,
         attributionControl:true,
-        // Per-source cache in MapLibre: retain more recently visited visible tiles.
-        // Keep a bounded limit on mobile to avoid excessive decoded raster memory.
+        // Always-on larger tile retention, device-aware for low-memory phones.
+        // Next-frame preloader separately warms only one low-zoom forecast source.
         maxTileCacheSize:window.HereNowTileCache?.maxTiles?.()||72
       });
       globeMap.on('style.load',()=>globeMap.setProjection({type:'globe'}));
