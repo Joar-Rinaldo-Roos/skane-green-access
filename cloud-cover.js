@@ -203,8 +203,8 @@
       catch(error){log('Unable to hide cloud layer: '+error.message);}
     }
     if(window.HereNowTemperature?.isEnabled?.())
-      window.HereNowTemperature?.setForecastFrame?.(null);
-    say('Cloud cover hidden. Temperature returns to the current forecast.');
+      window.HereNowTemperature?.setForecastFrame?.(window.HereNowWeatherTimeline?.currentFrame?.()||null);
+    say('Cloud cover hidden. Other enabled layers keep the shared forecast hour.');
   }
   playButton.addEventListener('click',startPlayback);
   combine.addEventListener('change',()=>{
