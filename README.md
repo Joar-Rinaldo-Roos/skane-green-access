@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.0**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.1**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.1** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.2** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,19 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## 🌧️ Animated global rain forecast — v1.0.1 (November 2026)
+
+Here & Now adds a **🌧️ Rain forecast** toggle to the existing **3D globe**. The layer uses the same Open-Meteo MapLibre weather renderer that powers the temperature map, but displays **DWD ICON Global model precipitation** (`precipitation`, with `rain` as a supported fallback). It is a forecast of **rain and snow combined**, not live radar or current observations.
+
+- When enabled, the button switches the map to the globe if needed. **Green Spaces and SGU Geology are unchanged.** Temperature and precipitation are mutually exclusive colour overlays for clarity.
+- Weather metadata comes from `https://openmeteo.s3.amazonaws.com/data_spatial/dwd_icon/latest.json`. The timeline uses only genuine `valid_times` from this file, selecting roughly three-hourly steps for **up to 48 hours**, skipping absent timesteps rather than fabricating values. The last available frame may be earlier than exactly +48 h.
+- The timeline shows the model's actual forecast-valid time and reference/issuance time. **▶ Play / Ⅱ Pause** controls cycle through the time steps at 4.5-second intervals; the slider can select any frame. Playback stops at the end. Results aren't animated wind advection; successive model predictions create the apparent motion.
+- MapLibre requests the relevant forecast frame with `om://.../latest.json?variable=precipitation&time_step=valid_times_N` and updates a raster tile source via `setUrl`. The same 3D layer is available from world scale down to city zoom, but **local precision remains limited by the global model resolution**.
+- This prototype intentionally does not preload all frames (mobile memory and bandwidth). Switching rapidly between frames can cause visible delays or a temporarily blank map while the new forecast tiles load. Open-Meteo's weather-map-layer package is still experimental. The app may report errors if model data or the library becomes unavailable.
+- This is a **static GitHub Pages site**; no secret API key or local Mac server is needed. User GPS coordinates are not sent to Open-Meteo for the global weather layer. The browser fetches model data based on visible globe tiles.
+- Checks: `node --test rain-forecast.test.cjs` covers metadata filtering, frame bounds, source URLs, view styles, and playback end conditions; `node rain-forecast-smoke.mjs` checks live metadata for precipitation availability and future timesteps. These are not a substitute for on-device Samsung rendering checks.
+- After publishing, GitHub Pages verifies that its live HTML contains `v1.0.1`, **🌡️ Temp** and **🌧️ Rain forecast**.
 
 ## 🌡️ Global temperature overlay (November 2026)
 

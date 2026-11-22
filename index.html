@@ -21,9 +21,11 @@
   <script src="./sky.js?v=10" defer></script>
   <script src="./green-spaces-core.js?v=3" defer></script>
   <script src="./temperature-core.js?v=1" defer></script>
+  <script src="./rain-forecast-core.js?v=1" defer></script>
   <script src="./map.js?v=10" defer></script>
   <script src="./globe.js?v=11" defer></script>
-  <script src="./temperature-layer.js?v=1" defer></script>
+  <script src="./temperature-layer.js?v=2" defer></script>
+  <script src="./rain-forecast.js?v=1" defer></script>
   <script src="./green-spaces.js?v=3" defer></script>
   <script src="./discovery-ui.js?v=10" defer></script>
   <script src="./app.js?v=11" defer></script>
@@ -34,7 +36,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.0" aria-label="Here and Now version 1.0.0" title="Website release v1.0.0">v1.0.0</span>
+        <span class="app-version" data-app-version="1.0.1" aria-label="Here and Now version 1.0.1" title="Website release v1.0.1">v1.0.1</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -55,6 +57,7 @@
             <button id="toggle-geology" type="button" aria-pressed="false" aria-label="Show SGU soil geology features">🪨 Soil geology</button>
             <button id="toggle-green-spaces" type="button" aria-pressed="false" aria-label="Show mapped green spaces">🌳 Green spaces</button>
             <button id="toggle-temperature" type="button" aria-pressed="false" aria-label="Show global temperature forecast">🌡️ Temp</button>
+            <button id="toggle-rain" type="button" aria-pressed="false" aria-label="Show global precipitation forecast">🌧️ Rain forecast</button>
             <button id="toggle-globe" type="button" aria-pressed="false" aria-label="Switch to a rotatable globe">🌐 Globe</button>
           </div>
         </div>
@@ -64,6 +67,20 @@
         </div>
         <p id="green-status" class="green-status" role="status" aria-live="polite">Green Spaces is off. Tap 🌳 Green spaces to load mapped parks and forests near the visible map center.</p>
         <p id="temperature-status" class="temperature-status" role="status" aria-live="polite">Temperature overlay is off. Tap 🌡️ Temp to view a global forecast on the 3D globe.</p>
+        <p id="rain-status" class="rain-status" role="status" aria-live="polite">Rain forecast is off. Tap 🌧️ Rain forecast to see predicted precipitation move around the globe.</p>
+        <section id="rain-forecast-controls" class="rain-forecast-controls" aria-label="Global precipitation forecast timeline" hidden>
+          <div class="rain-control-heading"><strong>🌧️ Rain &amp; snow forecast · next 48 hours</strong><span id="rain-lead-time">—</span></div>
+          <div class="rain-control-actions">
+            <button id="rain-play" type="button" aria-pressed="false" disabled>▶ Play</button>
+            <output id="rain-time-label" for="rain-hour">Loading forecast times…</output>
+          </div>
+          <label for="rain-hour">Forecast timeline</label>
+          <input id="rain-hour" type="range" min="0" max="0" step="1" value="0" disabled>
+          <div class="rain-control-ends"><span>Now</span><span id="rain-max-label">+48 h</span></div>
+          <p id="rain-model-time" class="rain-model-time">DWD ICON Global</p>
+          <p class="rain-note">This is predicted precipitation (rain and snow), not live radar. Colours and timing reflect a weather model; actual conditions can differ.</p>
+          <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Source: Open-Meteo / DWD ↗</a>
+        </section>
         <div id="temperature-details" class="temperature-details" hidden>
           <strong>🌡️ Global 2 m air-temperature forecast</strong>
           <span id="temperature-forecast-time">Nearest forecast hour</span>
