@@ -78,11 +78,11 @@ function harness({startIn2D=false}={}){
     get temperatureOn(){return temperatureOn}};
 }
 
-test('rain button loads real-index forecast, toggles temperature off and updates map URL on slider',async()=>{
+test('rain button loads real-index forecast without hiding Temperature and updates map URL on slider',async()=>{
   const h=harness();
   h.element('toggle-rain').click();
   await h.flush();
-  assert.equal(h.temperatureOn,false);
+  assert.equal(h.temperatureOn,true);
   assert.equal(h.element('toggle-rain').attributes['aria-pressed'],'true');
   assert.equal(h.element('rain-forecast-controls').hidden,false);
   assert.equal(h.element('rain-play').disabled,false);
