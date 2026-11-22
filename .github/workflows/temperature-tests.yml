@@ -31,13 +31,13 @@ jobs:
           node --check globe.js
           node --check temperature-smoke.mjs
       - name: Temperature geometry and timestamp unit tests
-        run: node --test temperature.test.cjs rain-forecast.test.cjs rain-forecast.browser.test.cjs cloud-cover.test.cjs cloud-cover.browser.test.cjs next-rain.test.cjs next-rain.browser.test.cjs
+        run: node --test temperature.test.cjs temperature-sync.browser.test.cjs weather-composite.test.cjs rain-forecast.test.cjs rain-forecast.browser.test.cjs cloud-cover.test.cjs cloud-cover.browser.test.cjs next-rain.test.cjs next-rain.browser.test.cjs
       - name: Verify release number and visible header contract
         run: node --test version.test.cjs
       - name: Inspect existing public Pages content
         run: |
           curl -fsSL --max-time 20 "https://joar-rinaldo-roos.github.io/skane-green-access/?inspect=${GITHUB_SHA}" -o /tmp/pages-live.html
-          if grep -Fq 'data-app-version="1.0.3"' /tmp/pages-live.html && grep -Fq 'id="toggle-clouds"' /tmp/pages-live.html; then echo "Live Pages already includes the v1.0.3 cloud cover layer"; else echo "Live Pages is still serving an earlier release (expected until PR deploy)"; fi
+          if grep -Fq 'data-app-version="1.0.4"' /tmp/pages-live.html && grep -Fq 'id="cloud-opacity"' /tmp/pages-live.html; then echo "Live Pages already includes the v1.0.4 combined cloud-temperature release"; else echo "Live Pages is still serving an earlier release (expected until PR deploy)"; fi
       - name: Verify global Open-Meteo cloud cover variables and forecast horizon
         run: node cloud-cover-smoke.mjs
       - name: Verify hourly Open-Meteo rain + showers API with real coordinates

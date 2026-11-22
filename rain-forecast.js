@@ -203,9 +203,10 @@
     button.setAttribute('aria-label','Hide global precipitation forecast');
     panel.hidden=false;slider.disabled=true;playButton.disabled=true;
     displayFrame();
-    window.HereNowClouds?.hide?.();
+    // Disable Temperature first so hiding Clouds does not briefly reload today's tiles.
     if(window.HereNowTemperature?.isEnabled?.())
       document.getElementById('toggle-temperature')?.click();
+    window.HereNowClouds?.hide?.();
     setup();
   });
   window.addEventListener('here-now-globe-map-ready',()=>{if(enabled)setup();});

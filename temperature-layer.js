@@ -12,6 +12,7 @@
   const PACKAGE='https://unpkg.com/@openmeteo/weather-map-layer@0.3.2/dist/index.mjs';
   let enabled=false,protocolReady=false,libraryPromise=null;
   let boundMap=null,forecastTime=null,readinessTimer=null,sourceLoaded=false;
+  let selectedFrame=null,lastRasterUrl='';
   const log=message=>window.HereNowDiagnostics?.log('Temperature',message);
   function say(message){status.textContent=message;log(message);}
   function timeDescription(){
@@ -49,7 +50,7 @@
       const result=await fetch(core.temperatureMetadataUrl(),{signal:controller.signal,cache:'no-store'});
       if(!result.ok)throw Error('model metadata HTTP '+result.status);
       const metadata=await result.json();
-      forecastTime=core.selectForecastTime(metadata,new Date());
+      if(!selectedFrame)forecastTime=core.selectForecastTime(metadata,new Date());
       setDetails();
       log(forecastTime?'Model time metadata resolved':'No valid forecast timestamps in model metadata');
     }catch(error){
@@ -103,18 +104,30 @@
     if(!map.isStyleLoaded?.())return;
     try{
       attachMapListeners(map);
+      const wanted=core.temperatureUrl(selectedFrame);
       if(!map.getSource('hn-temperature')){
-        map.addSource('hn-temperature',core.temperatureSource());
-        const before=map.getLayer('sgu-soil-fill')?'sgu-soil-fill':
+        map.addSource('hn-temperature',core.temperatureSource(selectedFrame));
+        const before=map.getLayer('hn-clouds-raster')?'hn-clouds-raster':
+          map.getLayer('sgu-soil-fill')?'sgu-soil-fill':
           map.getLayer('hn-green-wood-tiles')?'hn-green-wood-tiles':undefined;
         map.addLayer(core.temperatureLayer(true),before);
+        lastRasterUrl=wanted;
         sourceLoaded=false;
         log('MapLibre global forecast temperature source added');
-      }else if(map.getLayer('hn-temperature-raster')){
-        map.setLayoutProperty('hn-temperature-raster','visibility','visible');
+      }else{
+        if(map.getLayer('hn-temperature-raster'))
+          map.setLayoutProperty('hn-temperature-raster','visibility','visible');
+        if(lastRasterUrl!==wanted){
+          const source=map.getSource('hn-temperature');
+          if(typeof source.setUrl!=='function')
+            throw Error('MapLibre cannot switch temperature forecast hours');
+          source.setUrl(wanted);
+          lastRasterUrl=wanted;
+          sourceLoaded=false;
+        }
       }
       if(!sourceLoaded){
-        say('Loading global 2 m air-temperature forecast… '+timeDescription()+'.');
+        say((selectedFrame?'Loading temperature synchronized with clouds… ':'Loading global 2 m air-temperature forecast… ')+timeDescription()+'.');
         clearReadinessTimer();
         readinessTimer=setTimeout(()=>{
           readinessTimer=null;
@@ -125,6 +138,37 @@
       if(enabled)say('Temperature map layer could not start: '+(error?.message||'unknown error'));
       log('MapLibre layer error: '+(error?.message||'unknown error'));
     }
+  }
+  // Called by the Clouds timeline, including after the user manually drags the slider.
+  // The frame comes from the SAME DWD ICON latest.json metadata/valid_times index.
+  function setForecastFrame(frame){
+    if(frame!=null&&(!Number.isSafeInteger(frame.index)||frame.index<0||
+      frame.index>10000||typeof frame.time!=='string'||!Number.isFinite(Date.parse(frame.time))))
+      return false;
+    selectedFrame=frame||null;
+    forecastTime=selectedFrame?selectedFrame.time:null;
+    setDetails();
+    if(!enabled)return true;
+    const map=window.HereNowGlobe?.getMap?.();
+    if(map?.getSource?.('hn-temperature')&&map.isStyleLoaded?.()){
+      const url=core.temperatureUrl(selectedFrame);
+      if(url!==lastRasterUrl){
+        try{
+          const source=map.getSource('hn-temperature');
+          if(typeof source.setUrl!=='function')throw Error('Temperature raster time update unavailable');
+          source.setUrl(url);
+          lastRasterUrl=url;
+          sourceLoaded=false;
+          say((selectedFrame?'Temperature and clouds now show the SAME forecast hour. ':'Temperature returned to the current forecast. ')+timeDescription()+'.');
+        }catch(error){
+          say('Temperature time update failed: '+(error?.message||'unknown error'));
+          log('Temperature synchronization error: '+(error?.message||'unknown error'));
+          return false;
+        }
+      }
+    }else apply();
+    if(!selectedFrame)loadForecastTime();
+    return true;
   }
   function hide(){
     clearReadinessTimer();
@@ -140,17 +184,21 @@
   }
   toggle.addEventListener('click',()=>{
     enabled=!enabled;
-    // The two global weather palettes are alternatives, not competing overlays.
-    if(enabled){window.HereNowRain?.hide?.();window.HereNowClouds?.hide?.();}
+    // Temperature + Clouds deliberately coexist. Rain remains a separate palette.
+    if(enabled){
+      window.HereNowRain?.hide?.();
+      selectedFrame=window.HereNowClouds?.currentFrame?.()||null;
+      forecastTime=selectedFrame?selectedFrame.time:null;
+    }
     toggle.classList.toggle('layer-active',enabled);
     toggle.setAttribute('aria-pressed',String(enabled));
     toggle.setAttribute('aria-label',enabled?'Hide global temperature forecast':'Show global temperature forecast');
     setDetails();
     if(enabled){
-      loadForecastTime();
+      if(!selectedFrame)loadForecastTime();
       apply();
     }else hide();
   });
   window.addEventListener('here-now-globe-map-ready',onGlobeReady);
-  window.HereNowTemperature={onGlobeReady,isEnabled:()=>enabled,ensureProtocol:loadProtocol};
+  window.HereNowTemperature={onGlobeReady,isEnabled:()=>enabled,ensureProtocol:loadProtocol,setForecastFrame};
 })();

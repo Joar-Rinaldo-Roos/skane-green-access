@@ -52,7 +52,7 @@
   }
   function cloudLayer(enabled=true){
     return {id:'hn-clouds-raster',type:'raster',source:'hn-clouds',
-      paint:{'raster-opacity':0.62,'raster-fade-duration':0},
+      paint:{'raster-opacity':0.45,'raster-fade-duration':0},
       layout:{visibility:enabled?'visible':'none'}};
   }
   function nextCloudFrameIndex(index,length){
