@@ -299,7 +299,7 @@
     }).addTo(map);
     L.control.zoom({position:'bottomright'}).addTo(map);
     L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
-    map.on('moveend',()=>{if (!document.getElementById('map')?.hidden){scheduleRefresh();window.HereNowGreenSpaces?.scheduleRefresh?.();}});
+    map.on('moveend',()=>{if (!document.getElementById('map')?.hidden){scheduleRefresh();window.HereNowGreenSpaces?.scheduleRefresh?.();window.HereNowNextRain?.onMapMoved?.();}});
     geologyButton.addEventListener('click',()=>showGeology(!geologyVisible));
   } catch (error) {
     geologyButton.disabled=true;
