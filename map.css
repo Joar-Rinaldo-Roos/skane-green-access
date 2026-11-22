@@ -37,6 +37,18 @@
 .rain-model-time,.rain-note{margin:0;font-size:.76rem;color:#547183}
 .rain-forecast-controls a{font-size:.76rem;color:#1f667e}
 
+.next-rain-panel{background:#fff;border:1px solid #dce8e4;border-radius:18px;padding:17px 19px;margin:0 0 16px;box-shadow:0 7px 24px #173f3112}
+.next-rain-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.next-rain-heading h2{font-size:1.14rem;line-height:1.3;margin:0 0 4px;color:#194c3c}
+.next-rain-heading p{font-size:.77rem;color:#59756a;margin:0}
+#next-rain-refresh{background:#e5f2ed;color:#1a6650;border:1px solid #b8dac8;padding:10px 13px;min-height:44px;font-size:.8rem}
+#next-rain-refresh:disabled{opacity:.6;cursor:wait}
+.next-rain-answer{font-size:clamp(1.08rem,3.8vw,1.4rem);font-weight:750;line-height:1.4;margin:16px 0 7px;color:#1d5b48}
+.next-rain-detail{font-size:.88rem;line-height:1.55;margin:0 0 8px;color:#325648}
+.next-rain-status{font-size:.79rem;line-height:1.5;color:#567369;margin:10px 0}
+.next-rain-note{font-size:.74rem;line-height:1.55;color:#687970;margin:10px 0 7px}
+.next-rain-panel>a{font-size:.77rem;color:#216b50}
+@media(max-width:420px){.next-rain-panel{padding:14px}.next-rain-heading{align-items:flex-start}.next-rain-heading #next-rain-refresh{min-height:42px}}
 .leaflet-container{font-family:inherit}
 .leaflet-control-attribution{font-size:10px}
 .panel-title{font-size:clamp(1.4rem,4.8vw,1.85rem);line-height:1.22;margin:0 0 12px}
