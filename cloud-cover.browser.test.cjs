@@ -14,13 +14,14 @@ function harness({startIn2D=false,temperatureInitiallyOn=true}={}){
     if(!elements.has(id)){
       const local=new Map(),classes=new Set();
       elements.set(id,{
-        id,value:'0',max:'0',textContent:'',disabled:false,hidden:false,
+        id,value:'0',max:'0',textContent:'',disabled:false,hidden:false,checked:false,
         attributes:{},
         classList:{add:x=>classes.add(x),remove:x=>classes.delete(x),contains:x=>classes.has(x)},
         addEventListener(name,fn){if(!local.has(name))local.set(name,[]);local.get(name).push(fn)},
         setAttribute(name,val){this.attributes[name]=val},
         click(){for(const fn of local.get('click')||[])fn()},
-        input(){for(const fn of local.get('input')||[])fn()}
+        input(){for(const fn of local.get('input')||[])fn()},
+        change(){for(const fn of local.get('change')||[])fn()}
       });
     }
     return elements.get(id);
@@ -87,6 +88,7 @@ test('cloud button keeps temperature on and synchronizes both weather layers on 
   h.element('toggle-clouds').click();
   await h.flush();
   assert.equal(h.temperatureOn,true);
+  assert.equal(h.element('cloud-with-temperature').checked,true);
   assert(h.synchronized.length>0);
   const initialFrame=h.synchronized.at(-1);
   assert(initialFrame && Number.isInteger(initialFrame.index));
@@ -135,13 +137,23 @@ test('cloud toggle switches from 2D to the globe and waits for globe readiness',
   assert.equal(h.element('toggle-clouds').attributes['aria-pressed'],'true');
 });
 
-test('turning on Clouds enables Temperature underneath when it was off',async()=>{
+test('Clouds start alone when Temperature was off, then user can opt into the combination',async()=>{
  const h=harness({temperatureInitiallyOn:false});
  h.element('toggle-clouds').click();
  await h.flush();
+ assert.equal(h.temperatureOn,false);
+ assert.equal(h.element('cloud-with-temperature').checked,false);
+ assert.equal(h.synchronized.length,0);
+ assert(h.layers.has('hn-clouds-raster'));
+ h.element('cloud-with-temperature').checked=true;
+ h.element('cloud-with-temperature').change();
  assert.equal(h.temperatureOn,true);
  assert(h.synchronized.length>0);
- assert(h.layers.has('hn-clouds-raster'));
+ const frame=h.synchronized.at(-1);
+ assert(Number.isInteger(frame.index));
+ h.element('cloud-with-temperature').checked=false;
+ h.element('cloud-with-temperature').change();
+ assert.equal(h.temperatureOn,false);
 });
 
 test('cloud opacity slider adjusts cloud blend without changing the temperature model hour',async()=>{
