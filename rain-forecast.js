@@ -203,6 +203,7 @@
     button.setAttribute('aria-label','Hide global precipitation forecast');
     panel.hidden=false;slider.disabled=true;playButton.disabled=true;
     displayFrame();
+    window.HereNowClouds?.hide?.();
     if(window.HereNowTemperature?.isEnabled?.())
       document.getElementById('toggle-temperature')?.click();
     setup();

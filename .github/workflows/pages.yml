@@ -29,6 +29,9 @@ jobs:
           node --check temperature-layer.js
           node --check rain-forecast-core.js
           node --check rain-forecast.js
+          node --check cloud-cover-core.js
+          node --check cloud-cover.js
+          node --test cloud-cover.test.cjs cloud-cover.browser.test.cjs
           node --check next-rain-core.js
           node --check next-rain.js
           node --test next-rain.test.cjs next-rain.browser.test.cjs
@@ -55,7 +58,7 @@ jobs:
       - name: Stage only public website assets
         run: |
           mkdir -p _site
-          cp index.html version.json app.js temperature-core.js temperature-layer.js rain-forecast-core.js rain-forecast.js next-rain-core.js next-rain.js green-spaces-core.js green-spaces.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js chat.js style.css map.css _site/
+          cp index.html version.json app.js temperature-core.js temperature-layer.js rain-forecast-core.js rain-forecast.js cloud-cover-core.js cloud-cover.js next-rain-core.js next-rain.js green-spaces-core.js green-spaces.js map.js globe.js globe-loader.mjs diagnostics.js soil-info.js archive.js nature-detail.js local-history.js sky.js discovery-ui.js chat.js style.css map.css _site/
           touch _site/.nojekyll
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
@@ -72,13 +75,13 @@ jobs:
           site="${SITE_URL%/}/"
           for attempt in $(seq 1 12); do
             if curl -fsSL --max-time 20 -H "Cache-Control: no-cache" "${site}?release=${GITHUB_SHA}&attempt=${attempt}" -o /tmp/here-now-live.html; then
-              if grep -Fq "data-app-version=\"${expected}\"" /tmp/here-now-live.html && grep -Fq 'id="toggle-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-rain"' /tmp/here-now-live.html && grep -Fq 'id="next-rain-panel"' /tmp/here-now-live.html; then
-                echo "Published website verified: v${expected}, with global rain and next rain at map center"
+              if grep -Fq "data-app-version=\"${expected}\"" /tmp/here-now-live.html && grep -Fq 'id="toggle-temperature"' /tmp/here-now-live.html && grep -Fq 'id="toggle-rain"' /tmp/here-now-live.html && grep -Fq 'id="next-rain-panel"' /tmp/here-now-live.html && grep -Fq 'id="toggle-clouds"' /tmp/here-now-live.html; then
+                echo "Published website verified: v${expected}, with cloud cover and existing weather layers"
                 exit 0
               fi
             fi
-            echo "The published website does not yet show v${expected}, temperature, rain and next rain controls (attempt ${attempt}/12)"
+            echo "The published website does not yet show v${expected}, temperature, rain, clouds and next rain controls (attempt ${attempt}/12)"
             sleep 10
           done
-          echo "::error::GitHub Pages is not serving v${expected} with Temp, rain and next-rain forecast controls. Check Pages deployment source and CDN."
+          echo "::error::GitHub Pages is not serving v${expected} with Temp, rain, cloud cover and next-rain controls. Check Pages deployment source and CDN."
           exit 1

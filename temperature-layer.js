@@ -141,7 +141,7 @@
   toggle.addEventListener('click',()=>{
     enabled=!enabled;
     // The two global weather palettes are alternatives, not competing overlays.
-    if(enabled)window.HereNowRain?.hide?.();
+    if(enabled){window.HereNowRain?.hide?.();window.HereNowClouds?.hide?.();}
     toggle.classList.toggle('layer-active',enabled);
     toggle.setAttribute('aria-pressed',String(enabled));
     toggle.setAttribute('aria-label',enabled?'Hide global temperature forecast':'Show global temperature forecast');
