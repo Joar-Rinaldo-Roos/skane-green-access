@@ -2,9 +2,9 @@
 
 ## Website version and release verification
 
-**Current release: v1.0.7**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**Current release: v1.0.8**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
 
-For the next website changes, bump the version to **v1.0.8** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+For the next website changes, bump the version to **v1.0.9** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
 
 The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
 
@@ -65,6 +65,16 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add radius control, source details, bookmarks and caching
 - [ ] Add tests, deployment checks and accessibility improvements
 
+
+## 🌍 Globe-only and configurable map tile retention — v1.0.8 (November 2026)
+
+The page is now **3D globe only**. The formerly hidden Leaflet/2D street map, its duplicate OpenStreetMap tile requests, and the 2D/3D map-switch button have been removed from deployed assets. The lightweight `globe-map-controller.js` retains the public `HereNowMap` interface for GPS, place search, map-center Next Rain, geology, nearby discoveries, and the global Green Spaces vector layer. Without WebGL the app displays an explicit globe-unavailable message (there is no 2D fallback). The globe begins automatically as soon as MapLibre is loaded.
+
+**More actual tile caching:** MapLibre's `maxTileCacheSize` option is set explicitly, increasing memory retained for recently seen tiles **per source**. Defaults are 128 on desktop, 72 on normal mobile and 48 on low-memory devices. The new **“Keep more map tiles in memory”** checkbox raises limits to 224, 128 or 80 respectively. The selection persists in localStorage and applies after reloading the page. Browser storage may be blocked; in that case the setting is used in the current tab but cannot survive a reload. Very large caches can consume significant memory across four weather sources; low-memory devices use smaller limits.
+
+This is **not** downloading the whole 48-hour globe forecast. Tile retention only helps when returning to geography/model tiles that were already fetched; MapLibre's internal cache can evict old tiles and does not persist weather tiles offline. Initial tile decoding and new forecast-frame fetches are still network/CPU bound. The metadata prefetch and session cache from v1.0.7 remain. No claim of measured improvement without benchmarking on the actual device.
+
+CI `node --test globe-only.test.cjs` checks that Leaflet and the 2D switch are absent, the globe auto-initializes, place and soil interfaces remain available, and device-aware cache limits are respected. GitHub Pages verifies the published v1.0.8 HTML and new scripts.
 
 ## ⚡ Early weather loading and shared cache — v1.0.7 (November 2026)
 
