@@ -125,6 +125,7 @@
         syncMarker();
         paintSoil();
         window.HereNowGreenSpaces?.repaint?.();
+        window.HereNowGreenSpaces?.onMapReady?.();
         window.HereNowGreenSpaces?.scheduleRefresh?.();
         if(currentPlace) setViewFromPlace(currentPlace,lastZoom);
         controller.scheduleGeologyRefresh?.();
@@ -172,7 +173,12 @@
     currentPlace=null;
     syncMarker();
   };
-  window.HereNowGlobe={getMap:()=>globeReady?globeMap:null,isActive:()=>globeActive};
+  function zoomTo(zoom=13){
+    if(!globeActive||!globeMap||!globeReady||!Number.isFinite(zoom))return false;
+    globeMap.jumpTo({zoom});
+    return true;
+  }
+  window.HereNowGlobe={getMap:()=>globeReady?globeMap:null,isActive:()=>globeActive,zoomTo};
   // The ES-module loader dispatches this after MapLibre is actually available.
   window.addEventListener('here-now-globe-ready',toGlobe);
   if(window.maplibregl) toGlobe();

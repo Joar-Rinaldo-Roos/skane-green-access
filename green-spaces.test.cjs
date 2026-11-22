@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {buildOverpassQuery,toGeoJSON,cacheKey,kindFromTags}=require('./green-spaces-core.js');
+const {buildOverpassQuery,toGeoJSON,cacheKey,kindFromTags,desiredZoom,fetchOverpass}=require('./green-spaces-core.js');
 const rectangle=(left,bottom,right,top)=>[
  {lon:left,lat:bottom},{lon:right,lat:bottom},{lon:right,lat:top},
  {lon:left,lat:top},{lon:left,lat:bottom}];
@@ -52,4 +52,39 @@ test('Recognizes forest and provides a stable rounded cache key',()=>{
  assert.equal(kindFromTags({landuse:'grass'}),'Green area');
  assert.equal(kindFromTags({building:'house'}),null);
  assert.equal(cacheKey({lat:55.70496,lon:13.19104}),cacheKey({lat:55.70497,lon:13.19105}));
+});
+
+// Regressions reported by Android user: slow remote queries and missing auto-zoom.
+test('map toggle auto-zooms out-of-range views but does not zoom an already detailed view',()=>{
+ assert.equal(desiredZoom(3.3),13);
+ assert.equal(desiredZoom(11.9),13);
+ assert.equal(desiredZoom(13),13);
+ assert.equal(desiredZoom(16),16);
+});
+test('first query is lightweight and excludes huge relation geometries',()=>{
+ const q=buildOverpassQuery({lat:55.705,lon:13.191},700);
+ assert.match(q,/\[timeout:12\]/);
+ assert.doesNotMatch(q,/relation\[/);
+ assert.match(q,/way\[/);
+});
+test('request retries a different Overpass server after timeout',async()=>{
+ const attempted=[];
+ const result=await fetchOverpass({lat:55.705,lon:13.191},{
+  radius:700,timeoutMs:100,
+  endpoints:['https://first.test/api/interpreter','https://second.test/api/interpreter'],
+  fetchFn:async url=>{
+   attempted.push(url);
+   if(attempted.length===1)throw Object.assign(new Error('request timed out'),{name:'AbortError'});
+   return {ok:true,json:async()=>({elements:[{type:'way',id:7,tags:{leisure:'park'},geometry:rectangle(13.19,55.70,13.20,55.71)}]})};
+  }
+ });
+ assert.equal(attempted.length,2);
+ assert.match(attempted[1],/^https:\/\/second\.test/);
+ assert.equal(result.data.elements.length,1);
+});
+test('runtime errors from Overpass are treated as failures, not empty results',async()=>{
+ await assert.rejects(()=>fetchOverpass({lat:55.705,lon:13.191},{
+  endpoints:['https://only.test/api/interpreter'],timeoutMs:100,
+  fetchFn:async()=>({ok:true,json:async()=>({remark:'runtime error: Query timed out',elements:[]})})
+ }),/unavailable|timed out|runtime error/i);
 });
