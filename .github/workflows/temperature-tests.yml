@@ -1,0 +1,27 @@
+name: Test Here & Now Temperature
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  temperature:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check temperature and globe JavaScript
+        run: |
+          node --check temperature-core.js
+          node --check temperature-layer.js
+          node --check globe.js
+          node --check temperature-smoke.mjs
+      - name: Temperature geometry and timestamp unit tests
+        run: node --test temperature.test.cjs
+      - name: Check live model metadata and weather renderer files
+        run: node temperature-smoke.mjs

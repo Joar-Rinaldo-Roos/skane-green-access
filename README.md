@@ -56,6 +56,18 @@ Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to
 - [ ] Add tests, deployment checks and accessibility improvements
 
 
+## 🌡️ Global temperature overlay (November 2026)
+
+Here & Now's existing **MapLibre 3D globe** can display a **global forecast of air temperature at 2 metres above ground**. Tap **🌡️ Temp** above the globe. The temperature layer:
+- Uses Open-Meteo's MapLibre `om://` protocol and DWD ICON **global** model (`temperature_2m`, closest current forecast hour). Model coverage is global and forecast resolution is finite; zooming into neighbourhoods does *not* create street-scale observations.
+- Is a **numerical weather forecast**, not a real-time thermometer/radar or satellite measurement. The selected forecast validity time is shown where metadata is available.
+- Is a semi-transparent raster overlay on the existing 3D globe. It is supported at world and local zoom levels without fetching individual GPS-based forecasts. No GPS permission or Mac backend is required.
+- Only loads the weather renderer and model data if the user turns the layer on. Uses the pinned Open-Meteo weather-map-layer library version `0.3.2` from unpkg and model data from Open-Meteo's spatial repository. Weather attribution appears in the interface.
+- If the globe is in 2D mode, enabling Temperature switches to 3D; the temperature overlay itself is intentionally **3D only** in this first phase. Green Spaces is unchanged.
+- Is experimental: upstream Open-Meteo itself warns its map-layer API is not yet production-ready. The third-party library uses WebAssembly and worker assets, and may perform less smoothly on browsers without cross-origin isolation (GitHub Pages cannot configure custom cross-origin isolation headers in this workflow). Source: https://github.com/open-meteo/weather-map-layer
+- No embedded API key. Open-Meteo's free access is intended for non-commercial use under its terms; consult licensing for other uses. Map library source is distributed under GPL-2.0; its license remains with its authors.
+- Unit tests: `node --test temperature.test.cjs`. A separate GitHub Actions workflow probes current global model metadata and checks that CDN JS/worker/WASM assets exist. Browser performance, colors and global globe rendering still need Samsung testing.
+
 ## Green Spaces map overlay (November 2026)
 
 **🌳 Green spaces** is a map toggle alongside the geology layer. It shows mapped **parks, gardens, forests, nature reserves and recreation green areas** on both the 3D MapLibre globe and 2D Leaflet map.
