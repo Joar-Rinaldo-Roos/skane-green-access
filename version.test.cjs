@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.13');
+ assert.equal(version.version,'1.0.14');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -88,4 +88,11 @@ test('map introduction is current and removed green-space feature stays absent',
  assert.match(html,/Explore the 3D globe or tap Find me to zoom to your location\./);
  assert.doesNotMatch(html,/duplicate 2D|toggle-green-spaces|green-status|green-spaces(?:-core)?\.js/);
  for(const path of ['globe.js','globe-map-controller.js','map.js']) assert.doesNotMatch(fs.readFileSync(path,'utf8'),/HereNowGreenSpaces/);
+});
+
+test('Earth and Sky modes and optional day/night controls are deployed',()=>{
+ for(const id of ['view-earth','view-sky','earth-view','sky-view','toggle-day-night','day-night-status'])assert(html.includes('id="'+id+'"'));
+ assert.match(html,/id="sky-view"[^>]*hidden/);
+ assert.match(html,/day-night\.js\?v=1/);
+ assert.match(deploy,/node --test day-night\.test\.cjs/);
 });

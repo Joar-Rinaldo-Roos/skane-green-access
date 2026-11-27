@@ -2,7 +2,7 @@
 
 **There's a story everywhere.** Here & Now is a mobile-friendly, location-aware discovery website for exploring the Earth, the ground beneath you, local history, wildlife and the sky.
 
-**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.13 (27 November 2026)**
+**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.14 (27 November 2026)**
 
 The repository name reflects the original Skåne green-access prototype. Today's website is a broader discovery app, with a global globe and weather forecasts alongside Sweden-specific geological and heritage data.
 
@@ -16,6 +16,8 @@ The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lun
 - **Soil geology:** display SGU mapped soil polygons in Sweden using its OGC API – Features. Tap a polygon for an English explanation, original Swedish classification and composition; Read more opens details beneath the map. Colours are illustrative, not the official SGU legend.
 
 WebGL and network access are required for the globe.
+
+**Earth / Sky:** Earth is the default; Sky is a placeholder for a future interactive planetarium. Switching back preserves the existing map. **Day & night** optionally shades the geometric night hemisphere using a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. No new API, GPS, imagery or map downloads are needed. The layer sits beneath weather and geology, and uses real time rather than the forecast slider. This is not live satellite imagery, twilight or city lights.
 
 ## Weather
 
@@ -95,6 +97,7 @@ Open http://localhost:8000 in your browser. GPS requires browser permission and 
 | --- | --- |
 | index.html, style.css, map.css | Page, controls and responsive styling |
 | app.js, discovery-ui.js | Location selection, discovery and result display |
+| day-night.js | Earth/Sky selector and solar night shading |
 | globe-loader.mjs, globe.js, globe-map-controller.js | MapLibre initialization, globe and SGU features |
 | soil-info.js, archive.js, local-history.js, nature-detail.js, sky.js | Topic-specific sources and explanations |
 | temperature-layer.js, rain-forecast.js, cloud-cover.js, wind-layer.js | Weather rendering, supported by corresponding core modules |
@@ -119,7 +122,7 @@ GitHub Actions runs frontend syntax checks, browser-independent regression tests
 
 GitHub Pages uses **Settings → Pages → Source: GitHub Actions**, not branch-root deployment. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to main and manual dispatch. It validates JavaScript and relevant tests, stages only explicitly listed public frontend assets (not backend credentials or the legacy Python prototype), deploys and checks the public HTML for the expected release version, controls and script revisions.
 
-For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.13 is v1.0.14. Documentation-only edits do not require a website version bump.
+For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.14 is v1.0.15. Documentation-only edits do not require a website version bump.
 
 Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access/actions) and the live header to confirm deployment. A successful HTML check does not prove every external service or browser feature works.
 

@@ -108,6 +108,7 @@
         globeReady=true;
         syncMarker();
         paintSoil();
+        window.HereNowDayNight?.attach(globeMap);
         window.dispatchEvent?.(typeof Event==='function'?new Event('here-now-globe-map-ready'):{type:'here-now-globe-map-ready'});
         if(currentPlace) setViewFromPlace(currentPlace,lastZoom);
         controller.scheduleGeologyRefresh?.();

@@ -50,7 +50,7 @@ jobs:
       - name: Inspect existing public Pages content
         run: |
           curl -fsSL --max-time 20 "https://joar-rinaldo-roos.github.io/skane-green-access/?inspect=${GITHUB_SHA}" -o /tmp/pages-live.html
-          if grep -Fq 'data-app-version="1.0.13"' /tmp/pages-live.html && grep -Fq 'id="weather-play"' /tmp/pages-live.html; then echo "Live Pages already includes v1.0.13"; else echo "Live Pages is still serving an earlier release (expected until PR deploy)"; fi
+          if grep -Fq 'data-app-version="1.0.14"' /tmp/pages-live.html && grep -Fq 'id="weather-play"' /tmp/pages-live.html; then echo "Live Pages already includes v1.0.14"; else echo "Live Pages is still serving an earlier release (expected until PR deploy)"; fi
       - name: Verify live global DWD ICON wind vector source and future hours
         run: node wind-smoke.mjs
       - name: Verify global Open-Meteo cloud cover variables and forecast horizon
