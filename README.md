@@ -147,6 +147,41 @@ If GPS is denied, use Map center or Search place. If the globe fails, check WebG
 
 Real-device checks on Samsung/Android remain important: verify GPS grant/denial, globe rendering, SGU popups, each weather layer, first-frame reveal while other sources load, combined layers and timeline playback, Next Rain, source links and optional chat. Automated tests do not establish mobile rendering speed or live provider availability.
 
+## Roadmap — future features
+
+Develop Here & Now gradually, following KISS: keep each change small, test it on real devices and preserve working features. The roadmap is a living list of ideas, not a commitment to release numbers or dates.
+
+### 🌍 Earth — a more realistic globe
+
+Visual inspiration: [Realistic Earth globe with MapLibre](https://makewithmaplibre.com/globe/). Build on the existing MapLibre renderer rather than replacing the app.
+
+- [x] Earth view and Day & night button.
+- [x] Real-time geometric night shading, calculated locally from the device clock.
+- [ ] Smooth sunlight shading and twilight — replace the abrupt dark boundary with gradual illumination based on solar elevation.
+- [ ] Atmospheric glow — add a natural illuminated rim around the Earth.
+- [ ] Satellite imagery at global zoom — a more realistic Earth from space, retaining the detailed street map when zooming in.
+- [ ] Nighttime city lights — use suitable night-light imagery on the dark side of Earth. Historical imagery must not be presented as live lighting.
+
+### ✨ Sky — explore the universe above you
+
+Develop this after the Earth improvements. Keep the sky viewer tied to the selected observer location and time.
+
+- [x] Sky button and separate view, currently a placeholder.
+- [ ] Map the stars — explore different approaches to star catalogues, rendering, constellations and a location-aware night sky. Expect several small iterations rather than one large implementation.
+- [ ] Mark planets at their calculated positions, with identifiable labels.
+- [ ] Show satellites and their predicted positions or passes using suitable orbital data.
+
+### 🚆 Future game — a Here & Now geography challenge
+
+An original destination-guessing game inspired by the Swedish programme *På spåret*. Players try to identify a mystery location using progressively revealing clues. The distinctive idea is to connect the clues to what is happening **there, right now**, bringing the product's Here & Now concept into the game.
+
+- [ ] Build the original mystery-location and clue-reveal game.
+- [ ] Current local event clue: an event actually taking place at the destination now, backed by a reliable source and local time.
+- [ ] Local radio clue: a song or programme actually playing on a radio station at the destination now, when verifiable current-play metadata is available.
+- [ ] Add more clue types as ideas develop.
+
+Research event feeds and radio metadata coverage, freshness, time zones, provider permissions and media rights before implementation. Do not invent live clues when data is unavailable. Keep the game's name, presentation and rules original.
+
 ## Development history
 
 The original Skåne green-space proximity/Streamlit prototype is retained for reference; it is not integrated into Here & Now.
