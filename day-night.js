@@ -62,12 +62,19 @@
     const status=doc.getElementById('day-night-status');
     if(!toggle||!earth||!sky||!earthPanel||!skyPanel||!status)return null;
     const id='hn-day-night';
-    let map=null,enabled=false,earthActive=true,timer=null;
+    let map=null,enabled=false,earthActive=true,timer=null,realistic=false,streetEnabled=false,realisticEnabled=true;
     function refresh(){
       if(!enabled||!earthActive)return;
       if(!map){status.textContent='Waiting for the globe…';return;}
       try{
-        const data=nightGeometry(sunAt(new Date()));
+        const now=new Date();
+        if(realistic){
+          if(map.getLayer(id))map.setLayoutProperty(id,'visibility','none');
+          win.HereNowRealistic?.lighting(true,now,sunAt(now));
+          status.textContent='Smooth solar lighting · city lights are historical NASA imagery.';
+          return;
+        }
+        const data=nightGeometry(sunAt(now));
         const source=map.getSource(id);
         if(source)source.setData(data);
         else map.addSource(id,{type:'geojson',data,maxzoom:8,tolerance:0});
@@ -91,8 +98,8 @@
       stop();
       if(enabled&&earthActive){refresh();timer=win.setInterval(refresh,60000);}
     }
-    toggle.addEventListener('click',()=>{
-      enabled=!enabled;
+    function setEnabled(on){
+      enabled=on;
       toggle.setAttribute('aria-pressed',String(enabled));
       toggle.classList.toggle('layer-active',enabled);
       status.hidden=!enabled;
@@ -100,8 +107,17 @@
       else{
         stop();
         if(map?.getLayer(id))map.setLayoutProperty(id,'visibility','none');
+        if(realistic)win.HereNowRealistic?.lighting(false,new Date(),null);
       }
-    });
+    }
+    toggle.addEventListener('click',()=>setEnabled(!enabled));
+    function setRealistic(on){
+      if(realistic===on)return;
+      if(realistic)realisticEnabled=enabled;else streetEnabled=enabled;
+      realistic=on;
+      if(map?.getLayer(id))map.setLayoutProperty(id,'visibility','none');
+      setEnabled(on?realisticEnabled:streetEnabled);
+    }
     function select(isEarth){
       if(earthActive===isEarth)return;
       earthActive=isEarth;
@@ -118,11 +134,11 @@
     earth.addEventListener('click',()=>select(true));
     sky.addEventListener('click',()=>select(false));
     doc.addEventListener('visibilitychange',()=>{if(!doc.hidden)refresh();});
-    return {attach(nextMap){
+    return {sunAt,setRealistic,attach(nextMap){
       map=nextMap;
       // The globe emits attach after its load event. An idle event also retries
       // any failed first source creation, without waiting for the next minute.
-      map.on('idle',()=>{if(enabled&&earthActive&&!map.getLayer(id))refresh();});
+      map.on('idle',()=>{if(enabled&&earthActive&&!realistic&&!map.getLayer(id))refresh();});
       if(earthActive){map.resize();start();}
     }};
   }

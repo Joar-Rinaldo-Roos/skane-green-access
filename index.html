@@ -7,7 +7,7 @@
   <meta name="description" content="Discover local history, animals and the sky above you on a location-aware globe.">
   <title>Here &amp; Now — Discover your surroundings</title>
   <link rel="stylesheet" href="./style.css">
-  <link rel="stylesheet" href="./map.css?v=14">
+  <link rel="stylesheet" href="./map.css?v=15">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
   <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com" crossorigin>
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
@@ -28,8 +28,9 @@
   <script src="./next-rain-core.js?v=1" defer></script>
   <script src="./globe-map-controller.js?v=2" defer></script>
   <script src="./tile-cache.js?v=2" defer></script>
-  <script src="./day-night.js?v=1" defer></script>
-  <script src="./globe.js?v=14" defer></script>
+  <script src="./realistic-globe.js?v=1" defer></script>
+  <script src="./day-night.js?v=2" defer></script>
+  <script src="./globe.js?v=15" defer></script>
   <script src="./temperature-layer.js?v=9" defer></script>
   <script src="./rain-forecast.js?v=7" defer></script>
   <script src="./cloud-cover.js?v=7" defer></script>
@@ -47,7 +48,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.14" aria-label="Here and Now version 1.0.14" title="Website release v1.0.14">v1.0.14</span>
+        <span class="app-version" data-app-version="1.0.15" aria-label="Here and Now version 1.0.15" title="Website release v1.0.15">v1.0.15</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -65,6 +66,10 @@
           </div>
           <p>Explore the 3D globe or tap Find me to zoom to your location.</p>
         </div>
+        <div class="toggle render-switch" role="group" aria-label="Globe appearance">
+          <button id="render-street" type="button" aria-pressed="true">🗺️ Street map</button>
+          <button id="render-realistic" type="button" aria-pressed="false">🌍 Realistic</button>
+        </div>
         <div class="map-frame">
           <div id="globe-map" role="region" aria-label="Rotatable 3D globe with geological overlays from SGU."></div>
           <div class="map-toolbar" role="group" aria-label="Map controls">
@@ -77,6 +82,7 @@
             <button id="toggle-wind" type="button" aria-pressed="false" aria-label="Show global wind direction forecast arrows">💨 Wind</button>
           </div>
         </div>
+        <p id="render-status" class="map-note" role="status">Street map · OpenStreetMap.</p>
         <p id="day-night-status" class="map-note" hidden>Night is shaded · calculated from your device clock.</p>
         <div class="map-summary">
           <p id="map-status" role="status" aria-live="polite">Map starts in Lund. Use Find me or search for a place below.</p>

@@ -2,13 +2,13 @@
 
 **There's a story everywhere.** Here & Now is a mobile-friendly, location-aware discovery website for exploring the Earth, the ground beneath you, local history, wildlife and the sky.
 
-**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.14 (27 November 2026)**
+**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.15 (27 November 2026)**
 
 The repository name reflects the original Skåne green-access prototype. Today's website is a broader discovery app, with a global globe and weather forecasts alongside Sweden-specific geological and heritage data.
 
 ## Explore the map
 
-The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lund as an example, not as an inferred GPS position. OpenStreetMap raster tiles provide the basemap.
+The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lund as an example, not as an inferred GPS position. OpenStreetMap raster tiles provide the default street basemap. Choose **Realistic** for NASA Blue Marble at global scale and Sentinel-2 cloudless imagery at closer zooms. Both modes use the same map, camera, location marker and weather/geology layers. Realistic imagery loads only on selection. Return to Street map for street names and navigation context.
 
 - **Find me:** request one-time browser geolocation and zoom to the selected position (zoom 15). No continuous GPS tracking.
 - **Search place:** search for a Swedish place using OpenStreetMap Nominatim.
@@ -17,7 +17,7 @@ The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lun
 
 WebGL and network access are required for the globe.
 
-**Earth / Sky:** Earth is the default; Sky is a placeholder for a future interactive planetarium. Switching back preserves the existing map. **Day & night** optionally shades the geometric night hemisphere using a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. No new API, GPS, imagery or map downloads are needed. The layer sits beneath weather and geology, and uses real time rather than the forecast slider. This is not live satellite imagery, twilight or city lights.
+**Earth / Sky:** Earth is the default; Sky is a placeholder for a future interactive planetarium. Switching back preserves the existing map. **Day & night** uses a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. Street map retains geometric night shading; Realistic defaults to smooth per-pixel solar shading, twilight and MapLibre atmospheric glow, with NASA Black Marble 2016 city lights masked to night. Each appearance remembers its own day/night toggle while the page is open. These layers sit beneath weather and geology and use real time rather than the forecast slider. Realistic imagery is historical, not live satellite imagery or live lighting. No API key is required. Terrain and country-specific aerial photography are deferred.
 
 ## Weather
 
@@ -97,6 +97,7 @@ Open http://localhost:8000 in your browser. GPS requires browser permission and 
 | --- | --- |
 | index.html, style.css, map.css | Page, controls and responsive styling |
 | app.js, discovery-ui.js | Location selection, discovery and result display |
+| realistic-globe.js | Optional satellite basemap, local solar raster protocol and atmosphere |
 | day-night.js | Earth/Sky selector and solar night shading |
 | globe-loader.mjs, globe.js, globe-map-controller.js | MapLibre initialization, globe and SGU features |
 | soil-info.js, archive.js, local-history.js, nature-detail.js, sky.js | Topic-specific sources and explanations |
@@ -122,7 +123,7 @@ GitHub Actions runs frontend syntax checks, browser-independent regression tests
 
 GitHub Pages uses **Settings → Pages → Source: GitHub Actions**, not branch-root deployment. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to main and manual dispatch. It validates JavaScript and relevant tests, stages only explicitly listed public frontend assets (not backend credentials or the legacy Python prototype), deploys and checks the public HTML for the expected release version, controls and script revisions.
 
-For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.14 is v1.0.15. Documentation-only edits do not require a website version bump.
+For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.15 is v1.0.16. Documentation-only edits do not require a website version bump.
 
 Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access/actions) and the live header to confirm deployment. A successful HTML check does not prove every external service or browser feature works.
 
@@ -130,6 +131,7 @@ Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access
 
 Location is requested on user interaction, not continuously tracked. Selected coordinates are sent to relevant external services when needed for queries; map tile requests also reveal the requested map area. The optional chat has its own data flow described above.
 
+- Realistic imagery: [NASA GIBS](https://nasa-gibs.github.io/gibs-api-docs/) Blue Marble and 2016 Black Marble; [Sentinel-2 cloudless](https://s2maps.eu/) by EOX (modified Copernicus Sentinel data 2016/2017, CC BY 4.0). See provider terms and credits. Visual inspiration: [Make with MapLibre](https://makewithmaplibre.com/globe/).
 - Basemap and place search: [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), Nominatim.
 - Geological data: [SGU original soil map](https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html) and [OGC API – Features](https://api.sgu.se/oppnadata/jordarter25k-100k/ogc/features/v1/collections/grundlager/items).
 - Weather: [Open-Meteo](https://open-meteo.com/), DWD ICON and [weather-map-layer](https://github.com/open-meteo/weather-map-layer). Review provider usage terms and library licensing.
@@ -157,10 +159,12 @@ Visual inspiration: [Realistic Earth globe with MapLibre](https://makewithmaplib
 
 - [x] Earth view and Day & night button.
 - [x] Real-time geometric night shading, calculated locally from the device clock.
-- [ ] Smooth sunlight shading and twilight — replace the abrupt dark boundary with gradual illumination based on solar elevation.
-- [ ] Atmospheric glow — add a natural illuminated rim around the Earth.
-- [ ] Satellite imagery at global zoom — a more realistic Earth from space, retaining the detailed street map when zooming in.
-- [ ] Nighttime city lights — use suitable night-light imagery on the dark side of Earth. Historical imagery must not be presented as live lighting.
+- [x] Smooth sunlight shading and twilight — replace the abrupt dark boundary with gradual illumination based on solar elevation.
+- [x] Atmospheric glow — add a natural illuminated rim around the Earth.
+- [x] Satellite imagery at global zoom — switch between satellite mosaics and the detailed street map.
+- [x] Nighttime city lights — use suitable night-light imagery on the dark side of Earth. Historical imagery must not be presented as live lighting.
+
+- [ ] Validate realistic globe appearance and performance on actual devices, and consider terrain and national aerial photography later.
 
 ### ✨ Sky — explore the universe above you
 
