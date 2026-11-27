@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.16');
+ assert.equal(version.version,'1.0.17');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -106,6 +106,11 @@ test('Realistic is selected by default and Deep space is deployed lazily',()=>{
  assert.match(html,/id="render-realistic"[^>]*aria-pressed="true"/);
  assert.match(html,/id="sky-deep-space"[^>]*aria-pressed="true"/);
  assert.match(html,/id="sky-my-sky"/);assert.match(html,/id="deep-space-atlas"/);
- assert.match(html,/deep-space\.js\?v=1/);assert.doesNotMatch(html,/src="https:\/\/aladin\.cds\.unistra\.fr\/AladinLite\/api/);
+ assert.match(html,/deep-space\.js\?v=2/);assert.doesNotMatch(html,/src="https:\/\/aladin\.cds\.unistra\.fr\/AladinLite\/api/);
  assert.match(deploy,/node --test deep-space\.test\.cjs/);
+});
+
+test('SIMBAD object identification UI is deployed',()=>{
+ assert.match(html,/id="identify-sky-object"/);assert.match(html,/id="sky-object-card"/);
+ assert.match(html,/simbad\.js\?v=1/);assert.match(deploy,/node --test simbad\.test\.cjs/);
 });

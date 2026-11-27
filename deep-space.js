@@ -34,10 +34,11 @@
        atlas=A.aladin('#deep-space-atlas',{
          survey:'P/DSS2/color',target:'266.41683 -29.00781',fov:60,
          cooFrame:'ICRS',showCooGrid:false,showCooGridControl:true,
-         showSimbadPointerControl:true,showLayersControl:true,
+         showSimbadPointerControl:false,showLayersControl:true,
          showFullscreenControl:true,showReticle:false
        });
-       status.textContent='Explore real telescope surveys. Drag, pinch or zoom; use the atlas controls for surveys and object information.';
+       win.HereNowSimbad?.mount(win,doc,atlas,host);
+       status.textContent='Explore real telescope surveys. Drag, pinch or zoom; tap Identify object to look up an astronomical object.';
      })().catch(error=>{
        status.textContent='Deep space could not start. Try again or open the original Aladin Lite website.';
        retry.hidden=false;

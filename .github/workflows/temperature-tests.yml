@@ -46,11 +46,11 @@ jobs:
       - name: Temperature geometry and timestamp unit tests
         run: node --test temperature.test.cjs temperature-sync.browser.test.cjs weather-composite.test.cjs prewarmed-weather.browser.test.cjs rain-forecast.test.cjs rain-forecast.browser.test.cjs cloud-cover.test.cjs cloud-cover.browser.test.cjs wind.test.cjs wind.browser.test.cjs weather-timeline.test.cjs weather-timeline.browser.test.cjs weather-data-cache.test.cjs weather-prefetch.test.cjs first-frame-preload.test.cjs next-rain.test.cjs next-rain.browser.test.cjs
       - name: Verify release number and visible header contract
-        run: node --test realistic-globe.test.cjs day-night.test.cjs deep-space.test.cjs version.test.cjs
+        run: node --test realistic-globe.test.cjs day-night.test.cjs deep-space.test.cjs simbad.test.cjs version.test.cjs
       - name: Inspect existing public Pages content
         run: |
           curl -fsSL --max-time 20 "https://joar-rinaldo-roos.github.io/skane-green-access/?inspect=${GITHUB_SHA}" -o /tmp/pages-live.html
-          if grep -Fq 'data-app-version="1.0.16"' /tmp/pages-live.html && grep -Fq 'id="weather-play"' /tmp/pages-live.html; then echo "Live Pages already includes v1.0.16"; else echo "Live Pages is still serving an earlier release (expected until PR deploy)"; fi
+          if grep -Fq 'data-app-version="1.0.17"' /tmp/pages-live.html && grep -Fq 'id="weather-play"' /tmp/pages-live.html; then echo "Live Pages already includes v1.0.17"; else echo "Live Pages is still serving an earlier release (expected until PR deploy)"; fi
       - name: Verify live global DWD ICON wind vector source and future hours
         run: node wind-smoke.mjs
       - name: Verify global Open-Meteo cloud cover variables and forecast horizon
