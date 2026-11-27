@@ -23,8 +23,8 @@ test('basemap is lazy and changes in place below existing overlays',()=>{
  addSource(id,s){sources.set(id,{...s,setTiles(tiles){this.tiles=tiles;}});},getLayer:id=>layers.get(id),
  addLayer(l,before){assert.equal(before,'hn-temperature-raster');layers.set(l.id,l);},
  setLayoutProperty(id,k,v){layers.get(id)[k]=v;},setSky(){},setLight(){}};
- const ui=mount(win,doc);ui.attach(map);assert.equal(sources.size,0);
- nodes.get('render-realistic').click();assert(ui.isActive());assert.equal(layers.get('osm').visibility,'none');
+ const ui=mount(win,doc);assert.equal(sources.size,0);ui.attach(map);
+ assert(ui.isActive());nodes.get('render-realistic').click();assert(ui.isActive());assert.equal(layers.get('osm').visibility,'none');
  assert.equal(sources.size,2);assert.equal(layers.get('hn-blue-marble').visibility,'visible');
  const d=new Date('2026-11-27T12:00:00Z');ui.lighting(true,d,{lat:-20,lon:0});
  assert.equal(sources.size,4);assert.equal(layers.get('hn-solar-shade').visibility,'visible');

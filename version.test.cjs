@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.15');
+ assert.equal(version.version,'1.0.16');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -93,11 +93,19 @@ test('map introduction is current and removed green-space feature stays absent',
 test('Earth and Sky modes and optional day/night controls are deployed',()=>{
  for(const id of ['view-earth','view-sky','earth-view','sky-view','toggle-day-night','day-night-status'])assert(html.includes('id="'+id+'"'));
  assert.match(html,/id="sky-view"[^>]*hidden/);
- assert.match(html,/day-night\.js\?v=2/);
+ assert.match(html,/day-night\.js\?v=3/);
  assert.match(deploy,/node --test day-night\.test\.cjs/);
 });
 
 test('both globe appearances and realistic script are published',()=>{
  assert.match(html,/id="render-street"/);assert.match(html,/id="render-realistic"/);
- assert.match(html,/realistic-globe\.js\?v=1/);assert.match(deploy,/node --test realistic-globe\.test\.cjs/);
+ assert.match(html,/realistic-globe\.js\?v=2/);assert.match(deploy,/node --test realistic-globe\.test\.cjs/);
+});
+
+test('Realistic is selected by default and Deep space is deployed lazily',()=>{
+ assert.match(html,/id="render-realistic"[^>]*aria-pressed="true"/);
+ assert.match(html,/id="sky-deep-space"[^>]*aria-pressed="true"/);
+ assert.match(html,/id="sky-my-sky"/);assert.match(html,/id="deep-space-atlas"/);
+ assert.match(html,/deep-space\.js\?v=1/);assert.doesNotMatch(html,/src="https:\/\/aladin\.cds\.unistra\.fr\/AladinLite\/api/);
+ assert.match(deploy,/node --test deep-space\.test\.cjs/);
 });

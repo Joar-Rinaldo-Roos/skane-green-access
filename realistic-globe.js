@@ -100,7 +100,7 @@
  function mount(win,doc){
    const street=doc.getElementById('render-street'),real=doc.getElementById('render-realistic'),status=doc.getElementById('render-status');
    if(!street||!real||!status)return null;
-   let map=null,active=false,desired=false,registered=false,lastTime=null,originalLight=null,originalSky=null;
+   let map=null,active=false,desired=true,registered=false,lastTime=null,originalLight=null,originalSky=null;
    function visible(id,on){if(map.getLayer(id))map.setLayoutProperty(id,'visibility',on?'visible':'none');}
    function before(){return map.getStyle().layers.find(l=>!localLayers.has(l.id))?.id;}
    function add(id,source,paint={},minzoom){

@@ -2,13 +2,13 @@
 
 **There's a story everywhere.** Here & Now is a mobile-friendly, location-aware discovery website for exploring the Earth, the ground beneath you, local history, wildlife and the sky.
 
-**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.15 (27 November 2026)**
+**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.16 (27 November 2026)**
 
 The repository name reflects the original Skåne green-access prototype. Today's website is a broader discovery app, with a global globe and weather forecasts alongside Sweden-specific geological and heritage data.
 
 ## Explore the map
 
-The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lund as an example, not as an inferred GPS position. OpenStreetMap raster tiles provide the default street basemap. Choose **Realistic** for NASA Blue Marble at global scale and Sentinel-2 cloudless imagery at closer zooms. Both modes use the same map, camera, location marker and weather/geology layers. Realistic imagery loads only on selection. Return to Street map for street names and navigation context.
+The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lund as an example, not as an inferred GPS position. **Realistic** is the default, using NASA Blue Marble at global scale and Sentinel-2 cloudless imagery at closer zooms. Choose **Street map** for OpenStreetMap raster tiles. Both modes use the same map, camera, location marker and weather/geology layers. Return to Street map for street names and navigation context.
 
 - **Find me:** request one-time browser geolocation and zoom to the selected position (zoom 15). No continuous GPS tracking.
 - **Search place:** search for a Swedish place using OpenStreetMap Nominatim.
@@ -17,7 +17,7 @@ The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lun
 
 WebGL and network access are required for the globe.
 
-**Earth / Sky:** Earth is the default; Sky is a placeholder for a future interactive planetarium. Switching back preserves the existing map. **Day & night** uses a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. Street map retains geometric night shading; Realistic defaults to smooth per-pixel solar shading, twilight and MapLibre atmospheric glow, with NASA Black Marble 2016 city lights masked to night. Each appearance remembers its own day/night toggle while the page is open. These layers sit beneath weather and geology and use real time rather than the forecast slider. Realistic imagery is historical, not live satellite imagery or live lighting. No API key is required. Terrain and country-specific aerial photography are deferred.
+**Earth / Sky:** Earth is the default; Sky contains **Deep space** (default within Sky) and **My sky** (a placeholder for a future local planetarium). Deep space embeds Aladin Lite v3 from CDS Strasbourg only when selected, starts with DSS2 colour imagery towards the Galactic Centre, and supports the atlas's pan/zoom, survey and object controls. This is archival telescope imagery, not the current local horizon. No GPS or backend is needed. Switching back preserves the existing map. **Day & night** uses a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. Street map retains geometric night shading; Realistic defaults to smooth per-pixel solar shading, twilight and MapLibre atmospheric glow, with NASA Black Marble 2016 city lights masked to night. Each appearance remembers its own day/night toggle while the page is open. These layers sit beneath weather and geology and use real time rather than the forecast slider. Realistic imagery is historical, not live satellite imagery or live lighting. No API key is required. Terrain and country-specific aerial photography are deferred.
 
 ## Weather
 
@@ -97,6 +97,7 @@ Open http://localhost:8000 in your browser. GPS requires browser permission and 
 | --- | --- |
 | index.html, style.css, map.css | Page, controls and responsive styling |
 | app.js, discovery-ui.js | Location selection, discovery and result display |
+| deep-space.js | Lazy-loaded Aladin Lite astronomical atlas and Sky submode selector |
 | realistic-globe.js | Optional satellite basemap, local solar raster protocol and atmosphere |
 | day-night.js | Earth/Sky selector and solar night shading |
 | globe-loader.mjs, globe.js, globe-map-controller.js | MapLibre initialization, globe and SGU features |
@@ -123,7 +124,7 @@ GitHub Actions runs frontend syntax checks, browser-independent regression tests
 
 GitHub Pages uses **Settings → Pages → Source: GitHub Actions**, not branch-root deployment. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to main and manual dispatch. It validates JavaScript and relevant tests, stages only explicitly listed public frontend assets (not backend credentials or the legacy Python prototype), deploys and checks the public HTML for the expected release version, controls and script revisions.
 
-For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.15 is v1.0.16. Documentation-only edits do not require a website version bump.
+For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.16 is v1.0.17. Documentation-only edits do not require a website version bump.
 
 Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access/actions) and the live header to confirm deployment. A successful HTML check does not prove every external service or browser feature works.
 
@@ -137,6 +138,7 @@ Location is requested on user interaction, not continuously tracked. Selected co
 - Weather: [Open-Meteo](https://open-meteo.com/), DWD ICON and [weather-map-layer](https://github.com/open-meteo/weather-map-layer). Review provider usage terms and library licensing.
 - Heritage: [Riksantikvarieämbetet / K-samsök](https://www.raa.se/hitta-information/k-samsok/); contributing institutions retain their record/image rights.
 - Nature: [iNaturalist](https://www.inaturalist.org/) and Wikipedia contributors; observe individual image/content licenses.
+- Deep space: [Aladin Lite](https://cds-astro.github.io/aladin-lite/), CDS Strasbourg, LGPL-3.0-or-later; retain its logo/link and survey credits. Its WebGL2/WASM viewer and remote HiPS surveys require compatible browsers and connectivity.
 - Astronomy: [Astronomy Engine](https://github.com/cosinekitty/astronomy) and [Sunrise-Sunset API](https://sunrise-sunset.org/api).
 
 Public providers may have rate limits, outages, CORS restrictions and incomplete coverage. No source is guaranteed to be available.
@@ -164,16 +166,25 @@ Visual inspiration: [Realistic Earth globe with MapLibre](https://makewithmaplib
 - [x] Satellite imagery at global zoom — switch between satellite mosaics and the detailed street map.
 - [x] Nighttime city lights — use suitable night-light imagery on the dark side of Earth. Historical imagery must not be presented as live lighting.
 
-- [ ] Validate realistic globe appearance and performance on actual devices, and consider terrain and national aerial photography later.
+- [x] Realistic as the default globe appearance; Street map remains selectable. Day/night is considered complete for now after positive user-device feedback.
+- [ ] Terrain elevation (topography) and national aerial photography — revisit later.
 
 ### ✨ Sky — explore the universe above you
 
-Develop this after the Earth improvements. Keep the sky viewer tied to the selected observer location and time.
+Two independent sky views: My sky for the observer's location and time, and Deep space for exploring archival astronomical imagery without a local-horizon restriction.
 
-- [x] Sky button and separate view, currently a placeholder.
+- [x] Sky button and separate view.
+- [x] My sky and Deep space selector; Deep space opens first.
+- [x] Deep space: initial Aladin Lite atlas integration; on-device rendering and performance still need validation.
+- [ ] My sky: interactive location-aware planetarium.
 - [ ] Map the stars — explore different approaches to star catalogues, rendering, constellations and a location-aware night sky. Expect several small iterations rather than one large implementation.
 - [ ] Mark planets at their calculated positions, with identifiable labels.
 - [ ] Show satellites and their predicted positions or passes using suitable orbital data.
+
+### 🕰️ Historical Earth — changing landscapes and archaeology
+
+- [ ] Historical view with a draggable timeline showing how sea levels rose and fell and how coastlines changed through time. Research regional relative sea-level reconstructions, glacial isostatic adjustment, elevation/bathymetry, time ranges, uncertainty and data licensing before choosing sources; a simple modern elevation flood map is not a historical reconstruction.
+- [ ] Map archaeological discoveries of human remains, such as documented burials, skeletons and fossils, with dating ranges and source-linked context. Research whether appropriate archaeological catalogues or APIs exist; start with public, authorized datasets and respect sensitive burial-site locations, cultural heritage protections and coordinate precision. Do not invent records or assume universal coverage.
 
 ### 🚆 Future game — a Here & Now geography challenge
 

@@ -129,6 +129,7 @@
         win.requestAnimationFrame(()=>{if(earthActive){map?.resize();start();}});
       }else{
         stop();win.HereNowWeatherTimeline?.stop?.();
+        win.HereNowDeepSpace?.open?.();
       }
     }
     earth.addEventListener('click',()=>select(true));

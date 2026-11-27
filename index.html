@@ -7,7 +7,7 @@
   <meta name="description" content="Discover local history, animals and the sky above you on a location-aware globe.">
   <title>Here &amp; Now — Discover your surroundings</title>
   <link rel="stylesheet" href="./style.css">
-  <link rel="stylesheet" href="./map.css?v=15">
+  <link rel="stylesheet" href="./map.css?v=16">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
   <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com" crossorigin>
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
@@ -28,8 +28,9 @@
   <script src="./next-rain-core.js?v=1" defer></script>
   <script src="./globe-map-controller.js?v=2" defer></script>
   <script src="./tile-cache.js?v=2" defer></script>
-  <script src="./realistic-globe.js?v=1" defer></script>
-  <script src="./day-night.js?v=2" defer></script>
+  <script src="./realistic-globe.js?v=2" defer></script>
+  <script src="./deep-space.js?v=1" defer></script>
+  <script src="./day-night.js?v=3" defer></script>
   <script src="./globe.js?v=15" defer></script>
   <script src="./temperature-layer.js?v=9" defer></script>
   <script src="./rain-forecast.js?v=7" defer></script>
@@ -48,7 +49,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.15" aria-label="Here and Now version 1.0.15" title="Website release v1.0.15">v1.0.15</span>
+        <span class="app-version" data-app-version="1.0.16" aria-label="Here and Now version 1.0.16" title="Website release v1.0.16">v1.0.16</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -67,8 +68,8 @@
           <p>Explore the 3D globe or tap Find me to zoom to your location.</p>
         </div>
         <div class="toggle render-switch" role="group" aria-label="Globe appearance">
-          <button id="render-street" type="button" aria-pressed="true">🗺️ Street map</button>
-          <button id="render-realistic" type="button" aria-pressed="false">🌍 Realistic</button>
+          <button id="render-street" type="button" aria-pressed="false">🗺️ Street map</button>
+          <button id="render-realistic" type="button" aria-pressed="true">🌍 Realistic</button>
         </div>
         <div class="map-frame">
           <div id="globe-map" role="region" aria-label="Rotatable 3D globe with geological overlays from SGU."></div>
@@ -82,7 +83,7 @@
             <button id="toggle-wind" type="button" aria-pressed="false" aria-label="Show global wind direction forecast arrows">💨 Wind</button>
           </div>
         </div>
-        <p id="render-status" class="map-note" role="status">Street map · OpenStreetMap.</p>
+        <p id="render-status" class="map-note" role="status">Starting Realistic globe…</p>
         <p id="day-night-status" class="map-note" hidden>Night is shaded · calculated from your device clock.</p>
         <div class="map-summary">
           <p id="map-status" role="status" aria-live="polite">Map starts in Lund. Use Find me or search for a place below.</p>
@@ -168,7 +169,19 @@
         </section>
         </div>
         <section id="sky-view" aria-label="Sky exploration" hidden>
-          <div class="sky-placeholder"><h2>Explore the sky</h2><p>Interactive night sky coming in a future release.</p></div>
+          <div class="toggle sky-switch" role="group" aria-label="Sky appearance">
+            <button id="sky-my-sky" type="button" aria-pressed="false" aria-controls="my-sky-panel">⭐ My sky</button>
+            <button id="sky-deep-space" type="button" aria-pressed="true" aria-controls="deep-space-panel">🌌 Deep space</button>
+          </div>
+          <section id="my-sky-panel" aria-label="My sky" hidden>
+            <div class="sky-placeholder"><h2>My sky</h2><p>A location-aware view of the night sky is coming in a future release.</p></div>
+          </section>
+          <section id="deep-space-panel" aria-label="Deep space">
+            <div id="deep-space-atlas" role="region" aria-label="Interactive astronomical atlas"></div>
+            <p id="deep-space-status" class="map-note" role="status">Open Deep space to load the atlas.</p>
+            <button id="deep-space-retry" type="button" hidden>Retry loading atlas</button>
+            <p class="map-note">Powered by <a href="https://aladin.cds.unistra.fr/AladinLite/" target="_blank" rel="noopener noreferrer">Aladin Lite · CDS, Strasbourg</a>. Survey imagery is archival, not a live view of the sky above you. See survey credits in the atlas.</p>
+          </section>
         </section>
       </section>
 
