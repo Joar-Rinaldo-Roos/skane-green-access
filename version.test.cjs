@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.19');
+ assert.equal(version.version,'1.0.20');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -93,7 +93,7 @@ test('map introduction is current and removed green-space feature stays absent',
 test('Earth and Sky modes and optional day/night controls are deployed',()=>{
  for(const id of ['view-earth','view-sky','earth-view','sky-view','toggle-day-night','day-night-status'])assert(html.includes('id="'+id+'"'));
  assert.match(html,/id="sky-view"[^>]*hidden/);
- assert.match(html,/day-night\.js\?v=3/);
+ assert.match(html,/day-night\.js\?v=4/);
  assert.match(deploy,/node --test day-night\.test\.cjs/);
 });
 
@@ -104,9 +104,9 @@ test('both globe appearances and realistic script are published',()=>{
 
 test('Realistic is selected by default and Deep space is deployed lazily',()=>{
  assert.match(html,/id="render-realistic"[^>]*aria-pressed="true"/);
- assert.match(html,/id="sky-deep-space"[^>]*aria-pressed="true"/);
+ assert.match(html,/id="sky-my-sky"[^>]*aria-pressed="true"/);
  assert.match(html,/id="sky-my-sky"/);assert.match(html,/id="deep-space-atlas"/);
- assert.match(html,/deep-space\.js\?v=2/);assert.doesNotMatch(html,/src="https:\/\/aladin\.cds\.unistra\.fr\/AladinLite\/api/);
+ assert.match(html,/deep-space\.js\?v=3/);assert.doesNotMatch(html,/src="https:\/\/aladin\.cds\.unistra\.fr\/AladinLite\/api/);
  assert.match(deploy,/node --test deep-space\.test\.cjs/);
 });
 
@@ -118,3 +118,5 @@ test('SIMBAD object identification UI is deployed',()=>{
 test('object card has readable and technical sections',()=>{assert.match(html,/id="sky-object-technical"/);assert.match(html,/id="sky-object-note"/);});
 
 test('object survey preview is deployed',()=>{assert.match(html,/id="sky-object-preview"/);assert.match(html,/id="sky-object-image-frame"/);assert.match(html,/id="sky-object-image-source"/);});
+
+test('My sky chart and controls are published',()=>{assert.match(html,/my-sky\.js\?v=1/);for(const id of ['my-sky-chart','my-sky-time','my-sky-gps','my-sky-objects'])assert(html.includes('id="'+id+'"'));assert.match(deploy,/node --test my-sky\.test\.cjs/);});

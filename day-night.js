@@ -125,6 +125,7 @@
       earth.setAttribute('aria-pressed',String(isEarth));
       sky.setAttribute('aria-pressed',String(!isEarth));
       if(isEarth){
+        win.HereNowMySky?.stop?.();
         // Resize the existing map after its container is visible again.
         win.requestAnimationFrame(()=>{if(earthActive){map?.resize();start();}});
       }else{

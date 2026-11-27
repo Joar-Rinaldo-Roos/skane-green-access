@@ -8,7 +8,7 @@
    const host=doc.getElementById('deep-space-atlas'),status=doc.getElementById('deep-space-status');
    const retry=doc.getElementById('deep-space-retry'),sky=doc.getElementById('sky-view');
    if(!deep||!my||!deepPanel||!myPanel||!host||!status||!retry||!sky)return null;
-   let mode='deep',atlas=null,pending=null,library=null;
+   let mode='my',atlas=null,pending=null,library=null;
    function visible(){return !sky.hidden&&mode==='deep';}
    function loadLibrary(){
      if(win.A?.init)return Promise.resolve(win.A);
@@ -50,12 +50,13 @@
      mode=next;deepPanel.hidden=next!=='deep';myPanel.hidden=next!=='my';
      deep.setAttribute('aria-pressed',String(next==='deep'));
      my.setAttribute('aria-pressed',String(next==='my'));
-     if(next==='deep')return initialize();
+     if(next==='deep'){win.HereNowMySky?.stop?.();return initialize();}
+     win.HereNowMySky?.open?.();
    }
    deep.addEventListener('click',()=>select('deep'));
    my.addEventListener('click',()=>select('my'));
    retry.addEventListener('click',initialize);
-   return {open:()=>{if(mode==='deep')return initialize();},select};
+   return {open:()=>{if(mode==='deep')return initialize();win.HereNowMySky?.open?.();},select};
  }
  if(typeof module==='object'&&module.exports)module.exports={mount,URL};
  if(root?.document)root.HereNowDeepSpace=mount(root,root.document);

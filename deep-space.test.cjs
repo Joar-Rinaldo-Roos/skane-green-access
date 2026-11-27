@@ -12,8 +12,8 @@ function harness(){
 }
 test('does not load on Earth; loads once on opening Deep space',async()=>{
  const h=harness();assert.equal(h.scripts.length,0);h.ui.open();assert.equal(h.scripts.length,0);
- h.nodes.get('sky-view').hidden=false;
- const p=h.ui.open();assert.equal(h.scripts.length,1);assert.equal(h.scripts[0].src,URL);
+ h.nodes.get('sky-view').hidden=false;h.ui.open();assert.equal(h.scripts.length,0);
+ const p=h.ui.select('deep');assert.equal(h.scripts.length,1);assert.equal(h.scripts[0].src,URL);
  h.ready();h.scripts[0].onload();await p;
  assert.equal(h.calls.length,1);assert.equal(h.calls[0].selector,'#deep-space-atlas');
  assert.equal(h.calls[0].options.survey,'P/DSS2/color');
@@ -22,13 +22,13 @@ test('does not load on Earth; loads once on opening Deep space',async()=>{
 });
 test('leaving Sky during loading defers initialization until return',async()=>{
  const h=harness();h.nodes.get('sky-view').hidden=false;
- const p=h.ui.open();h.nodes.get('sky-view').hidden=true;h.ready();h.scripts[0].onload();await p;
+ const p=h.ui.select('deep');h.nodes.get('sky-view').hidden=true;h.ready();h.scripts[0].onload();await p;
  assert.equal(h.calls.length,0);h.nodes.get('sky-view').hidden=false;await h.ui.open();
  assert.equal(h.calls.length,1);assert.equal(h.scripts.length,1);
 });
 test('script failure offers a retry without breaking Earth',async()=>{
  const h=harness();h.nodes.get('sky-view').hidden=false;
- const p=h.ui.open();h.scripts[0].onerror();await p;
+ const p=h.ui.select('deep');h.scripts[0].onerror();await p;
  assert.equal(h.nodes.get('deep-space-retry').hidden,false);
  const next=h.ui.open();assert.equal(h.scripts.length,2);
  h.ready();h.scripts[1].onload();await next;assert.equal(h.calls.length,1);

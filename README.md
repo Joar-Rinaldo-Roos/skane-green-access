@@ -2,7 +2,7 @@
 
 **There's a story everywhere.** Here & Now is a mobile-friendly, location-aware discovery website for exploring the Earth, the ground beneath you, local history, wildlife and the sky.
 
-**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.19 (27 November 2026)**
+**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.20 (27 November 2026)**
 
 The repository name reflects the original Skåne green-access prototype. Today's website is a broader discovery app, with a global globe and weather forecasts alongside Sweden-specific geological and heritage data.
 
@@ -17,7 +17,7 @@ The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lun
 
 WebGL and network access are required for the globe.
 
-**Earth / Sky:** Earth is the default; Sky contains **Deep space** (default within Sky) and **My sky** (a placeholder for a future local planetarium). Deep space embeds Aladin Lite v3 from CDS Strasbourg only when selected, starts with DSS2 colour imagery towards the Galactic Centre, and supports the atlas's pan/zoom and survey controls. The custom **Identify object** mode replaces the built-in SIMBAD pointer: tap an image location to query a bounded cone in the SIMBAD catalogue using ICRS coordinates, with mirror fallback, and display its most referenced match, readable classification and type explanation, constellation (using Astronomy Engine), distance from reliable parallax or a published SIMBAD measurement where available, recorded cluster/group association where available, and source link. A small DSS2 colour survey image (320 × 320 pixels) is requested from CDS HiPS2FITS at the matched object's ICRS coordinates, with a crosshair at the centre, adaptive angular field and a second image endpoint as fallback. It is independent of the catalogue text, with clear unavailable status, source credit and original image link. The optical image shows the surrounding field, not necessarily the physical object itself or proof of a match. Coordinates, magnitude, spectral type, reference count and measurement citation are retained under scientific details. Missing or uncertain information is not fabricated. Empty results and failures are shown explicitly. No lookup is sent while simply exploring without Identify enabled. This is archival telescope imagery, not the current local horizon. No GPS or backend is needed. Switching back preserves the existing map. **Day & night** uses a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. Street map retains geometric night shading; Realistic defaults to smooth per-pixel solar shading, twilight and MapLibre atmospheric glow, with NASA Black Marble 2016 city lights masked to night. Each appearance remembers its own day/night toggle while the page is open. These layers sit beneath weather and geology and use real time rather than the forecast slider. Realistic imagery is historical, not live satellite imagery or live lighting. No API key is required. Terrain and country-specific aerial photography are deferred.
+**Earth / Sky:** Earth is the default; Sky contains **My sky** (default within Sky) and **Deep space**. My sky is a local, interactive all-sky chart of selected bright stars (67 approximate J2000 catalogue entries), five constellation/asterism guides, Sun, Moon and seven planets excluding Earth. It uses Astronomy Engine for epoch rotation and local horizon positions, follows the existing Earth location unless explicitly using one-shot Sky GPS, and includes a ±12-hour time slider, object labels and altitude/azimuth selection. The chart is illustrative, not a full star catalogue, live camera, or weather-aware visibility prediction; stellar proper motion is omitted. No CDS request is needed for My sky. Deep space embeds Aladin Lite v3 from CDS Strasbourg only when selected, starts with DSS2 colour imagery towards the Galactic Centre, and supports the atlas's pan/zoom and survey controls. The custom **Identify object** mode replaces the built-in SIMBAD pointer: tap an image location to query a bounded cone in the SIMBAD catalogue using ICRS coordinates, with mirror fallback, and display its most referenced match, readable classification and type explanation, constellation (using Astronomy Engine), distance from reliable parallax or a published SIMBAD measurement where available, recorded cluster/group association where available, and source link. A small DSS2 colour survey image (320 × 320 pixels) is requested from CDS HiPS2FITS at the matched object's ICRS coordinates, with a crosshair at the centre, adaptive angular field and a second image endpoint as fallback. It is independent of the catalogue text, with clear unavailable status, source credit and original image link. The optical image shows the surrounding field, not necessarily the physical object itself or proof of a match. Coordinates, magnitude, spectral type, reference count and measurement citation are retained under scientific details. Missing or uncertain information is not fabricated. Empty results and failures are shown explicitly. No lookup is sent while simply exploring without Identify enabled. This is archival telescope imagery, not the current local horizon. No GPS or backend is needed. Switching back preserves the existing map. **Day & night** uses a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. Street map retains geometric night shading; Realistic defaults to smooth per-pixel solar shading, twilight and MapLibre atmospheric glow, with NASA Black Marble 2016 city lights masked to night. Each appearance remembers its own day/night toggle while the page is open. These layers sit beneath weather and geology and use real time rather than the forecast slider. Realistic imagery is historical, not live satellite imagery or live lighting. No API key is required. Terrain and country-specific aerial photography are deferred.
 
 ## Weather
 
@@ -97,6 +97,7 @@ Open http://localhost:8000 in your browser. GPS requires browser permission and 
 | --- | --- |
 | index.html, style.css, map.css | Page, controls and responsive styling |
 | app.js, discovery-ui.js | Location selection, discovery and result display |
+| my-sky.js | Local bright-star and planetary sky chart with time/location controls |
 | simbad.js | Tap-to-identify astronomical catalogue queries and result card |
 | deep-space.js | Lazy-loaded Aladin Lite astronomical atlas and Sky submode selector |
 | realistic-globe.js | Optional satellite basemap, local solar raster protocol and atmosphere |
@@ -125,7 +126,7 @@ GitHub Actions runs frontend syntax checks, browser-independent regression tests
 
 GitHub Pages uses **Settings → Pages → Source: GitHub Actions**, not branch-root deployment. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to main and manual dispatch. It validates JavaScript and relevant tests, stages only explicitly listed public frontend assets (not backend credentials or the legacy Python prototype), deploys and checks the public HTML for the expected release version, controls and script revisions.
 
-For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.19 is v1.0.20. Documentation-only edits do not require a website version bump.
+For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.20 is v1.0.21. Documentation-only edits do not require a website version bump.
 
 Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access/actions) and the live header to confirm deployment. A successful HTML check does not prove every external service or browser feature works.
 
@@ -142,6 +143,7 @@ Location is requested on user interaction, not continuously tracked. Selected co
 - Object preview images: [DSS2 colour / CDS HiPS2FITS](https://alasky.cds.unistra.fr/hips-image-services/hips2fits), with Alaskybis fallback; archival optical survey cutouts.
 - Object identification: [SIMBAD](https://simbad.cds.unistra.fr/simbad/), CDS Strasbourg, including Harvard and IDIA TAP mirrors. Query coverage and availability vary; a cone match is not proof of exact identity.
 - Deep space: [Aladin Lite](https://cds-astro.github.io/aladin-lite/), CDS Strasbourg, LGPL-3.0-or-later; retain its logo/link and survey credits. Its WebGL2/WASM viewer and remote HiPS surveys require compatible browsers and connectivity.
+- My sky bright-star reference: [Western Washington University bright stars](https://astro101.wwu.edu/a101_brightstars.html); rounded standard J2000 coordinates and magnitudes, not a comprehensive catalogue.
 - Astronomy: [Astronomy Engine](https://github.com/cosinekitty/astronomy) and [Sunrise-Sunset API](https://sunrise-sunset.org/api).
 
 Public providers may have rate limits, outages, CORS restrictions and incomplete coverage. No source is guaranteed to be available.
@@ -177,15 +179,18 @@ Visual inspiration: [Realistic Earth globe with MapLibre](https://makewithmaplib
 Two independent sky views: My sky for the observer's location and time, and Deep space for exploring archival astronomical imagery without a local-horizon restriction.
 
 - [x] Sky button and separate view.
-- [x] My sky and Deep space selector; Deep space opens first.
+- [x] My sky and Deep space selector; My sky now opens first.
 - [x] Deep space: initial Aladin Lite atlas integration; on-device rendering and performance still need validation.
 - [x] Deep space: tap-to-identify SIMBAD catalogue card, with mirror fallback.
 - [x] Readable object-type explanations, constellation, available distance and cluster context; expandable scientific details.
 - [x] Deep space: catalogue-coordinate DSS2 image previews with crosshair and attribution.
+- [ ] Resume Deep space image-preview testing once CDS Strasbourg services recover from the reported cybersecurity incident; retain working catalogue identification and avoid changing provider-dependent features solely because of an outage.
+- [ ] Add a friendly multi-wavelength survey selector: **Visible light** (DSS, SDSS: stars and galaxies), **Near-infrared** (2MASS: dust-obscured stars), **Infrared** (AllWISE, IRAC/Spitzer and IRIS/IRAS: warm dust and star formation), **X-rays** (XMM-Newton: energetic objects and hot gas), and **Ultraviolet** (GALEX: hot stars and star-forming regions). Verify actual HiPS identifiers, coverage, attribution and availability before implementation; non-visible-band colours are assigned for display.
+- [ ] Teach the meaning of ICRS, right ascension, declination, field of view, projections (TAN), surveys, overlays, stacks, HiPS, composite HiPS and FITS through short contextual explanations. Consider recommending a wavelength based on identified object type; do not imply every survey covers every object.
 - [ ] Enrich with object-specific stories, common names, discovery history and further sourced measurements where available.
-- [ ] My sky: interactive location-aware planetarium.
+- [x] My sky: initial interactive location-aware all-sky chart, time slider, selected bright stars and five guide patterns.
 - [ ] Map the stars — explore different approaches to star catalogues, rendering, constellations and a location-aware night sky. Expect several small iterations rather than one large implementation.
-- [ ] Mark planets at their calculated positions, with identifiable labels.
+- [x] Mark the Sun, Moon and planets at their calculated positions, with selectable labels; refine rendering later.
 - [ ] Show satellites and their predicted positions or passes using suitable orbital data.
 
 ### 🕰️ Historical Earth — changing landscapes and archaeology

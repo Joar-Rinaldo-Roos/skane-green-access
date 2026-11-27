@@ -7,7 +7,7 @@
   <meta name="description" content="Discover local history, animals and the sky above you on a location-aware globe.">
   <title>Here &amp; Now — Discover your surroundings</title>
   <link rel="stylesheet" href="./style.css">
-  <link rel="stylesheet" href="./map.css?v=19">
+  <link rel="stylesheet" href="./map.css?v=20">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
   <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com" crossorigin>
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
@@ -30,8 +30,9 @@
   <script src="./tile-cache.js?v=2" defer></script>
   <script src="./realistic-globe.js?v=2" defer></script>
   <script src="./simbad.js?v=3" defer></script>
-  <script src="./deep-space.js?v=2" defer></script>
-  <script src="./day-night.js?v=3" defer></script>
+  <script src="./my-sky.js?v=1" defer></script>
+  <script src="./deep-space.js?v=3" defer></script>
+  <script src="./day-night.js?v=4" defer></script>
   <script src="./globe.js?v=15" defer></script>
   <script src="./temperature-layer.js?v=9" defer></script>
   <script src="./rain-forecast.js?v=7" defer></script>
@@ -50,7 +51,7 @@
     <header>
       <div class="brand">✦ HERE &amp; NOW</div>
       <div class="header-meta">
-        <span class="app-version" data-app-version="1.0.19" aria-label="Here and Now version 1.0.19" title="Website release v1.0.19">v1.0.19</span>
+        <span class="app-version" data-app-version="1.0.20" aria-label="Here and Now version 1.0.20" title="Website release v1.0.20">v1.0.20</span>
         <span class="tagline">There's a story everywhere.</span>
       </div>
     </header>
@@ -171,13 +172,19 @@
         </div>
         <section id="sky-view" aria-label="Sky exploration" hidden>
           <div class="toggle sky-switch" role="group" aria-label="Sky appearance">
-            <button id="sky-my-sky" type="button" aria-pressed="false" aria-controls="my-sky-panel">⭐ My sky</button>
-            <button id="sky-deep-space" type="button" aria-pressed="true" aria-controls="deep-space-panel">🌌 Deep space</button>
+            <button id="sky-my-sky" type="button" aria-pressed="true" aria-controls="my-sky-panel">⭐ My sky</button>
+            <button id="sky-deep-space" type="button" aria-pressed="false" aria-controls="deep-space-panel">🌌 Deep space</button>
           </div>
-          <section id="my-sky-panel" aria-label="My sky" hidden>
-            <div class="sky-placeholder"><h2>My sky</h2><p>A location-aware view of the night sky is coming in a future release.</p></div>
+          <section id="my-sky-panel" aria-label="My sky">
+            <div class="my-sky-controls"><button id="my-sky-earth" type="button">🌍 Earth location</button><button id="my-sky-gps" type="button">◎ Find me</button></div>
+            <p id="my-sky-status" class="map-note" role="status"></p>
+            <svg id="my-sky-chart" viewBox="0 0 360 360" role="group" aria-label="Sky chart looking up, north at top and east at left"></svg>
+            <div class="my-sky-time"><label for="my-sky-time">Sky time <span id="my-sky-time-label"></span></label><input id="my-sky-time" type="range" min="-720" max="720" step="15" value="0" aria-label="Minutes relative to now"><div class="my-sky-time-ends"><span>−12 hours</span><button id="my-sky-now" type="button">Now</button><span>+12 hours</span></div></div>
+            <label class="my-sky-object-label" for="my-sky-objects">Identify an object</label><select id="my-sky-objects"></select>
+            <p id="my-sky-detail" class="map-note" aria-live="polite">Select a star or planet.</p>
+            <p class="map-note">Calculated local sky, not a live camera. Selected bright stars and five constellation guides; planets and Moon use Astronomy Engine. The circle is the horizon and the centre is overhead. East is on the left when looking up. Visibility depends on daylight, weather and light pollution. Never look directly at the Sun.</p>
           </section>
-          <section id="deep-space-panel" aria-label="Deep space">
+          <section id="deep-space-panel" aria-label="Deep space" hidden>
             <button id="identify-sky-object" type="button" aria-pressed="false" disabled>🔎 Identify object</button>
             <div id="deep-space-atlas" role="region" aria-label="Interactive astronomical atlas"></div>
             <section id="sky-object-card" class="sky-object-card" aria-live="polite" hidden>
