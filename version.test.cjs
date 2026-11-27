@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.17');
+ assert.equal(version.version,'1.0.18');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -112,5 +112,7 @@ test('Realistic is selected by default and Deep space is deployed lazily',()=>{
 
 test('SIMBAD object identification UI is deployed',()=>{
  assert.match(html,/id="identify-sky-object"/);assert.match(html,/id="sky-object-card"/);
- assert.match(html,/simbad\.js\?v=1/);assert.match(deploy,/node --test simbad\.test\.cjs/);
+ assert.match(html,/simbad\.js\?v=2/);assert.match(deploy,/node --test simbad\.test\.cjs/);
 });
+
+test('object card has readable and technical sections',()=>{assert.match(html,/id="sky-object-technical"/);assert.match(html,/id="sky-object-note"/);});

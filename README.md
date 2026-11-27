@@ -2,7 +2,7 @@
 
 **There's a story everywhere.** Here & Now is a mobile-friendly, location-aware discovery website for exploring the Earth, the ground beneath you, local history, wildlife and the sky.
 
-**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.17 (27 November 2026)**
+**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.18 (27 November 2026)**
 
 The repository name reflects the original Skåne green-access prototype. Today's website is a broader discovery app, with a global globe and weather forecasts alongside Sweden-specific geological and heritage data.
 
@@ -17,7 +17,7 @@ The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lun
 
 WebGL and network access are required for the globe.
 
-**Earth / Sky:** Earth is the default; Sky contains **Deep space** (default within Sky) and **My sky** (a placeholder for a future local planetarium). Deep space embeds Aladin Lite v3 from CDS Strasbourg only when selected, starts with DSS2 colour imagery towards the Galactic Centre, and supports the atlas's pan/zoom and survey controls. The custom **Identify object** mode replaces the built-in SIMBAD pointer: tap an image location to query a bounded cone in the SIMBAD catalogue using ICRS coordinates, with mirror fallback, and display its most referenced match, object type, coordinates, available B magnitude, reference count and source link. Empty results and failures are shown explicitly. No lookup is sent while simply exploring without Identify enabled. This is archival telescope imagery, not the current local horizon. No GPS or backend is needed. Switching back preserves the existing map. **Day & night** uses a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. Street map retains geometric night shading; Realistic defaults to smooth per-pixel solar shading, twilight and MapLibre atmospheric glow, with NASA Black Marble 2016 city lights masked to night. Each appearance remembers its own day/night toggle while the page is open. These layers sit beneath weather and geology and use real time rather than the forecast slider. Realistic imagery is historical, not live satellite imagery or live lighting. No API key is required. Terrain and country-specific aerial photography are deferred.
+**Earth / Sky:** Earth is the default; Sky contains **Deep space** (default within Sky) and **My sky** (a placeholder for a future local planetarium). Deep space embeds Aladin Lite v3 from CDS Strasbourg only when selected, starts with DSS2 colour imagery towards the Galactic Centre, and supports the atlas's pan/zoom and survey controls. The custom **Identify object** mode replaces the built-in SIMBAD pointer: tap an image location to query a bounded cone in the SIMBAD catalogue using ICRS coordinates, with mirror fallback, and display its most referenced match, readable classification and type explanation, constellation (using Astronomy Engine), distance from reliable parallax or a published SIMBAD measurement where available, recorded cluster/group association where available, and source link. Coordinates, magnitude, spectral type, reference count and measurement citation are retained under scientific details. Missing or uncertain information is not fabricated. Empty results and failures are shown explicitly. No lookup is sent while simply exploring without Identify enabled. This is archival telescope imagery, not the current local horizon. No GPS or backend is needed. Switching back preserves the existing map. **Day & night** uses a local approximate solar-position calculation from the device clock, refreshed once per minute while Earth is visible. Street map retains geometric night shading; Realistic defaults to smooth per-pixel solar shading, twilight and MapLibre atmospheric glow, with NASA Black Marble 2016 city lights masked to night. Each appearance remembers its own day/night toggle while the page is open. These layers sit beneath weather and geology and use real time rather than the forecast slider. Realistic imagery is historical, not live satellite imagery or live lighting. No API key is required. Terrain and country-specific aerial photography are deferred.
 
 ## Weather
 
@@ -125,7 +125,7 @@ GitHub Actions runs frontend syntax checks, browser-independent regression tests
 
 GitHub Pages uses **Settings → Pages → Source: GitHub Actions**, not branch-root deployment. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to main and manual dispatch. It validates JavaScript and relevant tests, stages only explicitly listed public frontend assets (not backend credentials or the legacy Python prototype), deploys and checks the public HTML for the expected release version, controls and script revisions.
 
-For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.17 is v1.0.18. Documentation-only edits do not require a website version bump.
+For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.18 is v1.0.19. Documentation-only edits do not require a website version bump.
 
 Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access/actions) and the live header to confirm deployment. A successful HTML check does not prove every external service or browser feature works.
 
@@ -179,6 +179,8 @@ Two independent sky views: My sky for the observer's location and time, and Deep
 - [x] My sky and Deep space selector; Deep space opens first.
 - [x] Deep space: initial Aladin Lite atlas integration; on-device rendering and performance still need validation.
 - [x] Deep space: tap-to-identify SIMBAD catalogue card, with mirror fallback.
+- [x] Readable object-type explanations, constellation, available distance and cluster context; expandable scientific details.
+- [ ] Enrich with object-specific stories, common names, discovery history and further sourced measurements where available.
 - [ ] My sky: interactive location-aware planetarium.
 - [ ] Map the stars — explore different approaches to star catalogues, rendering, constellations and a location-aware night sky. Expect several small iterations rather than one large implementation.
 - [ ] Mark planets at their calculated positions, with identifiable labels.
