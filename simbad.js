@@ -126,11 +126,57 @@
    }
    throw Error('SIMBAD mirrors unavailable');
  }
+
+ const IMAGE_BASES=['https://alasky.cds.unistra.fr/hips-image-services/hips2fits','https://alaskybis.cds.unistra.fr/hips-image-services/hips2fits'];
+ function previewFov(type,radius){
+   const extended=/^(G|Cl\*|GlC|OpC|PN|HII|SNR|Neb|ClG|GrG)$/.test(type);
+   return Math.min(1.2,Math.max(extended?0.6:0.15,num(radius)?radius*2.2:0));
+ }
+ function previewURL(result,radius,mirror=0){
+   if(!num(result.ra)||!num(result.dec)||result.dec<-90||result.dec>90||!IMAGE_BASES[mirror])throw Error('Invalid preview coordinates');
+   return IMAGE_BASES[mirror]+'?'+new URLSearchParams({hips:'CDS/P/DSS2/color',width:'320',height:'320',projection:'TAN',coordsys:'icrs',format:'jpg',ra:String(((result.ra%360)+360)%360),dec:String(result.dec),fov:String(previewFov(result.type,radius))});
+ }
+ function mountPreview(win,doc){
+   const figure=doc.getElementById('sky-object-preview'),frame=doc.getElementById('sky-object-image-frame'),
+     status=doc.getElementById('sky-object-image-status'),source=doc.getElementById('sky-object-image-source');
+   if(!figure||!frame||!status||!source)return {clear(){},show(){}};
+   let generation=0,timer=null,image=null;
+   function clear(){
+     generation++;
+     if(timer!==null){win.clearTimeout(timer);timer=null;}
+     if(image){image.onload=image.onerror=null;image.removeAttribute('src');image=null;}
+     frame.replaceChildren();frame.hidden=true;figure.hidden=true;source.hidden=true;source.removeAttribute('href');
+   }
+   function show(result,radius){
+     clear();const token=generation;figure.hidden=false;status.textContent='Loading telescope image…';
+     function attempt(mirror){
+       if(token!==generation)return;
+       if(mirror>=IMAGE_BASES.length){status.textContent='Telescope image temporarily unavailable. Catalogue details are still shown.';return;}
+       const url=previewURL(result,radius,mirror);
+       const img=doc.createElement('img');image=img;
+       img.alt='DSS2 optical survey centred on '+result.id;img.width=320;img.height=320;img.decoding='async';
+       function cleanup(){if(timer!==null){win.clearTimeout(timer);timer=null;}img.onload=img.onerror=null;}
+       function failed(){
+         if(token!==generation||image!==img)return;
+         cleanup();img.removeAttribute('src');image=null;attempt(mirror+1);
+       }
+       img.onload=()=>{
+         if(token!==generation||image!==img)return;
+         cleanup();frame.replaceChildren(img);frame.hidden=false;source.href=url;source.hidden=false;
+         status.textContent='DSS2 colour · '+Math.round(previewFov(result.type,radius)*60)+' arcmin field · crosshair marks the catalogue coordinates. Optical survey imagery may not show the object itself.';
+       };
+       img.onerror=failed;timer=win.setTimeout(failed,8000);img.src=url;
+     }
+     attempt(0);
+   }
+   return {clear,show};
+ }
  function mount(win,doc,atlas,host){
    const button=doc.getElementById('identify-sky-object'),card=doc.getElementById('sky-object-card'),
      title=doc.getElementById('sky-object-title'),description=doc.getElementById('sky-object-description'),
      facts=doc.getElementById('sky-object-facts'),raw=doc.getElementById('sky-object-technical'),note=doc.getElementById('sky-object-note'),link=doc.getElementById('sky-object-link');
    if(!button||!card||!title||!description||!facts||!raw||!note||!link||!atlas?.pix2world)return null;
+   const preview=mountPreview(win,doc);
    let enabled=false,start=null,active=null;
    button.disabled=false;
    function render(heading,body,details='',url=null,technical='',caution=''){
@@ -139,12 +185,12 @@
    }
    function setEnabled(on){
      enabled=on;button.setAttribute('aria-pressed',String(on));button.classList.toggle('layer-active',on);
-     if(on)render('Identify an object','Tap a star, nebula or galaxy in the atlas. Zoom in for a more precise match.');
+     if(on){preview.clear();render('Identify an object','Tap a star, nebula or galaxy in the atlas. Zoom in for a more precise match.');}
      else{active?.abort();active=null;start=null;}
    }
    button.addEventListener('click',()=>setEnabled(!enabled));
    async function identify(x,y){
-     active?.abort();const controller=new AbortController();active=controller;
+     active?.abort();preview.clear();const controller=new AbortController();active=controller;
      let p,radius;
      try{
        p=atlas.pix2world(x,y,'ICRS');
@@ -170,6 +216,7 @@
        const initial=parallaxDistance(result);
        const caution='Catalogue match near your tap, selected by reference count. Not necessarily the exact visible object. Constellation is an apparent sky region, not physical cluster membership.';
        render(heading,body,[...context,'Distance: '+(initial?formatDistance(initial):'Checking catalogue…'),'Cluster/group: Checking catalogue…'].join('\n'),url,detail.join('\n'),caution);
+       preview.show(result,radius);
        const extra=await enrich(win,base,result,controller.signal);
        if(active!==controller||controller.signal.aborted)return;
        context.push('Distance: '+formatDistance(extra.distance));
@@ -198,6 +245,6 @@
    },true);
    return {identify,setEnabled};
  }
- if(typeof module==='object'&&module.exports)module.exports={queryURL,parse,lookup,mount,explain,parallaxDistance,publishedDistance,clusterLinks,constellation,enrich};
+ if(typeof module==='object'&&module.exports)module.exports={queryURL,parse,lookup,mount,explain,parallaxDistance,publishedDistance,clusterLinks,constellation,enrich,previewFov,previewURL,mountPreview};
  if(root?.document)root.HereNowSimbad={mount};
 })(typeof window==='object'?window:null);
