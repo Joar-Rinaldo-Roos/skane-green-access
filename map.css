@@ -14,7 +14,6 @@
 .map-summary p{margin:0;color:#315e49;font-size:.87rem;line-height:1.45}
 .map-summary a{font-size:.78rem;color:#286349;white-space:nowrap}
 .map-note{margin:9px 4px 0;font-size:.75rem;color:#6a7d71;line-height:1.5}
-.green-status{font-size:.8rem;color:#3d7855;line-height:1.5;margin:9px 5px 0;padding:8px 10px;background:#edf7ed;border-radius:9px}
 .temperature-status{font-size:.8rem;color:#315d77;line-height:1.5;margin:8px 5px 0;padding:8px 10px;background:#edf5fa;border-radius:9px}
 .temperature-details{display:flex;flex-direction:column;gap:5px;margin:7px 5px 0;padding:11px 12px;border:1px solid #dae6e8;border-radius:10px;background:#f7fafb;font-size:.78rem;color:#345264;line-height:1.5}
 .temperature-details[hidden]{display:none}

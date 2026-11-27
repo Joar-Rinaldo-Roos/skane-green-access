@@ -10,7 +10,7 @@ const version=JSON.parse(fs.readFileSync('version.json','utf8'));
 
 test('release identifier follows semantic versioning',()=>{
  assert.match(version.version,/^\d+\.\d+\.\d+$/);
- assert.equal(version.version,'1.0.12');
+ assert.equal(version.version,'1.0.13');
 });
 
 test('top-right page header visibly displays the same version as release manifest',()=>{
@@ -82,4 +82,10 @@ test('Pages deploys and verifies the exact version visible on the live site',()=
  assert.match(deploy,/first-frame-preload\.js/);
  assert.match(deploy,/globe-map-controller\.js/);
  assert.match(deploy,/curl -fsSL/);
+});
+
+test('map introduction is current and removed green-space feature stays absent',()=>{
+ assert.match(html,/Explore the 3D globe or tap Find me to zoom to your location\./);
+ assert.doesNotMatch(html,/duplicate 2D|toggle-green-spaces|green-status|green-spaces(?:-core)?\.js/);
+ for(const path of ['globe.js','globe-map-controller.js','map.js']) assert.doesNotMatch(fs.readFileSync(path,'utf8'),/HereNowGreenSpaces/);
 });

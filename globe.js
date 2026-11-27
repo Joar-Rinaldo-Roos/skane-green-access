@@ -80,8 +80,6 @@
     controller.setStatus('3D globe active. Drag to rotate; pinch to zoom.');
     if (globeMap) {
       globeMap.resize();
-      window.HereNowGreenSpaces?.repaint?.();
-      window.HereNowGreenSpaces?.scheduleRefresh?.();
       window.dispatchEvent?.(typeof Event==='function'?new Event('here-now-globe-map-ready'):{type:'here-now-globe-map-ready'});
       if (currentPlace) setViewFromPlace(currentPlace,lastZoom);
       controller.scheduleGeologyRefresh?.();
@@ -110,15 +108,12 @@
         globeReady=true;
         syncMarker();
         paintSoil();
-        window.HereNowGreenSpaces?.repaint?.();
-        window.HereNowGreenSpaces?.onMapReady?.();
-        window.HereNowGreenSpaces?.scheduleRefresh?.();
         window.dispatchEvent?.(typeof Event==='function'?new Event('here-now-globe-map-ready'):{type:'here-now-globe-map-ready'});
         if(currentPlace) setViewFromPlace(currentPlace,lastZoom);
         controller.scheduleGeologyRefresh?.();
         if(globeActive)controller.setStatus('Globe ready. Find me zooms to your GPS location; Soil geology adds SGU polygons.');
       });
-      globeMap.on('moveend',()=>{if(globeActive){controller.scheduleGeologyRefresh?.();window.HereNowGreenSpaces?.scheduleRefresh?.();window.HereNowNextRain?.onMapMoved?.();}});
+      globeMap.on('moveend',()=>{if(globeActive){controller.scheduleGeologyRefresh?.();window.HereNowNextRain?.onMapMoved?.();}});
       globeMap.on('error',event=>{diag('MapLibre resource/render error; globe may be partially available');});
     } catch(error) {
       failGlobe('The 3D globe could not start.');

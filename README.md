@@ -2,7 +2,7 @@
 
 **There's a story everywhere.** Here & Now is a mobile-friendly, location-aware discovery website for exploring the Earth, the ground beneath you, local history, wildlife and the sky.
 
-**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.12 (22 November 2026)**
+**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.13 (27 November 2026)**
 
 The repository name reflects the original Skåne green-access prototype. Today's website is a broader discovery app, with a global globe and weather forecasts alongside Sweden-specific geological and heritage data.
 
@@ -14,11 +14,8 @@ The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lun
 - **Search place:** search for a Swedish place using OpenStreetMap Nominatim.
 - **Map center:** explore without GPS permission or place search.
 - **Soil geology:** display SGU mapped soil polygons in Sweden using its OGC API – Features. Tap a polygon for an English explanation, original Swedish classification and composition; Read more opens details beneath the map. Colours are illustrative, not the official SGU legend.
-- **Green spaces:** display woods, grass and parks using OpenFreeMap's OSM-derived OpenMapTiles vector tiles. Tap a mapped area for its available name/type and an OSM link. The toggle zooms closer when needed. Active globe rendering does not require live Overpass queries.
 
-The current app is **globe-only**. There is no deployed Leaflet/2D fallback or map-mode switch. WebGL and network access are required for the globe. Legacy map code remains in the repository.
-
-Green spaces are a visualization of mapped land cover, **not** an assessment of public access, walking routes, entrances or distance to accessible greenery.
+WebGL and network access are required for the globe.
 
 ## Weather
 
@@ -100,7 +97,6 @@ Open http://localhost:8000 in your browser. GPS requires browser permission and 
 | app.js, discovery-ui.js | Location selection, discovery and result display |
 | globe-loader.mjs, globe.js, globe-map-controller.js | MapLibre initialization, globe and SGU features |
 | soil-info.js, archive.js, local-history.js, nature-detail.js, sky.js | Topic-specific sources and explanations |
-| green-spaces.js, green-spaces-core.js | Green-space overlay and retained prototype helpers |
 | temperature-layer.js, rain-forecast.js, cloud-cover.js, wind-layer.js | Weather rendering, supported by corresponding core modules |
 | weather-timeline.js, weather-timeline-core.js | Shared forecast clock |
 | weather-data-cache.js, first-frame-preload.js, weather-prefetch.js, tile-cache.js | Weather loading and tile retention |
@@ -119,11 +115,11 @@ Run the JavaScript regression suites from the repository root with a recent Node
 node --test *.test.cjs tests/*.test.cjs backend/*.test.mjs
 ```
 
-GitHub Actions runs frontend syntax checks, browser-independent regression tests, backend security/API tests and dedicated weather/green-space checks. Provider smoke tests exercise external services and may fail independently of application code.
+GitHub Actions runs frontend syntax checks, browser-independent regression tests, backend security/API tests and dedicated weather checks. Provider smoke tests exercise external services and may fail independently of application code.
 
 GitHub Pages uses **Settings → Pages → Source: GitHub Actions**, not branch-root deployment. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to main and manual dispatch. It validates JavaScript and relevant tests, stages only explicitly listed public frontend assets (not backend credentials or the legacy Python prototype), deploys and checks the public HTML for the expected release version, controls and script revisions.
 
-For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.12 is v1.0.13. Documentation-only edits do not require a website version bump.
+For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.13 is v1.0.14. Documentation-only edits do not require a website version bump.
 
 Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access/actions) and the live header to confirm deployment. A successful HTML check does not prove every external service or browser feature works.
 
@@ -132,7 +128,6 @@ Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access
 Location is requested on user interaction, not continuously tracked. Selected coordinates are sent to relevant external services when needed for queries; map tile requests also reveal the requested map area. The optional chat has its own data flow described above.
 
 - Basemap and place search: [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), Nominatim.
-- Green cover: [OpenFreeMap](https://openfreemap.org/), OpenMapTiles and OpenStreetMap contributors.
 - Geological data: [SGU original soil map](https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html) and [OGC API – Features](https://api.sgu.se/oppnadata/jordarter25k-100k/ogc/features/v1/collections/grundlager/items).
 - Weather: [Open-Meteo](https://open-meteo.com/), DWD ICON and [weather-map-layer](https://github.com/open-meteo/weather-map-layer). Review provider usage terms and library licensing.
 - Heritage: [Riksantikvarieämbetet / K-samsök](https://www.raa.se/hitta-information/k-samsok/); contributing institutions retain their record/image rights.
@@ -145,9 +140,9 @@ Public providers may have rate limits, outages, CORS restrictions and incomplete
 
 Open **Diagnostics & error logs**, tap Check browser, reproduce the issue and Copy error report. Reports stay in the browser tab and are intended to omit precise GPS coordinates; inspect before sharing.
 
-If GPS is denied, use Map center or Search place. If the globe fails, check WebGL, network connectivity and browser diagnostics; there is no current street-map fallback. If an overlay fails, inspect its status and retry when the provider is available.
+If GPS is denied, use Map center or Search place. If the globe fails, check WebGL, network connectivity and browser diagnostics; check that MapLibre loads successfully. If an overlay fails, inspect its status and retry when the provider is available.
 
-Real-device checks on Samsung/Android remain important: verify GPS grant/denial, globe rendering, SGU and green-space popups, each weather layer, first-frame reveal while other sources load, combined layers and timeline playback, Next Rain, source links and optional chat. Automated tests do not establish mobile rendering speed or live provider availability.
+Real-device checks on Samsung/Android remain important: verify GPS grant/denial, globe rendering, SGU popups, each weather layer, first-frame reveal while other sources load, combined layers and timeline playback, Next Rain, source links and optional chat. Automated tests do not establish mobile rendering speed or live provider availability.
 
 ## Development history
 

@@ -248,7 +248,6 @@
     }
     setStatus('Showing '+(place.name||'selected location')+'. Pan and zoom to explore.');
     if (geologyVisible) scheduleRefresh();
-    window.HereNowGreenSpaces?.scheduleRefresh?.();
   }
 
   function clearLocation() {
@@ -267,7 +266,6 @@
     const p=map.getCenter();
     return {lat:p.lat,lon:p.lng,zoom:map.getZoom()};
   }
-  // Green Spaces button follows SGU's behavior: jump to useful street-level zoom.
   function zoomTo(zoom=13){
     if(!map||!Number.isFinite(zoom))return false;
     map.setZoom(zoom,{animate:false});
@@ -299,7 +297,7 @@
     }).addTo(map);
     L.control.zoom({position:'bottomright'}).addTo(map);
     L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
-    map.on('moveend',()=>{if (!document.getElementById('map')?.hidden){scheduleRefresh();window.HereNowGreenSpaces?.scheduleRefresh?.();window.HereNowNextRain?.onMapMoved?.();}});
+    map.on('moveend',()=>{if (!document.getElementById('map')?.hidden){scheduleRefresh();window.HereNowNextRain?.onMapMoved?.();}});
     geologyButton.addEventListener('click',()=>showGeology(!geologyVisible));
   } catch (error) {
     geologyButton.disabled=true;

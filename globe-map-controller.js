@@ -1,6 +1,6 @@
 /* Here & Now v1.0.8 — lightweight globe-only location and SGU geology controller.
  * No Leaflet, duplicate OSM tile renderer, or hidden 2D canvas.
- * Exposes the existing HereNowMap API for search, GPS, soil, Green Spaces, chat,
+ * Exposes the existing HereNowMap API for search, GPS, soil, chat,
  * local discovery and the Next Rain prediction at the active globe center. */
 (function(){
   'use strict';
@@ -143,7 +143,6 @@
     selected=place;selectedZoom=options.zoom||14;
     setStatus('Selected '+(place.name||'location')+'. Exploring on the 3D globe.');
     if(geologyVisible)scheduleGeologyRefresh();
-    window.HereNowGreenSpaces?.scheduleRefresh?.();
   }
   function clearLocation(){selected=null;setStatus('Explore the globe or choose another location.');}
   function zoomTo(zoom=13){return Boolean(window.HereNowGlobe?.zoomTo?.(zoom));}

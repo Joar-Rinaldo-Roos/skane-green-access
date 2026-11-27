@@ -60,8 +60,7 @@ function harness(){
    }},
    HereNowSoil:{createSummary:()=>({})},
    addEventListener:(event,fn)=>{listeners.set(event,fn)},
-   dispatchEvent:()=>{},
-   HereNowGreenSpaces:{repaint(){},onMapReady(){},scheduleRefresh(){}}
+   dispatchEvent:()=>{}
  };
  const fakeDoc={getElementById:node,createElement:()=>({setAttribute(){}})};
  const context={window:fakeWindow,document:fakeDoc,maplibregl:fakeWindow.maplibregl,
