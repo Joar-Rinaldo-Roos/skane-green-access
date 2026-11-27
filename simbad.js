@@ -134,7 +134,7 @@
  }
  function previewURL(result,radius,mirror=0){
    if(!num(result.ra)||!num(result.dec)||result.dec<-90||result.dec>90||!IMAGE_BASES[mirror])throw Error('Invalid preview coordinates');
-   return IMAGE_BASES[mirror]+'?'+new URLSearchParams({hips:'CDS/P/DSS2/color',width:'320',height:'320',projection:'TAN',coordsys:'icrs',format:'jpg',ra:String(((result.ra%360)+360)%360),dec:String(result.dec),fov:String(previewFov(result.type,radius))});
+   return IMAGE_BASES[mirror]+'?'+new URLSearchParams({hips:'CDS/P/DSS2/color',width:'320',height:'320',projection:'TAN',coordsys:'icrs',format:'jpg',ra:String(result.ra>=0&&result.ra<360?result.ra:((result.ra%360)+360)%360),dec:String(result.dec),fov:String(previewFov(result.type,radius))});
  }
  function mountPreview(win,doc){
    const figure=doc.getElementById('sky-object-preview'),frame=doc.getElementById('sky-object-image-frame'),
