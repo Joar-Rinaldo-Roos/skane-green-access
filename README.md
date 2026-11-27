@@ -1,348 +1,158 @@
-# Here & Now — location-based curiosity app
+# Here & Now 🌍
 
-## Website version and release verification
+**There's a story everywhere.** Here & Now is a mobile-friendly, location-aware discovery website for exploring the Earth, the ground beneath you, local history, wildlife and the sky.
 
-**Current release: v1.0.12**. The version is shown in the top-right header, even if JavaScript fails to load. The authoritative release number is `version.json`; the header must match it and is checked with `node --test version.test.cjs`.
+**[Open the website](https://joar-rinaldo-roos.github.io/skane-green-access/)** · **Current source release: v1.0.12 (22 November 2026)**
 
-For the next website changes, bump the version to **v1.0.13** (and keep subsequent patch versions increasing), updating both `version.json` and the header. GitHub Pages will publish the manifest, too.
+The repository name reflects the original Skåne green-access prototype. Today's website is a broader discovery app, with a global globe and weather forecasts alongside Sweden-specific geological and heritage data.
 
-The deployment workflow now checks the actual public GitHub Pages URL after publishing and verifies that the served HTML contains both the expected version and the **🌡️ Temp** button. If it cannot verify those, deployment is reported as failing instead of assuming the new site is live. A public browser can still cache a previous page: if your header does not show the expected version, use the new release URL, refresh, or check GitHub Pages settings / Actions.
+## Explore the map
 
+The site starts with a rotatable **MapLibre GL JS 6.16.0 globe** centered on Lund as an example, not as an inferred GPS position. OpenStreetMap raster tiles provide the basemap.
 
+- **Find me:** request one-time browser geolocation and zoom to the selected position (zoom 15). No continuous GPS tracking.
+- **Search place:** search for a Swedish place using OpenStreetMap Nominatim.
+- **Map center:** explore without GPS permission or place search.
+- **Soil geology:** display SGU mapped soil polygons in Sweden using its OGC API – Features. Tap a polygon for an English explanation, original Swedish classification and composition; Read more opens details beneath the map. Colours are illustrative, not the official SGU legend.
+- **Green spaces:** display woods, grass and parks using OpenFreeMap's OSM-derived OpenMapTiles vector tiles. Tap a mapped area for its available name/type and an OSM link. The toggle zooms closer when needed. Active globe rendering does not require live Overpass queries.
 
-**Here & Now** is a responsive, browser-based discovery app that answers: **“What is interesting about where I am?”**
+The current app is **globe-only**. There is no deployed Leaflet/2D fallback or map-mode switch. WebGL and network access are required for the globe. Legacy map code remains in the repository.
 
-Choose your **current GPS location** or search for a **place in Sweden**, then choose a topic. The app fetches information from linked public sources and presents one discovery at a time.
+Green spaces are a visualization of mapped land cover, **not** an assessment of public access, walking routes, entrances or distance to accessible greenery.
 
-## Topics and live data
+## Weather
 
-| Topic | Current implementation | Source |
-| --- | --- | --- |
-| Surprise me | Nearby geotagged articles in random order | Wikipedia MediaWiki API |
-| History | Nearby geotagged articles (not strictly classified by historical topic yet) | Wikipedia MediaWiki API |
-| Culture | Nearby geotagged articles (not strictly classified by cultural topic yet) | Wikipedia MediaWiki API |
-| Nature | Species recorded within 10 km, not guaranteed present now | iNaturalist species counts API |
-| Astronomy | Today's sunrise, sunset and solar noon | sunrise-sunset.org API |
-| Geology | SGU soil geology WMS map overlay; no underlying feature query or site-specific interpretation yet | SGU Jordarter 1:25 000–1:100 000 |
+All four global overlays use Open-Meteo's weather-map rendering and DWD ICON Global model data.
 
-**Limitations:** The Geology map displays WMS imagery, not interpreted site measurements. History and Culture currently return the same broad nearby Wikipedia dataset. This is an honest first integration, not yet a reliable topic classifier. Wikipedia's geotagged coverage varies. Nature records represent observations, not a live species inventory. Astronomy gives calculated solar times, not actual sky visibility. Facts are sourced, not generated. The site does not provide location-based safety or navigation advice.
+| Control | Displays |
+| --- | --- |
+| 🌡️ Temp | Forecast air temperature at 2 m |
+| 🌧️ Rain forecast | Predicted precipitation, including rain and snow |
+| ☁️ Clouds | Total cloud cover, 0–100%; adjustable opacity (15–75%) |
+| 💨 Wind | Forecast wind direction at 10 m; arrow tips point where wind is blowing |
+
+One shared Play/Pause button and time slider synchronize enabled layers using the same model valid time. The timeline covers up to 48 hours, selecting available model frames at approximately three-hour intervals. Playback advances every 4.5 seconds and stops at the end. Cloud cover can be displayed alone or over temperature using its checkbox; wind can accompany the other layers. Weather toggles start off.
+
+These are **model predictions**, not live radar, satellite imagery or on-site observations. Resolution, coverage, timing and accuracy depend on the upstream forecast.
+
+### When will it rain here?
+
+The separate Next Rain panel uses the visible map center, independently of GPS and weather-layer selection. It queries Open-Meteo hourly forecasts for the next 48 hours and combines rain and showers. A forecast hour with at least 0.2 mm counts as rain. Times are shown in the device timezone. Move the globe or use Update forecast to refresh. A prediction is not a guarantee of rain.
+
+### Loading and performance
+
+- Shared weather metadata loader deduplicates requests and caches metadata for up to five minutes in memory/session storage.
+- Startup warming stages the four actual first-frame weather sources (native source maxzoom 12), near-transparent until enabled. The status indicates MapLibre source readiness, not that every worldwide tile has been downloaded.
+- v1.0.12 allows existing preloaded sources/layers to be revealed or updated even while unrelated map style work is ongoing. Matching preloaded URLs are reused; new sources still wait for style readiness.
+- One next-frame preview for one active layer is warmed at limited resolution (maxzoom 5), prioritizing clouds, rain, temperature, then wind.
+- Always-on MapLibre per-source tile cache limits are 224 desktop, 128 normal mobile and 80 low-memory devices.
+- Automatic weather warming is skipped on reported Data Saver and 2G-class connections. Explicit weather activation remains available. Startup staging is cancelled when a weather layer is selected.
+
+These are best-effort optimizations, not persistent offline storage or a complete global forecast download. Actual speed and GPU/memory behaviour require device testing.
+
+## Discover something
+
+Choose GPS, a Swedish place or the map center, then select a topic.
+
+| Topic | Current implementation |
+| --- | --- |
+| Surprise me | Nearby heritage records or curated local history; falls back to SGU geology when archives are empty/unavailable |
+| History | Curated Lund hospital-district context where applicable; otherwise K-samsök geolocated records within 75 m, with an explicit option to widen to 250 m |
+| Nature | iNaturalist research-grade species-count records within 5 km; wildlife details and optional Wikipedia enrichment, with permitted photo licenses and attribution |
+| Astronomy | Local solar times and Astronomy Engine calculations for the Moon and naked-eye planets at 21:00 device-local time; solar-time fallback |
+| Geology | SGU soil polygon containing the selected coordinate, with explanatory material and formation details; explicit coverage-gap message if no containing polygon is found |
+
+Discoveries link to their original sources. Archive coordinates can represent the pictured subject rather than the camera position. Records may be in Swedish. Wildlife observations do not guarantee that an animal is currently present; astronomical calculations do not guarantee visibility. Geological classifications are not borehole measurements.
+
+Culture is no longer a separate topic. The old nearby-Wikipedia-only history approach is not the current discovery flow.
+
+## Ask Here & Now (optional GPT prototype)
+
+The public static frontend works without GPT. The optional chat panel connects to a small Node.js server running on your Mac through a temporary Cloudflare Quick Tunnel.
+
+Follow the **[Mac backend setup guide](backend/README.md)** for Node.js 22+, cloudflared, setup/update script, configuration and connection instructions.
+
+- Keep the OpenAI API key in the Mac's private .env file; never place it in the frontend or GitHub.
+- Enter only the tunnel HTTPS URL and separate random access token in the website.
+- The URL is stored in localStorage and the token in sessionStorage.
+- Questions and selected geographic/geological context are sent when Ask is pressed. The backend enforces token authentication, origin restrictions and request limits, and uses store:false for OpenAI Responses requests.
+- The Mac and tunnel must remain running. Quick Tunnel addresses may change on restart. API usage is billed separately from ChatGPT subscriptions.
+
+This is a personal prototype, not a hosted multi-user production chat service.
 
 ## Run locally
 
-The current app is **static HTML/CSS/JavaScript** and requires no Python dependencies:
+The frontend is static HTML, CSS and vanilla JavaScript. There is no frontend build step, database or required API key for the map/discoveries.
 
-```bash
-python -m http.server 8000
+From the repository root:
+
+```sh
+python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000` on the same device. On Android, you can run this command from Termux inside the repository directory. Or host the static files with GitHub Pages.
+Open http://localhost:8000 in your browser. GPS requires browser permission and a secure context (HTTPS or localhost); a LAN HTTP URL on a phone may not permit geolocation. Internet access is required for external libraries and data.
 
-### Host on GitHub Pages
+## Repository guide
 
-Repository **Settings → Pages → Deploy from a branch → main → /(root)**. After publishing, open the HTTPS Pages URL on your Samsung phone. GitHub Pages availability for private repositories depends on your plan and settings.
+| Path | Purpose |
+| --- | --- |
+| index.html, style.css, map.css | Page, controls and responsive styling |
+| app.js, discovery-ui.js | Location selection, discovery and result display |
+| globe-loader.mjs, globe.js, globe-map-controller.js | MapLibre initialization, globe and SGU features |
+| soil-info.js, archive.js, local-history.js, nature-detail.js, sky.js | Topic-specific sources and explanations |
+| green-spaces.js, green-spaces-core.js | Green-space overlay and retained prototype helpers |
+| temperature-layer.js, rain-forecast.js, cloud-cover.js, wind-layer.js | Weather rendering, supported by corresponding core modules |
+| weather-timeline.js, weather-timeline-core.js | Shared forecast clock |
+| weather-data-cache.js, first-frame-preload.js, weather-prefetch.js, tile-cache.js | Weather loading and tile retention |
+| next-rain.js, next-rain-core.js | Map-center precipitation forecast |
+| chat.js, backend/ | Optional GPT frontend and Mac server |
+| diagnostics.js | In-tab status and error reports |
+| version.json | Release version and date |
+| .github/workflows/ | Validation, provider smoke tests and Pages deployment |
+| map.js, app.py, analysis.py, download.py, demo.py, requirements.txt | Retained older map/Python prototype; not part of the deployed frontend |
 
-GPS access needs browser permission and a secure context (HTTPS or localhost). A manual place search works without GPS. The app sends the location coordinates to the selected public APIs when querying. No app account or database is used.
+## Tests and deployment
 
-## Technology
+Run the JavaScript regression suites from the repository root with a recent Node.js (22+ recommended for the backend):
 
-- Responsive HTML, CSS and vanilla JavaScript
-- Leaflet 1.9.4, OpenStreetMap map tiles, and SGU OGC WMS soil geology overlay
-- Browser Geolocation API
-- OpenStreetMap Nominatim for Swedish place search
-- Wikipedia MediaWiki geosearch and article extracts
-- iNaturalist observations/species counts
-- sunrise-sunset.org solar calculations
+```sh
+node --test *.test.cjs tests/*.test.cjs backend/*.test.mjs
+```
 
-Public APIs may rate-limit, fail, or have browser CORS restrictions. Live end-to-end behavior on a Samsung device **has not been verified**.
+GitHub Actions runs frontend syntax checks, browser-independent regression tests, backend security/API tests and dedicated weather/green-space checks. Provider smoke tests exercise external services and may fail independently of application code.
 
-## Roadmap
+GitHub Pages uses **Settings → Pages → Source: GitHub Actions**, not branch-root deployment. The [Pages workflow](.github/workflows/pages.yml) runs on pushes to main and manual dispatch. It validates JavaScript and relevant tests, stages only explicitly listed public frontend assets (not backend credentials or the legacy Python prototype), deploys and checks the public HTML for the expected release version, controls and script revisions.
 
-- [ ] Verify mobile API requests and GPS on an actual device
-- [ ] Add real history/culture topic classification and heritage records from Riksantikvarieämbetet
-- [x] Add SGU soil geology WMS overlay to the map
-- [ ] Add underlying geology feature queries and explanatory research
-- [ ] Add richer astronomy and seasonal context
-- [ ] Add radius control, source details, bookmarks and caching
-- [ ] Add tests, deployment checks and accessibility improvements
+For website releases, keep version.json and the version displayed in index.html synchronized; update version.test.cjs and deployment checks as appropriate, and review script cache-busting versions. The next application release after v1.0.12 is v1.0.13. Documentation-only edits do not require a website version bump.
 
+Inspect [GitHub Actions](https://github.com/Joar-Rinaldo-Roos/skane-green-access/actions) and the live header to confirm deployment. A successful HTML check does not prove every external service or browser feature works.
 
-## 🌡️ Instant reveal of preloaded weather when map style is busy — v1.0.12 (November 2026)
+## Privacy, sources and attribution
 
-Real-device diagnostic logs exposed a race after v1.0.11: the startup preloader reported **4/4 real weather sources ready**, while tapping Temperature still logged "Opening the 3D globe; temperature will appear when the map is ready…" repeatedly. The globe had already initialized, but its global `map.isStyleLoaded()` check was false while other raster/vector sources updated. A broad global style-loaded gate is unnecessarily strict for an existing source with a matching layer.
+Location is requested on user interaction, not continuously tracked. Selected coordinates are sent to relevant external services when needed for queries; map tile requests also reveal the requested map area. The optional chat has its own data flow described above.
 
-In v1.0.12, **Temperature, Rain, Clouds and Wind** each allow an already-registered weather source to be *shown or updated* even if the rest of the MapLibre style is still loading. New sources continue to wait for style readiness before calling `map.addSource`/`map.addLayer`. The existing first-frame `claim` logic avoids re-fetching an identical forecast URL and restores the layer's normal visibility and opacity. All four overlays remain independently optional under the unified 48-hour forecast timeline.
+- Basemap and place search: [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), Nominatim.
+- Green cover: [OpenFreeMap](https://openfreemap.org/), OpenMapTiles and OpenStreetMap contributors.
+- Geological data: [SGU original soil map](https://apps.sgu.se/kartvisare/kartvisare-jordarter-25-100.html) and [OGC API – Features](https://api.sgu.se/oppnadata/jordarter25k-100k/ogc/features/v1/collections/grundlager/items).
+- Weather: [Open-Meteo](https://open-meteo.com/), DWD ICON and [weather-map-layer](https://github.com/open-meteo/weather-map-layer). Review provider usage terms and library licensing.
+- Heritage: [Riksantikvarieämbetet / K-samsök](https://www.raa.se/hitta-information/k-samsok/); contributing institutions retain their record/image rights.
+- Nature: [iNaturalist](https://www.inaturalist.org/) and Wikipedia contributors; observe individual image/content licenses.
+- Astronomy: [Astronomy Engine](https://github.com/cosinekitty/astronomy) and [Sunrise-Sunset API](https://sunrise-sunset.org/api).
 
-The browser diagnostic no longer complains "Leaflet library missing": Leaflet was deliberately removed from this globe-only app in v1.0.8. It now notes **"Globe-only mode (Leaflet not required)"** and describes the MapLibre module's asynchronous startup state correctly.
+Public providers may have rate limits, outages, CORS restrictions and incomplete coverage. No source is guaranteed to be available.
 
-Tests now reproduce the exact device situation: preloaded sources and layers exist, `map.isStyleLoaded()` is false, and tapping Temperature/Rain/Clouds/Wind must reveal and claim the existing layer, without downloading the same model tile URL again. The test suite does not measure mobile frame-render latency, which still needs a user-device check.
+## Troubleshooting and validation
 
-## ⚡ Real first-frame weather sources preloaded and readiness bug fixed — v1.0.11 (November 2026)
+Open **Diagnostics & error logs**, tap Check browser, reproduce the issue and Copy error report. Reports stay in the browser tab and are intended to omit precise GPS coordinates; inspect before sharing.
 
-This release fixes v1.0.10's startup message staying stuck while the MapLibre globe was visible. A globe-ready event can fire while MapLibre is still updating its style with soil/green layers; v1.0.10 returned immediately if `isStyleLoaded()` was temporarily false. v1.0.11 now **retries map-style readiness with visible progress and a bounded timeout**. If renderer setup fails, the status explains the problem rather than keeping the original "waiting for globe" text.
+If GPS is denied, use Map center or Search place. If the globe fails, check WebGL, network connectivity and browser diagnostics; there is no current street-map fallback. If an overlay fails, inspect its status and retry when the provider is available.
 
-More importantly, the preloader now warms the **actual, native-resolution weather sources and layers** that the layer buttons use: `hn-temperature`, `hn-rain`, `hn-clouds` and `hn-wind`. It reuses the one DWD ICON Global forecast metadata request and Open-Meteo protocol, uses identical model `valid_times_N` timestamps, and creates the original MapLibre sources at their original `maxzoom=12`. Four layers are staged 650ms apart and painted at **0.002 opacity** without setting their user-facing enabled flags. Each weather module now checks whether its exact first-frame URL was preloaded and **claims its real source without making a redundant `setUrl` call**, restoring the intended opacity upon activation. Temperature also starts with the preloaded forecast time if no separate master clock has been selected yet.
+Real-device checks on Samsung/Android remain important: verify GPS grant/denial, globe rendering, SGU and green-space popups, each weather layer, first-frame reveal while other sources load, combined layers and timeline playback, Next Rain, source links and optional chat. Automated tests do not establish mobile rendering speed or live provider availability.
 
-The new status shows **how many real sources have been requested and reported loaded** by MapLibre; unlike the previous preview, these are the same sources the buttons reveal. Not every pixel of a global field or all zoom levels is downloaded up front—MapLibre requests tiles for the visible viewport. Four real sources at once consume additional bandwidth and decoded tile memory. Startup work is skipped for Save Data / 2G-class connections, background staging is cancelled on weather-button selection, and the regular overlay activation remains available even if preloading fails. We have not measured actual speed improvement on the user's device.
+## Development history
 
-New automated tests in `first-frame-preload.test.cjs` reproduce the globe-style readiness race and verify native source IDs, four-source staging, shared timestamps, Data Saver, cancellation, status updates and claiming real sources without duplicate URL loads. Previous weather, globe-only and Pages checks remain.
+The original Skåne green-space proximity/Streamlit prototype is retained for reference; it is not integrated into Here & Now.
 
-## ⏩ First weather frames preload automatically — v1.0.10 (November 2026)
+For detailed historical implementation notes and the v1.0.1–v1.0.12 release history, see the [previous README snapshot](https://github.com/Joar-Rinaldo-Roos/skane-green-access/blob/46c445b7995cb687d8cfe223d5d4c6e270ddf4d3/README.md). Older sections describe superseded functionality and should not be treated as current instructions.
 
-The globe now begins warming **all four first-forecast overlays** *before any weather layer is enabled*: 🌡️ Temperature, 🌧️ Rain, ☁️ Clouds, and 💨 Wind. Once MapLibre is ready, the new `first-frame-preload.js` waits briefly for the initial map load, reuses `HereNowWeatherData.getMetadata()` and the existing Open-Meteo renderer/protocol, chooses the single current DWD ICON Global model `valid_times_N` frame via `weather-timeline-core.js`, and stages **four** near-transparent MapLibre sources in 650ms increments. Nothing is switched on in the UI; all user controls remain optional, and the one shared 48h timeline remains intact.
-
-Each warm source uses **only the visible globe viewport at a maximum tile zoom of 4**, for a fixed upper bound of four extra sources—not a complete global/offline download. Automatic requests are skipped on Save Data and 2G/slow-2G connections, and remaining background work is cancelled when the user selects any weather layer, prioritizing interactive work. A small status text reports queued previews and how many source requests MapLibre says are loaded. If weather metadata or one preview fails, the ordinary weather overlays still work on demand.
-
-The existing v1.0.9 next-frame preloader continues to work after a weather overlay is selected. The larger MapLibre per-source in-memory tile cache is still always enabled (desktop 224, normal mobile 128, low-memory 80).
-
-**Important limitation:** These are best-effort low-resolution Open-Meteo previews through standard MapLibre sources. A preview being loaded is *not a guarantee* that a later high-resolution or differently configured visible layer reuses its decoded tiles; a first tap can still trigger network and GPU work. We do not claim a measured performance improvement without phone testing. No GPS, credentials, or persistent offline tile storage are required. `node --test first-frame-preload.test.cjs` covers four matching model times, staging, no toggles selected, no invented variables, Data Saver, errors, and cancellation when a user starts a weather layer.
-
-## ⚡ Always-on larger map cache + one upcoming weather-frame prefetch — v1.0.9 (November 2026)
-
-The globe-only release **v1.0.8 was already merged to main**; it remains the default. In v1.0.9 the larger **MapLibre `maxTileCacheSize` is always enabled**, with the former checkbox removed: 224 recent tiles per map source on desktop, 128 on normal mobile and 80 on low-memory devices. MapLibre can still evict tiles as needed; these are limits rather than an allocation or a guarantee of offline storage.
-
-A small **next-frame weather preloader** (`weather-prefetch.js`) now attaches one additional MapLibre source and nearly transparent layer for the **next real DWD ICON model time** in the existing unified 48h timeline. It automatically starts after the timeline loads and after subsequent Play/slider steps, and follows the visible globe viewport using the Open-Meteo `om://` tile protocol. For bounded bandwidth and memory, the preview source is capped at **zoom level 5**, there is **at most one** preview source for **one active layer** (priority Clouds, Rain, Temperature, then Wind), and it does not fetch all geographic tiles or all 48h forecast frames. An earlier request is superseded by a later timeline step. Turning all weather layers off hides the preloader; Save Data and 2G-class connections skip additional prefetch requests.
-
-Preloading through an extra almost-transparent layer is a **best-effort browser warm-up** of requests/worker state. It does **not** guarantee that MapLibre's decoded tile cache for the visible source will contain the future tile. In particular, high-zoom weather tiles beyond zoom 5 may still download/compute on demand, and the cache does not persist weather tiles offline. MapLibre does not currently expose a supported arbitrary-tile decoded-cache prefetch API. We use the public addSource/addLayer/setUrl APIs instead of unsupported internals.
-
-The prior v1.0.7 metadata prefetch, 5-minute session cache, and one synchronized Play button are unchanged. `node --test weather-prefetch.test.cjs globe-only.test.cjs` verifies bounded tile-zoom, correct next model times, at most one extra preview source, layer switching, final-frame cleanup, Data Saver and always-on memory limits. Real performance gains depend on Open-Meteo, MapLibre's weather worker, network and device GPU, and are **not claimed without on-device measurement**. The live Pages deploy checks for the new preloader script and absence of the former checkbox.
-
-## 🌍 Globe-only and configurable map tile retention — v1.0.8 (November 2026)
-
-The page is now **3D globe only**. The formerly hidden Leaflet/2D street map, its duplicate OpenStreetMap tile requests, and the 2D/3D map-switch button have been removed from deployed assets. The lightweight `globe-map-controller.js` retains the public `HereNowMap` interface for GPS, place search, map-center Next Rain, geology, nearby discoveries, and the global Green Spaces vector layer. Without WebGL the app displays an explicit globe-unavailable message (there is no 2D fallback). The globe begins automatically as soon as MapLibre is loaded.
-
-**More actual tile caching:** MapLibre's `maxTileCacheSize` option is set explicitly, increasing memory retained for recently seen tiles **per source**. Defaults are 128 on desktop, 72 on normal mobile and 48 on low-memory devices. The new **“Keep more map tiles in memory”** checkbox raises limits to 224, 128 or 80 respectively. The selection persists in localStorage and applies after reloading the page. Browser storage may be blocked; in that case the setting is used in the current tab but cannot survive a reload. Very large caches can consume significant memory across four weather sources; low-memory devices use smaller limits.
-
-This is **not** downloading the whole 48-hour globe forecast. Tile retention only helps when returning to geography/model tiles that were already fetched; MapLibre's internal cache can evict old tiles and does not persist weather tiles offline. Initial tile decoding and new forecast-frame fetches are still network/CPU bound. The metadata prefetch and session cache from v1.0.7 remain. No claim of measured improvement without benchmarking on the actual device.
-
-CI `node --test globe-only.test.cjs` checks that Leaflet and the 2D switch are absent, the globe auto-initializes, place and soil interfaces remain available, and device-aware cache limits are respected. GitHub Pages verifies the published v1.0.8 HTML and new scripts.
-
-## ⚡ Early weather loading and shared cache — v1.0.7 (November 2026)
-
-The 3D weather overlays now share one `weather-data-cache.js` metadata loader. On a normal connection it starts fetching **DWD ICON Global `latest.json` during browser idle time**, before the first weather layer is activated, and prepares the existing Open-Meteo MapLibre `om` renderer early when MapLibre is available. HTML `preconnect` hints shorten connection setup to the weather-data host and unpkg CDN. All four overlays plus the shared timeline now call `HereNowWeatherData.getMetadata()` rather than duplicating concurrent network requests.
-
-- **Deduplicated requests:** One in-flight metadata request is shared between Temperature, Rain, Clouds, Wind and the master timeline, instead of separate parallel `fetch(..., {cache:'no-store'})` requests for the same model JSON.
-- **Short-lived browser cache:** Model metadata is reused in memory and in `sessionStorage` for **up to 5 minutes** (even after reloading a tab). This is a bounded cache, not an offline weather store, to reduce the chance of stale `valid_times_N` model indices after a new forecast run. Expired entries fetch fresh data; failed requests can be retried. When storage is blocked, the in-memory cache still works.
-- **Connection-aware preloading:** On `navigator.connection.saveData` or 2G/slow-2G connections, automatic prefetch is skipped; explicit weather layer activation continues to work. The warm-up is scheduled at browser idle or after a short fallback delay. A first-time visit still downloads the model JSON and renderer once; later activations can be quicker.
-- **Not a bulk tile downloader:** These optimizations do **not** predownload every hourly weather raster/vector tile or the whole world; the Open-Meteo MapLibre protocol still fetches and decodes visible tiles on demand. This avoids consuming huge amounts of bandwidth and memory on phones and avoids stale forecast tiles. Actual tile rendering speed is constrained by Open-Meteo, network latency, device CPU and graphics power.
-- Test with `node --test weather-data-cache.test.cjs` for concurrent deduplication, idle prefetch, session reuse, expiration, slow-connection skipping and retry behavior. GitHub Pages verifies v1.0.7 serves the new script.
-
-## 🕒 One shared weather forecast timeline — v1.0.6 (November 2026)
-
-One shared **Play/Pause button and 48-hour time slider** now control all enabled 3D global weather overlays: **🌡️ Temperature, 🌧️ Rain forecast, ☁️ Clouds and 💨 Wind**. The shared panel appears under the map whenever at least one weather layer is on and hides when all weather layers are off. The previous duplicate Rain, Cloud and Wind playback controls are hidden from the page (their private DOM elements remain for backward compatibility with the weather modules).
-
-The shared controller reads **one** copy of DWD ICON Global `latest.json` metadata, selects actual `valid_times_N` model indices approximately every three hours, and dispatches each chosen frame to all enabled layers via `setForecastFrame(frame)`. This makes temperature, precipitation, cloud cover and 10 m wind arrows use the **same valid hour** when overlaid. Each layer still uses its own original MapLibre source and colour scale; no interpolation or artificial animation of the forecast field is implied.
-
-Layers can be added or removed during playback without resetting the master clock: newly enabled layers join the currently selected index once their map source has initialized, and disabling just one layer does **not** stop playback while another remains selected. Dragging the shared slider pauses playback. Playback stops at the final published frame; pressing Play again restarts from the beginning. No GPS needed.
-
-Weather overlays can coexist, including Rain with Temperature/Clouds. When colours overlap, visual mixing may obscure data; the existing Cloud opacity slider remains available. The **“Also show Temperature beneath clouds”** checkbox is still an optional shortcut. `node --test weather-timeline.test.cjs weather-timeline.browser.test.cjs` checks one timeline's true model timestamps, all four model URLs, Play/Pause, scrubbing, layering mid-play and stopping when all layers are disabled. CI also runs previous weather and Pages regression tests. GitHub Pages validates the **v1.0.6** header plus the shared `weather-play` and `weather-hour` controls in served HTML. Real mobile graphics smoothness is not validated by these tests.
-
-## 💨 Global 10 m wind direction and optional cloud/temperature combination — v1.0.5 (November 2026)
-
-**💨 Wind:** An optional **10 m surface wind** arrow overlay on the existing 3D MapLibre globe. This reuses the same Open-Meteo `om://` raster/vector protocol already loaded for other global weather layers. The implementation follows Open-Meteo's official `examples/vector/wind-arrows.html`: a vector tile source at `om://…/dwd_icon/latest.json?variable=wind_u_component_10m&time_step=valid_times_N&arrows=true` with the vector `source-layer: wind-arrows`. Open-Meteo interprets the U and V wind components into arrows; arrow tips indicate **where the air is moving**, while meteorological wind direction is conventionally named for *where wind comes from*. The arrow positions and forecast times are model estimates, not live measured wind, particles or real-time advection.
-
-Wind can overlay Temperature, Clouds and Rain, with one synchronized forecast clock. The wind arrow layer is deliberately rendered last (above underlying weather colours and geography). The shared weather controls have a 48-hour, approximately three-hourly **Play/Pause and timeline** using only the DWD ICON model's real published `valid_times`. All selected overlays now share one valid-time index (v1.0.6). Switching to Wind does not require GPS or the Mac; Wind automatically opens the globe. Long timelines and several active layers can consume more mobile bandwidth/graphics processing.
-
-**Clouds + Temperature are optional again:** Tap ☁️ Clouds to see cloud cover **alone**, not automatically force Temperature on. The Clouds panel now includes an unchecked-by-default **“Also show 🌡️ Temperature beneath clouds”** checkbox. Check it to enable the translucent combined view, uncheck it to return to clouds only. Manual 🌡️ Temp button presses also remain supported; when both are enabled, both advance to the *same* forecast hour as the Clouds timeline, unlike the independent Wind timeline. Temperature can still run by itself.
-
-**Tests:** `node --test wind.test.cjs wind.browser.test.cjs cloud-cover.browser.test.cjs` covers genuine global wind vector component requirements, time indices, the official OM arrows protocol, toggle, Play/Pause, and optional Temperature pairing. A live `node wind-smoke.mjs` verifies global u/v wind components and at least 30 hours of future forecast data; the test uses no GPS. The previous Open-Meteo and Green Spaces regressions remain in CI. GitHub Pages checks that live HTML exposes `v1.0.5`, Wind and the cloud/temperature checkbox, but real Samsung rendering must still be tested manually.
-
-## 🌡️☁️ Combined temperature + cloud cover — v1.0.4 (November 2026)
-
-Here & Now can now render **temperature beneath translucent clouds** on the same 3D globe, synchronized to one model hour. Tap **☁️ Clouds** and the application **enables 🌡️ Temp automatically** (if not already enabled). Temperature stays on when Clouds are hidden; it then returns to the nearest-current-hour forecast. Temperature may be turned off independently while Clouds remain visible. Rain forecast remains a separate, mutually exclusive visualization. Green Spaces and SGU soil remain unchanged.
-
-**Time alignment:** Cloud and temperature are fetched from the same DWD ICON Global latest.json metadata. The Clouds 48-hour timeline reads actual `valid_times_N` indices; every Cloud Play/Pause or slider step updates the temperature raster to the **exact same forecast index**, through the existing Open-Meteo `om://` protocol. The temperature panel displays that chosen forecast time, not an outdated nearest-now label. With Clouds off, temperature alone retains its original `time_step=current_time_1H` behavior.
-
-**Blending and performance:** Temperature paints **under** Clouds in MapLibre order. A new mobile-friendly **Cloud opacity** control (15–75%, default 45%) lets you see warm/cold patterns through cloud cover. It does not modify weather model values. Each animation step updates two raster sources (so performance/bandwidth demands are higher than either layer alone); there is no GPS or backend requirement. This visual overlap illustrates coincident forecast fields but **does not prove clouds caused temperature changes**.
-
-**Validation:** `node --test weather-composite.test.cjs temperature-sync.browser.test.cjs cloud-cover.browser.test.cjs` covers matching DWD ICON time indices, map-layer order, transparency, temperature activation, independent toggling, and Play/Pause synchronization. Existing live Open-Meteo source checks continue; an actual phone browser rendering test remains necessary. GitHub Pages verifies that the published HTML includes v1.0.4 and the cloud opacity slider.
-
-## ☁️ Global cloud cover forecast — v1.0.3 (November 2026)
-
-- **☁️ Clouds** adds a global **total cloud cover** forecast layer on the existing 3D MapLibre globe. It reuses the working Open-Meteo MapLibre OM protocol renderer and the DWD ICON Global weather model. The data variable is `cloud_cover` (the predicted share of sky covered by clouds, **0% = clear, 100% = overcast**).
-- Unlike live satellite photos, this is **numerical model forecast cloud cover**, which can diverge from the sky at any given location. Resolution remains global-model resolution even when zoomed in. A model forecast does not mean precipitation is expected.
-- The **48-hour timeline** selects only timestamps actually present in the latest model metadata (`https://openmeteo.s3.amazonaws.com/data_spatial/dwd_icon/latest.json`), approximately every three hours. **▶ Play / Ⅱ Pause** animates through frames; the forecast-valid time and model-run reference time are visible.
-- The MapLibre raster source uses `om://…/dwd_icon/latest.json?variable=cloud_cover&time_step=valid_times_N` at zoom levels from world to local, with a semi-transparent overlay. The source is not queried until Clouds is activated. No GPS, user coordinates, Mac backend, or API key is needed.
-- **Rain forecast is a separate exclusive weather overlay; Clouds and Temperature can now be combined** to avoid blending unrelated colour scales, while SGU geology and Green Spaces remain available. Switching away pauses animation and hides the previous forecast overlay.
-- Network/code tests: `node --test cloud-cover.test.cjs cloud-cover.browser.test.cjs` covers real forecast indices, raster URLs, toggle, slider and Play/Pause. GitHub Actions runs `node cloud-cover-smoke.mjs` to verify that `cloud_cover` is actually in the latest DWD ICON global metadata and that there are at least 36 hours of future forecasts. These checks cannot substitute for testing real graphics rendering on a Samsung/Android or Mac browser.
-- Github Pages deployment checks that live HTML contains the expected v1.0.3 release number and **☁️ Clouds** button. The upstream Open-Meteo weather-map-layer library is experimental, and model/tiles may load slowly on mobile.
-
-## 🌧️ Next rain at the map center — v1.0.2 (November 2026)
-
-Here & Now now answers **“When will it rain next here?”** in a simple card directly beneath the map. It queries the **center of the active globe or 2D map**, not GPS; the initial map center defaults to Lund, and the user can pan anywhere and tap **↻ Update forecast** to get a forecast for that new center. Moving more than roughly 0.001° invalidates the old prediction instead of silently continuing to show it for the wrong place. The initial page load fetches the forecast automatically.
-
-- Uses the public Open-Meteo hourly point forecast at `https://api.open-meteo.com/v1/forecast`, with `hourly=rain,showers,precipitation_probability`, `forecast_hours=48`, `timezone=UTC`, and `models=best_match`. This is a **location-specific best-match model**, distinct from the globe-wide DWD ICON visualization.
-- `rain` covers large-scale rain and `showers` covers convective showers; both are combined. An hour counts as next measurable rain if predicted total reaches **at least 0.2 mm in one hour**. The API timestamps represent the **end of the preceding hour**. The card shows the full interval and predicted millimetres, and labels **precipitation probability** as probability of *any* precipitation, not necessarily rain.
-- When the model forecasts no hours above the threshold, the card says so with a caveat; it does not claim certain dry conditions. Null or missing rain fields are not silently interpreted as zero. Rain likelihood and model forecasts can be wrong; this is **not live radar**.
-- Open-Meteo time values are requested in UTC and shown in the **device's timezone**, explicitly labelled. Map coordinates sent to Open-Meteo are rounded to five decimal places for the forecast request, but app diagnostics avoid logging precise position. The displayed map-center label rounds coordinates to two decimal places.
-- No GPS permission, optional Mac backend, or API key is needed. The card has a refresh button and an abort timeout; error messages appear on failure.
-- Tests: `node --test next-rain.test.cjs next-rain.browser.test.cjs` covers forecast API request arguments, distinguishing rain from snow/precipitation probability, times and units, map-center selection, stale forecast invalidation, and network failures. `node next-rain-smoke.mjs` runs a live API call for Lund example coordinates in GitHub Actions; it **does not** access the user's location.
-- The Pages deployment test checks that v1.0.2 and the Next Rain card are present in the publicly served HTML. Real browser/network behaviour should still be checked on a phone or Mac.
-
-## 🌧️ Animated global rain forecast — v1.0.1 (November 2026)
-
-Here & Now adds a **🌧️ Rain forecast** toggle to the existing **3D globe**. The layer uses the same Open-Meteo MapLibre weather renderer that powers the temperature map, but displays **DWD ICON Global model precipitation** (`precipitation`, with `rain` as a supported fallback). It is a forecast of **rain and snow combined**, not live radar or current observations.
-
-- When enabled, the button switches the map to the globe if needed. **Green Spaces and SGU Geology are unchanged.** Temperature and precipitation are mutually exclusive colour overlays for clarity.
-- Weather metadata comes from `https://openmeteo.s3.amazonaws.com/data_spatial/dwd_icon/latest.json`. The timeline uses only genuine `valid_times` from this file, selecting roughly three-hourly steps for **up to 48 hours**, skipping absent timesteps rather than fabricating values. The last available frame may be earlier than exactly +48 h.
-- The timeline shows the model's actual forecast-valid time and reference/issuance time. **▶ Play / Ⅱ Pause** controls cycle through the time steps at 4.5-second intervals; the slider can select any frame. Playback stops at the end. Results aren't animated wind advection; successive model predictions create the apparent motion.
-- MapLibre requests the relevant forecast frame with `om://.../latest.json?variable=precipitation&time_step=valid_times_N` and updates a raster tile source via `setUrl`. The same 3D layer is available from world scale down to city zoom, but **local precision remains limited by the global model resolution**.
-- This prototype intentionally does not preload all frames (mobile memory and bandwidth). Switching rapidly between frames can cause visible delays or a temporarily blank map while the new forecast tiles load. Open-Meteo's weather-map-layer package is still experimental. The app may report errors if model data or the library becomes unavailable.
-- This is a **static GitHub Pages site**; no secret API key or local Mac server is needed. User GPS coordinates are not sent to Open-Meteo for the global weather layer. The browser fetches model data based on visible globe tiles.
-- Checks: `node --test rain-forecast.test.cjs` covers metadata filtering, frame bounds, source URLs, view styles, and playback end conditions; `node rain-forecast-smoke.mjs` checks live metadata for precipitation availability and future timesteps. These are not a substitute for on-device Samsung rendering checks.
-- After publishing, GitHub Pages verifies that its live HTML contains `v1.0.1`, **🌡️ Temp** and **🌧️ Rain forecast**.
-
-## 🌡️ Global temperature overlay (November 2026)
-
-Here & Now's existing **MapLibre 3D globe** can display a **global forecast of air temperature at 2 metres above ground**. Tap **🌡️ Temp** above the globe. The temperature layer:
-- Uses Open-Meteo's MapLibre `om://` protocol and DWD ICON **global** model (`temperature_2m`, closest current forecast hour). Model coverage is global and forecast resolution is finite; zooming into neighbourhoods does *not* create street-scale observations.
-- Is a **numerical weather forecast**, not a real-time thermometer/radar or satellite measurement. The selected forecast validity time is shown where metadata is available.
-- Is a semi-transparent raster overlay on the existing 3D globe. It is supported at world and local zoom levels without fetching individual GPS-based forecasts. No GPS permission or Mac backend is required.
-- Only loads the weather renderer and model data if the user turns the layer on. Uses the pinned Open-Meteo weather-map-layer library version `0.3.2` from unpkg and model data from Open-Meteo's spatial repository. Weather attribution appears in the interface.
-- If the globe is in 2D mode, enabling Temperature switches to 3D; the temperature overlay itself is intentionally **3D only** in this first phase. Green Spaces is unchanged.
-- Is experimental: upstream Open-Meteo itself warns its map-layer API is not yet production-ready. The third-party library uses WebAssembly and worker assets, and may perform less smoothly on browsers without cross-origin isolation (GitHub Pages cannot configure custom cross-origin isolation headers in this workflow). Source: https://github.com/open-meteo/weather-map-layer
-- No embedded API key. Open-Meteo's free access is intended for non-commercial use under its terms; consult licensing for other uses. Map library source is distributed under GPL-2.0; its license remains with its authors.
-- Unit tests: `node --test temperature.test.cjs`. A separate GitHub Actions workflow probes current global model metadata and checks that CDN JS/worker/WASM assets exist. Browser performance, colors and global globe rendering still need Samsung testing.
-
-## Green Spaces map overlay (November 2026)
-
-**🌳 Green spaces** is a map toggle alongside the geology layer. It shows mapped **parks, gardens, forests, nature reserves and recreation green areas** on both the 3D MapLibre globe and 2D Leaflet map.
-
-- Uses OpenStreetMap Overpass API to fetch nearby OSM ways and multipolygon relations on demand, within about **1.2 km of the visible map center** (at street-level zoom 12+).
-- Converts closed OSM polygon geometries into GeoJSON and renders transparent colored shapes on both map views. Tap an area to see its mapped name/type and the original OSM object link.
-- Updates when the map moves, with 15-second minimum request spacing, a 5-minute in-memory query cache, a capped output size, timeouts and a user-visible error message. The toggle starts **off** and does not fetch until selected.
-- This visualizes **mapped green spaces, not measured green access**. The app does not yet compute walking routes, verify entry points or confirm public accessibility. Incomplete OSM tagging and unclosed multipolygon fragments may cause areas to be omitted.
-- Data source: OpenStreetMap contributors via a public Overpass API instance. Its availability, CORS and rate limits can vary; no availability guarantee. Queries send the selected map center coordinates to Overpass.
-- Tests: `node --test green-spaces.test.cjs`. The GitHub Actions CI runs these tests and syntax checks; Pages deployment also requires them to pass.
-- Works independently of the Mac GPT backend. Actual Android browser/network rendering still requires on-device validation.
-
-## Previous prototype
-
-This repository began as a Skåne green-space proximity project. Its original Python files (`analysis.py`, `app.py`, `download.py`, `demo.py`, `tests/`) are retained for reference and have **not** been incorporated into Here & Now. The original prototype's live OSM/Streamlit integration has not been validated end-to-end.
-
-## Attribution
-
-Wikipedia content is provided by Wikipedia contributors; follow linked article license terms. OpenStreetMap geocoding © OpenStreetMap contributors. iNaturalist observations are subject to their individual licenses.
-
-## Phase 1 — mobile map and an actual OGC layer
-
-The interactive map is now displayed above the existing discoveries, even when reading a result:
-
-- **Street map**: OpenStreetMap tiles via Leaflet 1.9.4, with attribution and mobile pan/zoom.
-- **Globe**: Optional world-scale MapLibre GL JS 6.16.0 globe using OpenStreetMap raster tiles. The globe requires WebGL; it shows the same selected-location marker but not SGU geology. Choose **Street map** to return to geology.
-- **Find me**: requests one-time browser GPS permission when tapped, places a location marker and a GPS accuracy circle, and recenters the map. No continuous tracking.
-- **Choose a place**: searching for a Swedish place moves the same map marker. The map opens at **Lund only as an example**, not as a claimed GPS reading.
-- **Soil geology**: toggle SGU's published OGC **WMS 1.3.0** map layer `jord:SE.GOV.SGU.JORD.GRUNDLAGER.25K` (Jordarter 1:25 000–1:100 000). WMS serves map images; it is **not** yet a query of underlying geology attributes. The Geology discovery topic shows an honest map-only description, not invented facts.
-
-OGC service: https://resource.sgu.se/service/wms/130/jordarter-25-100-tusen  
-SGU product description: https://www.sgu.se/produkter-och-tjanster/geologiska-data/jordarter--geologiska-data/jordartsdata/
-
-The map relies on Leaflet from the pinned unpkg CDN, OSM map tiles, and SGU WMS. Network access is required. Map errors should be reported in the status line instead of disabling other discovery features. Availability and cartographic coverage depend on upstream services.
-
-### Deploy with GitHub Pages
-
-A GitHub Actions workflow in `.github/workflows/pages.yml` deploys the static root files on push to `main` or manual run. To enable it:
-
-1. In **Settings → Pages**, choose **GitHub Actions** as the build/deployment source.
-2. Merge the map pull request into `main` and inspect **Actions → Deploy Here & Now to Pages**.
-3. Open the resulting HTTPS URL on your Samsung browser; accept the location permission when prompted.
-
-**Note:** GitHub Pages support for private repositories depends on the account and organization plan. If Pages is unavailable, host these static files on any HTTPS static host. Neither an OpenAI API key nor Python is needed for Phase 1.
-
-### Samsung validation checklist (requires a real device)
-
-- Open the live HTTPS page on your Samsung. Confirm the street map loads, tiles pan/zoom, and attribution is visible.
-- Tap **Find me** and grant browser location access. Confirm the marker is near you, the accuracy circle is displayed when available, and the app does not move its marker until you ask again.
-- Deny GPS permission, then use **Choose a place → Lund → Find**. Confirm the map recenters and a topic can still be discovered.
-- Toggle **Soil geology** on and off; confirm SGU's mapped soil colors appear in a covered area and street tiles remain visible under the overlay.
-- Temporarily disable the network; confirm map errors are explained and the discovery interface remains usable.
-
-Automated checks or inspecting the desktop browser cannot replace testing live GPS and WMS tile rendering on a Samsung. This step is intentionally **not marked verified** until device testing is performed.
-
-### Phase 1 limits
-
-This does not yet implement historical archives, OGC API Features, a backend, GPT chat, or evidence-grounded site-specific geology. Those belong to later phases. The original Skåne Python prototype remains untouched.
-
-### Globe and SGU troubleshooting
-
-The OSM background provides street context; SGU's WMS provides the OGC geology overlay. Neither OSM nor the globe itself is an OGC geology service. The SGU layer displays only on the **street map**. You can use **🌐 Globe** to rotate and zoom the Earth, then **🗺️ Street map** to return. It requires a browser with WebGL.
-
-If SGU tiles are delayed, the map now displays a clear message after 12 seconds instead of staying indefinitely at "Loading". Image request failures and successful requests have distinct messages. A successful image response does **not** prove there is colourful geology at a specific point: SGU's scale-dependent rendering and map coverage can produce transparent images.
-
-To compare directly with SGU, use **Open SGU’s original map** beneath the map. The WMS URL, layer name, and EPSG:3857 coordinate support agree with SGU's service documentation, but mobile-origin requests and pixel rendering still need testing on a live network.
-
-
-## Troubleshooting on your Samsung
-
-Open **Diagnostics & error logs** at the bottom of the site. Tap **Check browser**, reproduce the problem, then tap **Copy error report**. This stores recent status messages in the current browser tab and does not upload GPS coordinates or the text of questions. Inspect the report before sharing it. For full network responses, inspect Chrome on a computer (`F12`) or remote-debug Android with `chrome://inspect/#devices`.
-
-**Find me** requests GPS access on user tap, rather than prompting without context on page load. If Chrome already blocked GPS, enable Location for this website in Chrome site settings. **Map center** allows using Discover without location permission or place-search services. GPS is cached within the session, so Discover will not repeatedly ask after a successful Find me.
-
-
-### Runtime crash fix — global location and MapLibre v6
-- The previous `let location` conflicted with the browser's built-in `location` property (notably in Safari), preventing `app.js` from running. Discovery state now uses `selectedLocation`; browser location access still works through `navigator.geolocation`.
-- MapLibre GL JS v6 removed the old `dist/maplibre-gl.js` browser bundle. `globe-loader.mjs` now imports the documented v6 `dist/maplibre-gl.mjs` module and exposes it to the existing globe code; a failed optional globe import is reported through Diagnostics and does not stop the discovery interface.
-- On phones, **Find me** or Discover in GPS mode triggers the browser location-permission request. If location is blocked, use **Map center** (or enable location access in browser site settings).
-- Automated regression tests check these cases but cannot guarantee live browser connectivity, MapLibre WebGL support, or SGU WMS tile availability.
-
-
-### SGU geology data source update
-The old SGU WMS endpoint `resource.sgu.se/service/wms/130/jordarter-25-100-tusen` returned repeated image failures on the Samsung device. The primary geological overlay now uses SGU's separately published **OGC API – Features** `grundlager` endpoint, requesting GeoJSON polygons for the map viewport in longitude/latitude coordinates (CRS84):
-`https://api.sgu.se/oppnadata/jordarter25k-100k/ogc/features/v1/collections/grundlager/items`.
-The polygons carry `jg2_tx` (mapped soil-type text). Tapping coloured areas shows the actual source label; colours are illustrative, not official SGU symbology. Maps use a capped number of results per viewport, so zoom closer if the source has more than 180 features. Failed requests report the network/HTTP error in browser diagnostics. This feature relies on SGU's service and cross-origin browser access; successful rendering on a Samsung still needs live testing. The globe remains separate and does not render these geological features.
-
-
-### Globe-first map revision
-- **Globe is the preferred default** if MapLibre loads and WebGL is available. Otherwise Leaflet is a 2D fallback. MapLibre's globe is a rendering/projection choice; OpenStreetMap supplies background map data.
-- **Find me** now zooms the active globe to its actual GPS point (zoom 15) instead of zoom 4. The marker appears in both modes.
-- **SGU OGC Features** GeoJSON polygons are drawn on both 3D Globe and 2D map, with tappable real SGU soil descriptions. Validate coordinates and report when the API returns features but no drawable polygons.
-- **2D gray tiles** are mitigated by not recentering Leaflet while it is hidden and by delaying Leaflet resize/invalidate after switching back.
-- **Request throttling** reduces repeated SGU queries while panning to at most one after 800 ms of idle map movement; canceled requests do not overwrite the newest view.
-- Real-device display remains to be checked. MapLibre globe and Leaflet street map still use OpenStreetMap-derived basemaps with required attribution; switching projection does not change the map's source.
-
-
-## Phase 1.5 — Understand the ground and find local archives (November 2026)
-The colour overlays in MapLibre Globe and Leaflet 2D now show **English SGU soil stories** when tapped. Each popup includes the English geological term, the original SGU Swedish category, the material composition, how it formed, why it matters, expandable questions and a link to SGU's source legend. For example, `Fyllning` is artificial fill placed by people; `Moränfinlera` is glacial till with more than 25% clay. These explanations describe classifications rather than asserting actual borehole material.
-
-**Geology** under Discover now calls SGU's OGC API – Features for the map point and looks for a polygon that **contains** the selected GPS or map-center coordinate. It will not use a merely nearby polygon to label the point. A source gap is reported clearly.
-
-**History** and **Culture** now try the official Swedish K-samsök catalogue (Riksantikvarieämbetet), instead of treating unclassified Wikipedia articles up to 10 km away as local history. The search uses a WGS84 bounding box and a strict **75 m** post-filter on source coordinates. Archival photos may be offered by their source thumbnail, with source attribution and a link to the original object. A historical image's mapped coordinate may describe the subject, not the actual photographer location. When nothing is catalogued within 75 m, the app does not invent a story; users can explicitly widen to **250 m**. **Surprise me** starts with such an archive record and falls back to a verified local SGU ground story when none is available.
-
-Archive records and image rights remain the responsibility of the contributing institution. Descriptions may still be in the source's original Swedish: the app does not invent English translations of historical documents. The K-samsök browser API/CORS and thumbnail delivery **have not been verified on a Samsung**; on-site errors are logged in Diagnostics. No API key or GPT model is used. K-samsök documentation: https://www.raa.se/hitta-information/k-samsok/att-anvanda-k-samsok/kom-igang-med-k-samsoks-api/
-
-
-## Discovery UI revision (November 2026)
-- **Geology:** map popups now show English name, original Swedish name, material description and a **Read more** button. The button opens a source-linked details table *below the map* with origin, significance and expandable questions. Detailed text is no longer inside the map overlay.
-- **Nature:** local iNaturalist observations select wildlife rather than raw species names only. A separate background query to Wikipedia can enrich species information; a curated Mallard profile links to an independent bird reference for food, appearance and notable facts. Images are displayed only when photo license metadata permits reuse (CC0/CC BY/CC BY-SA), with attribution.
-- **Astronomy:** sunrise/sunset remain available. Astronomy Engine 2.1.19 calculates actual Moon and naked-eye planet positions for 21:00 **device-local time** from the selected coordinates entirely in the browser. No meteor shower schedule is guessed. If the optional calculator does not load, solar times still appear.
-- **History:** the official K-samsök catalogue remains available for nearby records. A curated, sourced Lund hospital-district story is shown when the selected map point falls in the approximate hospital area. Hospital historical photographs are opened at the original institution website instead of republishing potentially restricted photos. This is campus context, not a claim that a specific historical photograph depicts the exact GPS point.
-- **Culture:** removed because it duplicated History.
-
-- The standalone `discovery-ui.js` renders animal diets, visual identification notes, a planet-position table and source links. If the optional astronomy library does not load, the solar-time fallback still works. The astronomy calculations run locally in the browser.
-
-
-## Ask Here & Now — Mac-hosted GPT proof of concept
-
-The public website now includes an optional **Ask Here & Now** panel under the map. Its source code remains on GitHub Pages; GPT requests go to a tiny password-protected server running on your Mac via a temporary HTTPS Cloudflare Quick Tunnel. The existing map and Discover are independent of the Mac backend.
-
-Start with [the Mac setup guide](backend/README.md). This setup script downloads backend files into `~/HereNowBackend` and preserves private `.env` settings when updated. No Git clone or repeated git pull is required. You must create your own OpenAI API project key, install Node.js 22+ and Cloudflare Tunnel locally and keep two Terminal windows open while testing.
-
-**Security:** Never commit or enter `OPENAI_API_KEY` in the browser. Only a separate randomly generated access token is entered in the chat settings. The server checks the token, restricts browser origins, rate-limits requests and sets `store:false` for OpenAI Responses. The frontend sends selected coordinates and geological or historical context only when you ask. API usage and optional web searches are billed separately from ChatGPT subscriptions.
-
-**GitHub repo privacy:** GitHub Pages from a private repository requires an eligible GitHub plan, and published sites can still be publicly accessible even when the repository is private. On GitHub Free, changing the repository from public to private will unpublish Pages. We recommend leaving this prototype repository public and excluding private credentials entirely.
-
-### Green Spaces timeout and auto-zoom fix (22 November 2026)
-
-The first version timed out on a public Overpass API instance on Android. The layer now uses a smaller **700 m query for mapped ways**, with a sequential fallback between two public Overpass providers, aborts/timeouts, and the previous request throttling/caching. Multi-part relation-only areas may be omitted by the lightweight query; no missing data should be interpreted as absence of greenery. When **Green Spaces** is enabled on a zoomed-out globe or 2D map, it automatically zooms to level 13, like the geology toggle. The popup includes an OpenStreetMap source link and never claims public access. Green-space styling is drawn above SGU soil polygons so both toggles remain visible. Production public servers may still be busy; integration with a reliable OGC/cached data backend is a future improvement.
-
-**Test scope:** Github Actions tests cover query shape, GeoJSON conversion, zoom helper and simulated provider failover. They do not constitute a live Samsung network test. Public Overpass instances are rate-limited shared infrastructure; the map sends coordinates to the selected provider only on user toggle, and avoids parallel provider requests.
-
-### Green Spaces: reliable 3D globe vector tiles (November 2026)
-
-Android reported that the two public Overpass providers repeatedly returned HTTP 502, even after reducing query size. This indicates upstream service capacity or gateway errors rather than invalid GPS data. Live Overpass requests are not suitable as the default display source for our 3D globe.
-
-**New 3D globe behavior:** The 🌳 Green Spaces toggle uses OpenFreeMap's OSM-derived **pre-generated OpenMapTiles vector tiles** with MapLibre, rendering the `landcover` source layer for woods and grassy land and the `park` source layer for parks. No Overpass request occurs when navigating the 3D globe. Existing autozoom to zoom 13 remains. Tap an area for its mapped name/type where provided and a link to its OpenStreetMap vicinity. This is a **map visualization**, not verified walking access or a complete OSM feature registry; vector tile simplification/zoom availability and naming vary.
-
-**2D fallback:** The separate Leaflet 2D view still uses the prior Overpass prototype for clickable individual OSM polygons. It may encounter 502/timeout errors and should later be migrated to vector tiles or a cached OGC data service too.
-
-**Checks:** `node --test green-spaces.test.cjs green-vector.test.cjs` covers green geometry and vector style definitions. GitHub Actions also performs an external network smoke test of OpenFreeMap's public TileJSON endpoint for this PR; this test does not guarantee live Android browser rendering. The provider may change its hosting conditions. Required attribution: © OpenMapTiles © OpenStreetMap contributors.
-
+Update this README whenever user-visible features, data sources, deployment, privacy or setup change.
